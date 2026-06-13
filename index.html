@@ -1209,13 +1209,14 @@ fetchSiteContent(function() {
   });
 
   /* ── gallery ── */
-  var photos = (CONFIG.photos||[]).filter(function(p){ return p.src; });
+  var photos = (CONFIG.photos||[]).filter(function(p){ return p.src || p.url; });
   if (photos.length) {
     var gg = document.getElementById('galleryGrid');
     document.getElementById('gallery').style.display = 'block';
     photos.forEach(function(p){
+      var imgSrc = p.url || p.src;
       var div = document.createElement('div'); div.className = 'gallery-item';
-      var img = document.createElement('img'); img.src = p.src; img.alt = p.alt||'';
+      var img = document.createElement('img'); img.src = imgSrc; img.alt = p.alt||'';
       div.appendChild(img); gg.appendChild(div);
     });
   }
