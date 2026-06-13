@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NMA Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#08080f;--surf:#13131f;--surf2:#1a1a28;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.18);
+  --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
+  --glow:rgba(15,0,247,.4);--text:#f4f4fa;--muted:#9a9ab4;
+  --green:#22c55e;--red:#ff5a5a;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+.disp{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;line-height:.95}
+
+/* lock */
+#lockScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;
+  background:radial-gradient(800px 400px at 50% 0,rgba(15,0,247,.25),transparent 70%),var(--bg)}
+.lock-box{background:var(--surf);border:1px solid var(--border2);border-radius:20px;
+  padding:34px 28px;width:100%;max-width:360px;text-align:center}
+.lock-logo{width:70px;height:70px;border-radius:18px;margin:0 auto 18px;display:grid;
+  place-items:center;background:linear-gradient(150deg,var(--brand),#3a0fff);
+  box-shadow:0 10px 28px var(--glow);font-family:'Bebas Neue';font-size:1.6rem;color:#fff}
+.lock-box h1{font-size:1.9rem;margin-bottom:.25rem}
+.lock-box p{color:var(--muted);font-size:.88rem;margin-bottom:1.3rem}
+.lock-box input{width:100%;background:var(--bg);border:1px solid var(--border2);
+  border-radius:10px;padding:11px 13px;color:var(--text);font-size:1rem;
+  font-family:inherit;outline:none;transition:border-color .15s;margin-bottom:.45rem}
+.lock-box input:focus{border-color:var(--bright)}
+.lock-box input.shake{animation:shake .35s ease}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.lock-err{color:var(--red);font-size:.82rem;min-height:1.1em;margin-bottom:.5rem}
+.btn-lock{width:100%;padding:12px;background:var(--brand);color:#fff;border:none;
+  border-radius:11px;font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;
+  box-shadow:0 6px 16px var(--glow);transition:filter .15s}
+.btn-lock:hover{filter:brightness(1.1)}
+
+/* app */
+#app{display:none;max-width:820px;margin:0 auto;padding:22px 18px 100px}
+.app-header{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.app-header h1{font-size:2.2rem}
+.app-header p{color:var(--muted);font-size:.84rem;margin-top:2px}
+.logout-btn{background:var(--surf2);border:1px solid var(--border);color:var(--muted);
+  padding:7px 13px;border-radius:9px;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer}
+.logout-btn:hover{border-color:var(--border2);color:var(--text)}
+
+/* status */
+.status-bar{background:var(--surf);border:1px solid var(--border);border-radius:12px;
+  padding:12px 15px;margin-bottom:18px;display:flex;align-items:center;gap:10px;font-size:.87rem}
+.dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.dot-ok{background:var(--green)}.dot-err{background:var(--red)}
+.dot-spin{background:#fbbf24;animation:spin-dot 1s infinite}
+@keyframes spin-dot{0%,100%{opacity:1}50%{opacity:.3}}
+.status-ts{color:var(--muted);font-size:.76rem;margin-left:auto}
+
+/* sections */
+.section{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);margin-bottom:11px;overflow:hidden}
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none}
+.sec-head h2{font-size:1.35rem;display:flex;align-items:center;gap:8px}
+.badge{font-size:.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--soft);color:var(--bright);padding:3px 8px;border-radius:99px}
+.chev{color:var(--muted);transition:transform .2s;flex:0 0 auto}
+.chev.open{transform:rotate(180deg)}
+.sec-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border)}
+.sec-body.open{display:block}
+
+/* fields */
+.field{margin-top:12px}
+.field label{display:block;font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
+.field input,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;color:var(--text);font-size:.92rem;font-family:inherit;outline:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus{border-color:var(--bright)}
+.field textarea{min-height:66px;resize:vertical}
+.field .hint{font-size:.74rem;color:var(--muted);margin-top:.26rem}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:500px){.field-row{grid-template-columns:1fr}}
+
+/* dynamic lists */
+.list-item{background:var(--surf2);border:1px solid var(--border);border-radius:11px;padding:12px;margin-top:10px;position:relative}
+.list-item .rm{position:absolute;top:9px;right:9px;background:rgba(255,90,90,.13);border:1px solid rgba(255,90,90,.28);color:var(--red);border-radius:6px;padding:3px 8px;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit}
+.add-btn{margin-top:10px;width:100%;padding:9px;background:var(--soft);color:var(--bright);border:1px solid var(--bright);border-radius:10px;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
+.add-btn:hover{background:rgba(81,96,255,.26)}
+.photo-row{display:flex;align-items:center;gap:8px;background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-top:8px}
+.photo-row input{flex:1;background:transparent;border:none;color:var(--text);font-size:.87rem;font-family:inherit;outline:none}
+.photo-row .rm{position:static;white-space:nowrap}
+
+/* save bar */
+.save-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:1px solid var(--border2);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:100}
+.save-bar p{font-size:.83rem;color:var(--muted)}
+.btn-save{padding:12px 22px;background:var(--brand);color:#fff;border:none;border-radius:11px;font-family:inherit;font-size:.93rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px var(--glow);transition:filter .15s,transform .15s;display:flex;align-items:center;gap:7px}
+.btn-save:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn-save:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-save svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);color:#fff;font-weight:700;font-size:.87rem;padding:10px 20px;border-radius:99px;transition:transform .3s ease;z-index:200;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--green)}.toast.err{background:var(--red)}
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-logo">NMA</div>
+    <h1 class="disp">Admin Panel</h1>
+    <p>Noble's Martial Arts · Sensei Brandon only</p>
+    <input type="password" id="lockInput" placeholder="Admin password" autocomplete="current-password"/>
+    <div class="lock-err" id="lockErr"></div>
+    <button class="btn-lock" id="lockBtn">Enter</button>
+  </div>
+</div>
+
+<div id="app">
+  <div class="app-header">
+    <div><h1 class="disp">NMA Admin</h1><p>Changes go live instantly — no upload needed</p></div>
+    <button class="logout-btn" id="logoutBtn">Log out</button>
+  </div>
+
+  <div class="status-bar">
+    <div class="dot dot-spin" id="sDot"></div>
+    <span id="sTxt">Loading…</span>
+    <span class="status-ts" id="sTs"></span>
+  </div>
+
+  <div id="editor" style="display:none">
+
+    <!-- ANNOUNCEMENT -->
+    <div class="section">
+      <div class="sec-head" data-s="ann">
+        <h2 class="disp">Announcement / Weekly Update <span class="badge">Hides when empty</span></h2>
+        <svg class="chev open" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body open" id="sb-ann">
+        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Leave <b>Message</b> blank to hide the banner entirely.</p>
+        <div class="field"><label>Label</label><input id="ann-label" placeholder="📣 Weekly Update"/></div>
+        <div class="field"><label>Message (blank = hidden)</label><textarea id="ann-text" placeholder="e.g. No class July 4th!"></textarea></div>
+        <div class="field"><label>YouTube Video URL (optional)</label><input id="ann-video" placeholder="https://youtu.be/…"/><p class="hint">Leave blank for text-only announcement</p></div>
+        <div class="field-row">
+          <div class="field"><label>Button Link (optional)</label><input id="ann-linkUrl" placeholder="https://…"/></div>
+          <div class="field"><label>Button Text</label><input id="ann-linkLabel" placeholder="Learn More"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHALLENGE -->
+    <div class="section">
+      <div class="sec-head" data-s="chal">
+        <h2 class="disp">Challenge of the Month <span class="badge">Monthly</span></h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-chal">
+        <div class="field"><label>Month Label</label><input id="chal-month"/></div>
+        <div class="field"><label>Title</label><input id="chal-title"/></div>
+        <div class="field"><label>Description</label><textarea id="chal-body"></textarea></div>
+      </div>
+    </div>
+
+    <!-- INTRO VIDEO -->
+    <div class="section">
+      <div class="sec-head" data-s="intro">
+        <h2 class="disp">Welcome / Intro Video <span class="badge">Hides when empty</span></h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-intro">
+        <div class="field"><label>YouTube URL</label><input id="intro-url" placeholder="https://youtu.be/…"/><p class="hint">Shown near top of Home tab. Leave blank to hide.</p></div>
+      </div>
+    </div>
+
+    <!-- TESTIMONIALS -->
+    <div class="section">
+      <div class="sec-head" data-s="test">
+        <h2 class="disp">Testimonials</h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-test">
+        <div id="testList"></div>
+        <button class="add-btn" id="addTest">+ Add Testimonial</button>
+      </div>
+    </div>
+
+    <!-- PHOTOS -->
+    <div class="section">
+      <div class="sec-head" data-s="photos">
+        <h2 class="disp">Photo Gallery</h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-photos">
+        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Upload photo files to Netlify, then add filenames here. Gallery hides until at least one is added.</p>
+        <div id="photoList"></div>
+        <button class="add-btn" id="addPhoto">+ Add Photo</button>
+      </div>
+    </div>
+
+    <!-- VIDEO PASSWORD -->
+    <div class="section">
+      <div class="sec-head" data-s="vidpw">
+        <h2 class="disp">Video Password</h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-vidpw">
+        <div class="field"><label>Shared password for all video playlists</label><input id="vid-pw"/></div>
+      </div>
+    </div>
+
+    <!-- VIDEO LINKS -->
+    <div class="section">
+      <div class="sec-head" data-s="vids">
+        <h2 class="disp">Practice Video Links <span class="badge">Update anytime</span></h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-vids">
+        <div id="vidList"></div>
+      </div>
+    </div>
+
+    <!-- REGISTRATION LINKS -->
+    <div class="section">
+      <div class="sec-head" data-s="reg">
+        <h2 class="disp">Registration Links <span class="badge">Monthly update</span></h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-reg">
+        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Update when new RecDesk sessions go live each month.</p>
+        <div class="field"><label>Little Dragons</label><input id="reg-0"/></div>
+        <div class="field"><label>Karate Kids</label><input id="reg-1"/></div>
+        <div class="field"><label>Black Belt Club</label><input id="reg-2"/></div>
+        <div class="field"><label>Masters Club</label><input id="reg-3"/></div>
+        <div class="field"><label>Legends Club</label><input id="reg-4"/></div>
+      </div>
+    </div>
+
+    <!-- GEAR -->
+    <div class="section">
+      <div class="sec-head" data-s="gear">
+        <h2 class="disp">Gear &amp; Weapons Order Links</h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-gear">
+        <div id="gearList"></div>
+      </div>
+    </div>
+
+    <!-- CONTACT & SOCIAL -->
+    <div class="section">
+      <div class="sec-head" data-s="social">
+        <h2 class="disp">Contact &amp; Social</h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-social">
+        <div class="field"><label>Email</label><input type="email" id="soc-email"/></div>
+        <div class="field-row">
+          <div class="field"><label>Instagram URL</label><input id="soc-ig"/></div>
+          <div class="field"><label>Facebook URL</label><input id="soc-fb"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="section">
+      <div class="sec-head" data-s="analytics">
+        <h2 class="disp">Analytics Tracking</h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-analytics">
+        <div class="field"><label>Google Analytics 4 — Measurement ID</label>
+          <input id="an-ga4" placeholder="G-XXXXXXXXXX"/>
+          <p class="hint">analytics.google.com → Admin → Data Streams → Measurement ID</p></div>
+        <div class="field"><label>Meta (Facebook) Pixel ID</label>
+          <input id="an-meta" placeholder="1234567890123"/>
+          <p class="hint">business.facebook.com → Events Manager → Pixel ID</p></div>
+      </div>
+    </div>
+
+  </div><!-- /editor -->
+</div>
+
+<div class="save-bar" id="saveBar" style="display:none">
+  <p id="saveMsg">Make changes above</p>
+  <button class="btn-save" id="saveBtn" disabled>
+    <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    Save — Goes Live Instantly
+  </button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var SB_URL = 'https://erqblpewozxkpornohvq.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycWJscGV3b3p4a3Bvcm5vaHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzUzMDMsImV4cCI6MjA5NTA1MTMwM30.Ot3sd3X3Fo9rtpAXUfTjrUlB_6Y-QcMuwotUIvdcr5o';
+var ADMIN_PW = 'Noble2026';
+
+var data = {};        // current content from Supabase
+var testimonials = [];
+var photos = [];
+
+/* ── lock ── */
+function tryLogin() {
+  if (document.getElementById('lockInput').value === ADMIN_PW) {
+    sessionStorage.setItem('nma_admin','1');
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('saveBar').style.display='flex';
+    loadData();
+  } else {
+    document.getElementById('lockErr').textContent='Incorrect password.';
+    var i=document.getElementById('lockInput');
+    i.value=''; i.classList.remove('shake'); void i.offsetWidth; i.classList.add('shake');
+  }
+}
+document.getElementById('lockBtn').addEventListener('click',tryLogin);
+document.getElementById('lockInput').addEventListener('keydown',function(e){if(e.key==='Enter')tryLogin();});
+document.getElementById('logoutBtn').addEventListener('click',function(){sessionStorage.removeItem('nma_admin');location.reload();});
+if(sessionStorage.getItem('nma_admin')==='1'){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('saveBar').style.display='flex';
+  loadData();
+}
+
+/* ── status helpers ── */
+function setStatus(type,msg,ts){
+  var d=document.getElementById('sDot');
+  d.className='dot '+(type==='ok'?'dot-ok':type==='err'?'dot-err':'dot-spin');
+  document.getElementById('sTxt').textContent=msg;
+  if(ts) document.getElementById('sTs').textContent=ts;
+}
+
+/* ── load from Supabase ── */
+function loadData(){
+  setStatus('spin','Loading content from database…');
+  fetch(SB_URL+'/rest/v1/nma_site_content?id=eq.main&select=data,updated_at',{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  })
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    if(!rows||!rows[0]) throw new Error('No data row found');
+    data=rows[0].data||{};
+    var ts=new Date(rows[0].updated_at);
+    setStatus('ok','Ready — changes save instantly',
+      'Last saved: '+ts.toLocaleDateString()+' '+ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+    populateForm();
+    document.getElementById('editor').style.display='block';
+    document.getElementById('saveBtn').disabled=false;
+  })
+  .catch(function(e){
+    setStatus('err','Could not load data: '+e.message);
+  });
+}
+
+/* ── populate form fields ── */
+function populateForm(){
+  // announcement
+  var ann=data.announcement||{};
+  document.getElementById('ann-label').value    = ann.label||'';
+  document.getElementById('ann-text').value     = ann.text||'';
+  document.getElementById('ann-video').value    = ann.videoUrl||'';
+  document.getElementById('ann-linkUrl').value  = ann.linkUrl||'';
+  document.getElementById('ann-linkLabel').value= ann.linkLabel||'';
+
+  // challenge
+  var chal=data.challenge||{};
+  document.getElementById('chal-month').value=chal.month||'';
+  document.getElementById('chal-title').value=chal.title||'';
+  document.getElementById('chal-body').value =chal.body||'';
+
+  // intro video
+  document.getElementById('intro-url').value=data.introVideoUrl||'';
+
+  // video password
+  document.getElementById('vid-pw').value=data.videoPassword||'';
+
+  // contact
+  document.getElementById('soc-email').value=data.email||'';
+  document.getElementById('soc-ig').value   =data.instagram||'';
+  document.getElementById('soc-fb').value   =data.facebook||'';
+
+  // analytics
+  document.getElementById('an-ga4').value =data.ga4Id||'';
+  document.getElementById('an-meta').value=data.metaPixelId||'';
+
+  // videos
+  var vids=data.videos||[];
+  var vl=document.getElementById('vidList'); vl.innerHTML='';
+  var VID_LABELS=['Little Dragons & Karate Kids','Black Belt Club Level I','Black Belt Club Level II',
+    'Masters Club','BBC Test Review (Orange → Purple)','Masters Club Test Review (Green II → Brown)','Black Belt Test Review (BB Candidates)'];
+  VID_LABELS.forEach(function(lbl,i){
+    var url=(vids[i]&&vids[i].url)||'';
+    vl.insertAdjacentHTML('beforeend',
+      '<div class="field"><label>'+lbl+'</label>'+
+      '<input id="vid-'+i+'" value="'+ea(url)+'" placeholder="YouTube playlist URL"/></div>');
+  });
+
+  // reg URLs
+  var reg=data.regUrls||{};
+  var PROG_NAMES=['Little Dragons','Karate Kids','Black Belt Club','Masters Club','Legends Club'];
+  PROG_NAMES.forEach(function(n,i){
+    document.getElementById('reg-'+i).value=reg[n]||'';
+  });
+
+  // gear links
+  var gear=data.gearLinks||[];
+  var gl=document.getElementById('gearList'); gl.innerHTML='';
+  var GEAR_DEFAULTS=['Order Apparel','Gear & Weapons 1','Gear & Weapons 2','Gear & Weapons 3','Gear & Weapons 4'];
+  GEAR_DEFAULTS.forEach(function(def,i){
+    var url=(gear[i]&&gear[i].url)||'';
+    var lbl=(gear[i]&&gear[i].label)||def;
+    gl.insertAdjacentHTML('beforeend',
+      '<div class="list-item" style="margin-top:10px">'+
+      '<div class="field"><label>Link Name</label>'+
+      '<input id="gear-label-'+i+'" value="'+ea(lbl)+'" placeholder="e.g. Order Sparring Gear"/></div>'+
+      '<div class="field"><label>URL</label>'+
+      '<input id="gear-'+i+'" value="'+ea(url)+'" placeholder="Order form or store URL"/></div>'+
+      '</div>');
+  });
+
+  // testimonials
+  testimonials=(data.testimonials||[]).map(function(t){return Object.assign({},t);});
+  renderTestList();
+
+  // photos
+  photos=(data.photos||[]).map(function(p){return Object.assign({},p);});
+  renderPhotoList();
+}
+
+/* ── testimonials ── */
+function renderTestList(){
+  var c=document.getElementById('testList'); c.innerHTML='';
+  testimonials.forEach(function(t,i){
+    var div=document.createElement('div'); div.className='list-item';
+    div.innerHTML='<button class="rm" data-i="'+i+'">Remove</button>'+
+      '<div class="field"><label>Name</label><input class="t-name" data-i="'+i+'" value="'+ea(t.name||'')+'"/></div>'+
+      '<div class="field"><label>Sub-label</label><input class="t-sub" data-i="'+i+'" value="'+ea(t.sub||'')+'"/></div>'+
+      '<div class="field"><label>Quote</label><textarea class="t-quote" data-i="'+i+'">'+eh(t.quote||'')+'</textarea></div>';
+    c.appendChild(div);
+  });
+  c.querySelectorAll('.rm').forEach(function(b){b.addEventListener('click',function(){testimonials.splice(+b.dataset.i,1);renderTestList();});});
+  c.querySelectorAll('.t-name').forEach(function(e){e.addEventListener('input',function(){testimonials[+e.dataset.i].name=e.value;});});
+  c.querySelectorAll('.t-sub').forEach(function(e){e.addEventListener('input',function(){testimonials[+e.dataset.i].sub=e.value;});});
+  c.querySelectorAll('.t-quote').forEach(function(e){e.addEventListener('input',function(){testimonials[+e.dataset.i].quote=e.value;});});
+}
+document.getElementById('addTest').addEventListener('click',function(){
+  testimonials.push({name:'',sub:'NMA Parent',quote:''});
+  renderTestList();
+  var items=document.querySelectorAll('#testList .list-item');
+  if(items.length) items[items.length-1].scrollIntoView({behavior:'smooth'});
+});
+
+/* ── photos ── */
+function renderPhotoList(){
+  var c=document.getElementById('photoList'); c.innerHTML='';
+  photos.forEach(function(p,i){
+    var div=document.createElement('div'); div.className='photo-row';
+    div.innerHTML='<input class="p-src" data-i="'+i+'" placeholder="filename.jpg" value="'+ea(p.src||'')+'"/>'+
+      '<input class="p-alt" data-i="'+i+'" placeholder="Description" value="'+ea(p.alt||'')+'" style="max-width:150px"/>'+
+      '<button class="rm" data-i="'+i+'">Remove</button>';
+    c.appendChild(div);
+  });
+  c.querySelectorAll('.rm').forEach(function(b){b.addEventListener('click',function(){photos.splice(+b.dataset.i,1);renderPhotoList();});});
+  c.querySelectorAll('.p-src').forEach(function(e){e.addEventListener('input',function(){photos[+e.dataset.i].src=e.value;});});
+  c.querySelectorAll('.p-alt').forEach(function(e){e.addEventListener('input',function(){photos[+e.dataset.i].alt=e.value;});});
+}
+document.getElementById('addPhoto').addEventListener('click',function(){
+  photos.push({src:'',alt:''}); renderPhotoList();
+});
+
+/* ── collect form → data object ── */
+function collectData(){
+  var PROG_NAMES=['Little Dragons','Karate Kids','Black Belt Club','Masters Club','Legends Club'];
+
+  var regUrls={};
+  PROG_NAMES.forEach(function(n,i){ regUrls[n]=document.getElementById('reg-'+i).value.trim(); });
+
+  var vids=[];
+  var VID_META=[
+    {label:'Little Dragons & Karate Kids',tag:'LD + KK'},
+    {label:'Black Belt Club Level I',tag:'BBC I'},
+    {label:'Black Belt Club Level II',tag:'BBC II'},
+    {label:'Masters Club',tag:'Masters'},
+    {label:'BBC Test Review',tag:'Orange to Purple'},
+    {label:'Masters Club Test Review',tag:'Green II to Brown'},
+    {label:'Black Belt Test Review',tag:'BB Candidates'}
+  ];
+  VID_META.forEach(function(v,i){
+    vids.push({label:v.label,tag:v.tag,url:(document.getElementById('vid-'+i)||{}).value||''});
+  });
+
+  var gearLinks=[];
+  ['Order Apparel','Gear & Weapons 1','Gear & Weapons 2','Gear & Weapons 3','Gear & Weapons 4'].forEach(function(def,i){
+    var labelEl=document.getElementById('gear-label-'+i);
+    var urlEl=document.getElementById('gear-'+i);
+    gearLinks.push({
+      label: labelEl ? labelEl.value.trim()||def : def,
+      sub:'',
+      icon:i===0?'cart':'sword',
+      url: urlEl ? urlEl.value.trim() : ''
+    });
+  });
+
+  return {
+    email:        document.getElementById('soc-email').value.trim(),
+    instagram:    document.getElementById('soc-ig').value.trim(),
+    facebook:     document.getElementById('soc-fb').value.trim(),
+    videoPassword:document.getElementById('vid-pw').value.trim(),
+    introVideoUrl:document.getElementById('intro-url').value.trim(),
+    ga4Id:        document.getElementById('an-ga4').value.trim(),
+    metaPixelId:  document.getElementById('an-meta').value.trim(),
+    announcement:{
+      label:    document.getElementById('ann-label').value.trim(),
+      text:     document.getElementById('ann-text').value.trim(),
+      videoUrl: document.getElementById('ann-video').value.trim(),
+      linkUrl:  document.getElementById('ann-linkUrl').value.trim(),
+      linkLabel:document.getElementById('ann-linkLabel').value.trim()
+    },
+    challenge:{
+      month:document.getElementById('chal-month').value.trim(),
+      title:document.getElementById('chal-title').value.trim(),
+      body: document.getElementById('chal-body').value.trim()
+    },
+    testimonials: testimonials.filter(function(t){return t.quote.trim();}),
+    photos:       photos.filter(function(p){return p.src.trim();}),
+    videos:       vids,
+    regUrls:      regUrls,
+    gearLinks:    gearLinks
+  };
+}
+
+/* ── save to Supabase ── */
+document.getElementById('saveBtn').addEventListener('click',function(){
+  var btn=document.getElementById('saveBtn');
+  var msg=document.getElementById('saveMsg');
+  btn.disabled=true;
+  btn.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving…';
+  setStatus('spin','Saving to database…');
+
+  var payload=collectData();
+
+  fetch(SB_URL+'/rest/v1/nma_site_content?id=eq.main',{
+    method:'PATCH',
+    headers:{
+      'apikey':SB_KEY,
+      'Authorization':'Bearer '+SB_KEY,
+      'Content-Type':'application/json',
+      'Prefer':'return=minimal'
+    },
+    body:JSON.stringify({data:payload, updated_at:new Date().toISOString()})
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    data=payload;
+    var now=new Date();
+    setStatus('ok','Saved!',
+      'Last saved: '+now.toLocaleDateString()+' '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+    showToast('✓ Saved — live on noblesmartialarts.com instantly','ok');
+    msg.textContent='Saved '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    btn.disabled=false;
+    btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Save — Goes Live Instantly';
+  })
+  .catch(function(e){
+    setStatus('err','Save failed: '+e.message);
+    showToast('Save failed — try again','err');
+    btn.disabled=false;
+    btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Save — Goes Live Instantly';
+  });
+});
+
+/* ── toast ── */
+function showToast(msg,type){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+(type||'ok');
+  t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},4000);
+}
+
+/* ── accordion ── */
+document.querySelectorAll('.sec-head').forEach(function(h){
+  h.addEventListener('click',function(){
+    var b=document.getElementById('sb-'+h.dataset.s);
+    var c=h.querySelector('.chev');
+    if(b){b.classList.toggle('open');c.classList.toggle('open');}
+  });
+});
+
+/* ── utils ── */
+function ea(s){return String(s||'').replace(/"/g,'&quot;');}
+function eh(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body>
+</html>
