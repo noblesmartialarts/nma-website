@@ -85,8 +85,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
 .add-btn{margin-top:10px;width:100%;padding:9px;background:var(--soft);color:var(--bright);border:1px solid var(--bright);border-radius:10px;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
 .add-btn:hover{background:rgba(81,96,255,.26)}
 .photo-row{display:flex;align-items:center;gap:8px;background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-top:8px}
+.photo-row img{width:44px;height:44px;object-fit:cover;border-radius:7px;flex:0 0 auto;background:var(--bg)}
 .photo-row input{flex:1;background:transparent;border:none;color:var(--text);font-size:.87rem;font-family:inherit;outline:none}
 .photo-row .rm{position:static;white-space:nowrap}
+.upload-item{background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:8px;font-size:.85rem}
+.upload-bar{height:4px;border-radius:99px;background:var(--border);margin-top:6px;overflow:hidden}
+.upload-bar-fill{height:100%;background:var(--brand);border-radius:99px;transition:width .3s ease;width:0%}
+#photoDropZone:hover{border-color:var(--bright);background:var(--soft)}
 
 /* save bar */
 .save-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:1px solid var(--border2);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:100}
@@ -188,9 +193,16 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
         <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="sec-body" id="sb-photos">
-        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Upload photo files to Netlify, then add filenames here. Gallery hides until at least one is added.</p>
-        <div id="photoList"></div>
-        <button class="add-btn" id="addPhoto">+ Add Photo</button>
+        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Upload photos directly — they go live on the site instantly. Gallery hides until at least one photo is added.</p>
+        <!-- upload drop zone -->
+        <div id="photoDropZone" style="border:2px dashed var(--border2);border-radius:12px;padding:22px;text-align:center;margin-top:12px;cursor:pointer;transition:border-color .15s,background .15s">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--bright)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p style="color:var(--bright);font-weight:700;font-size:.9rem">Drop photos here or click to choose</p>
+          <p style="color:var(--muted);font-size:.78rem;margin-top:3px">JPG, PNG, WebP — multiple files OK</p>
+          <input type="file" id="photoFileInput" accept="image/*" multiple style="display:none"/>
+        </div>
+        <div id="uploadProgress" style="display:none;margin-top:10px"></div>
+        <div id="photoList" style="margin-top:4px"></div>
       </div>
     </div>
 
@@ -448,22 +460,97 @@ document.getElementById('addTest').addEventListener('click',function(){
 });
 
 /* ── photos ── */
+var STORAGE_URL = SB_URL + '/storage/v1/object/public/nma-photos/';
+var STORAGE_UPLOAD_URL = SB_URL + '/storage/v1/object/nma-photos/';
+
 function renderPhotoList(){
   var c=document.getElementById('photoList'); c.innerHTML='';
   photos.forEach(function(p,i){
     var div=document.createElement('div'); div.className='photo-row';
-    div.innerHTML='<input class="p-src" data-i="'+i+'" placeholder="filename.jpg" value="'+ea(p.src||'')+'"/>'+
-      '<input class="p-alt" data-i="'+i+'" placeholder="Description" value="'+ea(p.alt||'')+'" style="max-width:150px"/>'+
+    var imgSrc = p.url || (p.src ? STORAGE_URL+p.src : '');
+    div.innerHTML=
+      '<img src="'+ea(imgSrc)+'" onerror="this.style.display=\'none\'"/>'+
+      '<input class="p-alt" data-i="'+i+'" placeholder="Caption / description" value="'+ea(p.alt||'')+'"/>'+
       '<button class="rm" data-i="'+i+'">Remove</button>';
     c.appendChild(div);
   });
-  c.querySelectorAll('.rm').forEach(function(b){b.addEventListener('click',function(){photos.splice(+b.dataset.i,1);renderPhotoList();});});
-  c.querySelectorAll('.p-src').forEach(function(e){e.addEventListener('input',function(){photos[+e.dataset.i].src=e.value;});});
-  c.querySelectorAll('.p-alt').forEach(function(e){e.addEventListener('input',function(){photos[+e.dataset.i].alt=e.value;});});
+  c.querySelectorAll('.rm').forEach(function(b){
+    b.addEventListener('click',function(){ photos.splice(+b.dataset.i,1); renderPhotoList(); });
+  });
+  c.querySelectorAll('.p-alt').forEach(function(e){
+    e.addEventListener('input',function(){ photos[+e.dataset.i].alt=e.value; });
+  });
 }
-document.getElementById('addPhoto').addEventListener('click',function(){
-  photos.push({src:'',alt:''}); renderPhotoList();
+
+// Upload drop zone
+var photoDropZone = document.getElementById('photoDropZone');
+var photoFileInput = document.getElementById('photoFileInput');
+photoDropZone.addEventListener('click', function(){ photoFileInput.click(); });
+photoDropZone.addEventListener('dragover', function(e){ e.preventDefault(); photoDropZone.style.background='var(--soft)'; });
+photoDropZone.addEventListener('dragleave', function(){ photoDropZone.style.background=''; });
+photoDropZone.addEventListener('drop', function(e){
+  e.preventDefault(); photoDropZone.style.background='';
+  uploadFiles(Array.from(e.dataTransfer.files).filter(function(f){ return f.type.startsWith('image/'); }));
 });
+photoFileInput.addEventListener('change', function(){
+  uploadFiles(Array.from(photoFileInput.files));
+  photoFileInput.value='';
+});
+
+function uploadFiles(files) {
+  if (!files.length) return;
+  var prog = document.getElementById('uploadProgress');
+  prog.style.display = 'block';
+
+  var promises = files.map(function(file) {
+    // Sanitize filename
+    var fname = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+
+    // Show progress item
+    var item = document.createElement('div');
+    item.className = 'upload-item';
+    item.innerHTML = '<div style="display:flex;justify-content:space-between"><span>'+ea(file.name)+'</span><span class="up-status">Uploading…</span></div><div class="upload-bar"><div class="upload-bar-fill" style="width:30%"></div></div>';
+    prog.appendChild(item);
+    var fill = item.querySelector('.upload-bar-fill');
+    var status = item.querySelector('.up-status');
+
+    return fetch(STORAGE_UPLOAD_URL + fname, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': file.type,
+        'x-upsert': 'true'
+      },
+      body: file
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res) {
+      if (res.error) throw new Error(res.error.message || 'Upload failed');
+      fill.style.width = '100%';
+      status.textContent = '✓ Done';
+      status.style.color = 'var(--green)';
+      var url = STORAGE_URL + fname;
+      photos.push({ url: url, src: fname, alt: '' });
+      renderPhotoList();
+      // Auto-save after upload
+      setTimeout(function(){
+        var saveBtn = document.getElementById('saveBtn');
+        if (!saveBtn.disabled) saveBtn.click();
+      }, 500);
+    })
+    .catch(function(e) {
+      fill.style.width = '100%';
+      fill.style.background = 'var(--red)';
+      status.textContent = '✗ Failed';
+      status.style.color = 'var(--red)';
+    });
+  });
+
+  Promise.all(promises).then(function(){
+    setTimeout(function(){ prog.style.display='none'; prog.innerHTML=''; }, 3000);
+  });
+}
 
 /* ── collect form → data object ── */
 function collectData(){
@@ -519,7 +606,7 @@ function collectData(){
       body: document.getElementById('chal-body').value.trim()
     },
     testimonials: testimonials.filter(function(t){return t.quote.trim();}),
-    photos:       photos.filter(function(p){return p.src.trim();}),
+    photos:       photos.filter(function(p){return p.src||p.url;}),
     videos:       vids,
     regUrls:      regUrls,
     gearLinks:    gearLinks
