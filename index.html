@@ -368,6 +368,37 @@ footer a{color:inherit}
 a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius:4px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
+
+/* ── LOST & FOUND ── */
+.lf-intro{background:rgba(81,96,255,.08);border:1px solid rgba(81,96,255,.24);border-radius:var(--r);padding:15px 16px;margin-bottom:16px}
+.lf-intro strong{color:var(--text)}
+.lf-layout{display:grid;gap:14px}
+@media(min-width:680px){.lf-layout{grid-template-columns:1fr 1.15fr;align-items:start}}
+.lf-form-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
+.lf-form-card h3{font-size:1.35rem;margin-bottom:.25rem}
+.lf-form-card p{color:var(--muted);font-size:.87rem;margin-bottom:1rem}
+.lf-file-note{font-size:.76rem;color:var(--muted);margin-top:.35rem}
+.lf-groups{display:grid;gap:14px}
+.lf-group{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.lf-group-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.lf-group-title{font-weight:800;font-size:.95rem;display:flex;align-items:center;gap:8px}
+.lf-count{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--bright);background:var(--soft);border-radius:99px;padding:3px 8px;white-space:nowrap}
+.lf-list{display:grid;gap:10px;padding:12px}
+.lf-card{background:var(--surf2);border:1px solid var(--border);border-radius:12px;padding:12px;display:grid;gap:10px}
+.lf-card.pending{border-color:rgba(251,191,36,.45);background:rgba(251,191,36,.06)}
+.lf-photo{width:100%;max-height:230px;object-fit:cover;border-radius:10px;background:var(--bg);border:1px solid var(--border)}
+.lf-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.lf-item-title{font-weight:800;font-size:.96rem;line-height:1.3}
+.lf-meta{font-size:.76rem;color:var(--muted);margin-top:2px}
+.lf-notes{font-size:.86rem;color:var(--muted);line-height:1.45;white-space:pre-wrap}
+.lf-status{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:99px;padding:4px 8px;white-space:nowrap}
+.lf-status.open{color:var(--green);background:rgba(34,197,94,.13);border:1px solid rgba(34,197,94,.28)}
+.lf-status.pending_resolution{color:#fbbf24;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3)}
+.lf-resolve-btn{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:inherit;font-weight:700;font-size:.83rem;cursor:pointer;transition:background .15s,border-color .15s}
+.lf-resolve-btn:hover:not(:disabled){background:var(--surf);border-color:var(--bright)}
+.lf-resolve-btn:disabled{opacity:.65;cursor:not-allowed;color:var(--muted)}
+.lf-empty{padding:18px;color:var(--muted);text-align:center;font-size:.88rem}
+
 /* ── MOBILE-FIRST OPTIMIZATIONS ── */
 /* Ensure hero is compact on small screens */
 @media(max-width:480px){
@@ -454,6 +485,9 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
   </button>
   <button class="tab-btn" data-tab="hub">
     <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Parent Hub
+  </button>
+  <button class="tab-btn" data-tab="lostfound">
+    <svg viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7L12 12l8.7-5"/><path d="M12 22V12"/></svg>Lost &amp; Found
   </button>
   <button class="tab-btn" data-tab="forms">
     <svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><line x1="9" y1="13" x2="15" y2="13"/></svg>Forms
@@ -747,6 +781,66 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
   </section>
 </div><!-- /tab-hub -->
 
+
+<!-- ═══════════════ TAB: LOST & FOUND ═══════════════ -->
+<div class="tab-panel" id="tab-lostfound">
+  <section id="lostfoundTop">
+    <div class="head">
+      <p class="eye">Parent Hub</p>
+      <h2 class="disp">Lost &amp; Found</h2>
+      <p>Post something your student lost, something they accidentally brought home, or check what Sensei Brandon found after class.</p>
+    </div>
+
+    <div class="lf-intro">
+      <strong>How it works:</strong> Parents can post lost items or items brought home by mistake. When an item is returned, tap <b>This has been resolved</b> and Sensei Brandon will confirm it from the admin.
+    </div>
+
+    <div class="lf-layout">
+      <div class="lf-form-card">
+        <h3 class="disp">Post an Item</h3>
+        <p>Use this after Monday classes when something goes missing or an extra item comes home.</p>
+        <div id="lfFormInner">
+          <div class="fq"><label class="ql">Post type <span class="req">*</span></label>
+            <select id="lf-type">
+              <option value="">— Select —</option>
+              <option value="lost_by_parent">My student lost something</option>
+              <option value="brought_home">My student brought home something that is not ours</option>
+            </select>
+          </div>
+          <div class="fq"><label class="ql">Item <span class="req">*</span></label><input type="text" id="lf-item" placeholder="e.g. black hoodie, water bottle, sparring glove"/></div>
+          <div class="fq"><label class="ql">Details</label><textarea id="lf-notes" placeholder="Color, size, name on label, where you last saw it, etc."></textarea></div>
+          <div class="fq"><label class="ql">Photo <span style="color:var(--muted);font-weight:400">(optional)</span></label><input type="file" id="lf-photo" accept="image/*"/><div class="lf-file-note">A clear photo helps families identify items quickly.</div></div>
+          <div class="fq"><label class="ql">Your name <span class="req">*</span></label><input type="text" id="lf-name" placeholder="Parent name"/></div>
+          <div class="fq"><label class="ql">Best contact <span class="req">*</span></label><input type="text" id="lf-contact" placeholder="Email or phone — only shown to Sensei Brandon"/></div>
+          <p id="lfFormErr" style="color:#ff5a5a;font-size:.82rem;margin-bottom:.6rem;display:none"></p>
+          <button class="form-submit" id="lfSubmitBtn">Submit Lost &amp; Found Post</button>
+        </div>
+        <div class="form-success" id="lfFormSuccess">
+          <div class="big">📦</div>
+          <h4 class="disp" style="font-size:1.5rem;margin-bottom:.3rem">Posted!</h4>
+          <p style="color:var(--muted)">Your Lost &amp; Found post is now visible. Sensei Brandon can monitor it from the admin panel.</p>
+          <button class="btn-secondary" id="lfPostAnother" style="margin-top:12px;width:100%;justify-content:center">Post Another Item</button>
+        </div>
+      </div>
+
+      <div class="lf-groups">
+        <div class="lf-group">
+          <div class="lf-group-head"><div class="lf-group-title">📦 Found at Class</div><div class="lf-count" id="lf-count-found_at_class">0 items</div></div>
+          <div class="lf-list" id="lf-list-found_at_class"><div class="lf-empty">Loading items…</div></div>
+        </div>
+        <div class="lf-group">
+          <div class="lf-group-head"><div class="lf-group-title">🔍 Parents Looking</div><div class="lf-count" id="lf-count-lost_by_parent">0 items</div></div>
+          <div class="lf-list" id="lf-list-lost_by_parent"><div class="lf-empty">Loading items…</div></div>
+        </div>
+        <div class="lf-group">
+          <div class="lf-group-head"><div class="lf-group-title">🏠 Brought Home by Mistake</div><div class="lf-count" id="lf-count-brought_home">0 items</div></div>
+          <div class="lf-list" id="lf-list-brought_home"><div class="lf-empty">Loading items…</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div><!-- /tab-lostfound -->
+
 <!-- ═══════════════ TAB: FORMS ═══════════════ -->
 <div class="tab-panel" id="tab-forms">
   <section>
@@ -982,6 +1076,7 @@ const CONFIG = {
     { icon:"👕", label:"Order Apparel",   sub:"T-shirts & uniforms",            url:"https://form.jotform.com/noblesmartialarts/nma-t-shirt-order" },
     { icon:"⚔️", label:"Gear & Weapons", sub:"Equipment orders",              action:"pay-gear" },
     { icon:"📅", label:"Weekly Updates",  sub:"Announcements",                  action:"hub-top" },
+    { icon:"📦", label:"Lost & Found",     sub:"Missing items",                  action:"lostfound" },
     { icon:"📚", label:"Handbook",        sub:"Download PDF",                   url:"handbook.pdf", download:true },
     { icon:"📄", label:"Forms",           sub:"Feedback & interest",            action:"forms" },
     { icon:"📧", label:"Contact",         sub:"noblesmartialarts@gmail.com",    url:"mailto:noblesmartialarts@gmail.com" },
@@ -1093,6 +1188,7 @@ fetchSiteContent(function() {
     'classes':  'tab-classes',
     'register': 'tab-register',
     'hub':      'tab-hub',
+    'lostfound':'lostfoundTop',
     'forms':    'tab-forms',
   };
 
@@ -1150,6 +1246,7 @@ fetchSiteContent(function() {
         if (l.action === 'videos')    { switchTab('hub'); setTimeout(function(){ showVideos(); }, 80); }
         else if (l.action === 'register') switchTab('register');
         else if (l.action === 'forms')    switchTab('forms');
+        else if (l.action === 'lostfound') switchTab('lostfound');
         else if (l.action === 'pay-belt') switchTab('hub');
         else if (l.action === 'pay-gear') switchTab('hub');
         else if (l.action === 'hub-top')  { switchTab('hub'); }
@@ -1308,6 +1405,7 @@ fetchSiteContent(function() {
         if (c.action==='videos')    { switchTab('hub'); setTimeout(showVideos,80); }
         else if (c.action==='register') switchTab('register');
         else if (c.action==='forms')    switchTab('forms');
+        else if (c.action==='lostfound') switchTab('lostfound');
         else if (c.action==='pay-belt'||c.action==='pay-gear') showPaySection();
         else if (c.action==='hub-top')  { switchTab('hub'); window.scrollTo({top:0,behavior:'smooth'}); }
       });
@@ -1432,6 +1530,136 @@ fetchSiteContent(function() {
   pwInput.addEventListener('keydown',function(e){if(e.key==='Enter')tryPw();});
   modal.addEventListener('click',function(e){if(e.target===modal)closePw();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closePw();});
+
+
+  /* ── lost & found ── */
+  var LF_TABLE = 'nma_lost_found';
+  var LF_STORAGE_URL = SUPABASE_URL + '/storage/v1/object/public/nma-lost-found/';
+  var LF_STORAGE_UPLOAD_URL = SUPABASE_URL + '/storage/v1/object/nma-lost-found/';
+
+  function lfDate(v){
+    if(!v) return '';
+    var d=new Date(v);
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' at '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  }
+  function lfStatusLabel(status){ return status==='pending_resolution' ? 'Pending Review' : 'Open'; }
+  function lfTypeLabel(type){
+    if(type==='found_at_class') return 'Found at Class';
+    if(type==='lost_by_parent') return 'Looking For';
+    if(type==='brought_home') return 'Brought Home';
+    return 'Lost & Found';
+  }
+  function lfSafeFileName(file){ return Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); }
+  function uploadLostFoundPhoto(file){
+    if(!file) return Promise.resolve('');
+    var fname=lfSafeFileName(file);
+    return fetch(LF_STORAGE_UPLOAD_URL+fname,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':file.type,'x-upsert':'true'},
+      body:file
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if(res && res.error) throw new Error(res.error.message||'Photo upload failed');
+      return LF_STORAGE_URL+fname;
+    });
+  }
+  function setLfLoading(msg){
+    ['found_at_class','lost_by_parent','brought_home'].forEach(function(t){
+      var el=document.getElementById('lf-list-'+t);
+      if(el) el.innerHTML='<div class="lf-empty">'+esc(msg||'Loading items…')+'</div>';
+    });
+  }
+  function loadLostFound(){
+    if(!document.getElementById('tab-lostfound')) return;
+    fetch(SUPABASE_URL+'/rest/v1/'+LF_TABLE+'?select=id,type,item,notes,photo_url,parent_name,status,created_at&status=neq.resolved&order=created_at.desc',{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    })
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(renderLostFound)
+    .catch(function(){ setLfLoading('Could not load Lost & Found items right now.'); });
+  }
+  function renderLostFound(items){
+    items=items||[];
+    var types=['found_at_class','lost_by_parent','brought_home'];
+    types.forEach(function(type){
+      var list=document.getElementById('lf-list-'+type);
+      var count=document.getElementById('lf-count-'+type);
+      if(!list) return;
+      var group=items.filter(function(x){return x.type===type;});
+      if(count) count.textContent=group.length+' '+(group.length===1?'item':'items');
+      list.innerHTML='';
+      if(!group.length){ list.innerHTML='<div class="lf-empty">No active items here right now.</div>'; return; }
+      group.forEach(function(it){
+        var card=document.createElement('div'); card.className='lf-card '+(it.status==='pending_resolution'?'pending':'');
+        var img=it.photo_url?'<img class="lf-photo" src="'+esc(it.photo_url)+'" alt="'+esc(it.item||'Lost and found item')+'" loading="lazy"/>':'';
+        var disabled=it.status==='pending_resolution'?'disabled':'';
+        var btnText=it.status==='pending_resolution'?'Pending Sensei Confirmation':'This has been resolved';
+        card.innerHTML=img+
+          '<div class="lf-card-top"><div><div class="lf-item-title">'+esc(it.item||'Item')+'</div>'+ 
+          '<div class="lf-meta">'+esc(lfTypeLabel(it.type))+(it.parent_name?' · Posted by '+esc(it.parent_name):'')+(it.created_at?' · '+esc(lfDate(it.created_at)):'')+'</div></div>'+ 
+          '<span class="lf-status '+esc(it.status||'open')+'">'+esc(lfStatusLabel(it.status||'open'))+'</span></div>'+ 
+          (it.notes?'<div class="lf-notes">'+esc(it.notes)+'</div>':'')+
+          '<button class="lf-resolve-btn" data-id="'+esc(it.id)+'" '+disabled+'>'+btnText+'</button>';
+        list.appendChild(card);
+      });
+      list.querySelectorAll('.lf-resolve-btn:not(:disabled)').forEach(function(btn){
+        btn.addEventListener('click',function(){ flagLostFoundResolved(btn.dataset.id,btn); });
+      });
+    });
+  }
+  function flagLostFoundResolved(id,btn){
+    if(!id) return;
+    btn.disabled=true; btn.textContent='Sending to Sensei Brandon…';
+    fetch(SUPABASE_URL+'/rest/v1/'+LF_TABLE+'?id=eq.'+encodeURIComponent(id),{
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({status:'pending_resolution',resolution_requested_at:new Date().toISOString(),updated_at:new Date().toISOString()})
+    }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); loadLostFound(); })
+    .catch(function(){ btn.disabled=false; btn.textContent='This has been resolved'; alert('Could not flag this item. Please try again or text Sensei Brandon.'); });
+  }
+  var lfSubmitBtn=document.getElementById('lfSubmitBtn');
+  if(lfSubmitBtn){
+    lfSubmitBtn.addEventListener('click',function(){
+      var type=document.getElementById('lf-type').value;
+      var item=document.getElementById('lf-item').value.trim();
+      var notes=document.getElementById('lf-notes').value.trim();
+      var name=document.getElementById('lf-name').value.trim();
+      var contact=document.getElementById('lf-contact').value.trim();
+      var file=(document.getElementById('lf-photo').files||[])[0];
+      var err=document.getElementById('lfFormErr');
+      function showE(m){err.textContent=m;err.style.display='block';}
+      if(!type){showE('Please choose what kind of post this is.');return;}
+      if(!item){showE('Please describe the item.');return;}
+      if(!name){showE('Please enter your name.');return;}
+      if(!contact){showE('Please enter an email or phone number so Sensei Brandon can follow up.');return;}
+      err.style.display='none';
+      lfSubmitBtn.disabled=true; lfSubmitBtn.textContent=file?'Uploading photo…':'Posting…';
+      uploadLostFoundPhoto(file).then(function(photoUrl){
+        lfSubmitBtn.textContent='Posting…';
+        var payload={type:type,item:item,notes:notes,parent_name:name,contact:contact,photo_url:photoUrl,status:'open'};
+        return fetch(SUPABASE_URL+'/rest/v1/'+LF_TABLE,{
+          method:'POST',
+          headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify(payload)
+        });
+      }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); 
+        document.getElementById('lfFormInner').style.display='none';
+        document.getElementById('lfFormSuccess').style.display='block';
+        if(window.trackEvent) trackEvent('form_submit',{form:'lost_found'});
+        loadLostFound();
+      }).catch(function(){ showE('Could not submit your post. Please try again or text Sensei Brandon.'); })
+      .finally(function(){ lfSubmitBtn.disabled=false; lfSubmitBtn.textContent='Submit Lost & Found Post'; });
+    });
+  }
+  var lfPostAnother=document.getElementById('lfPostAnother');
+  if(lfPostAnother){
+    lfPostAnother.addEventListener('click',function(){
+      ['lf-type','lf-item','lf-notes','lf-name','lf-contact'].forEach(function(id){var el=document.getElementById(id); if(el) el.value='';});
+      var ph=document.getElementById('lf-photo'); if(ph) ph.value='';
+      document.getElementById('lfFormSuccess').style.display='none';
+      document.getElementById('lfFormInner').style.display='block';
+    });
+  }
+  loadLostFound();
 
   /* ── feedback form ── */
   document.querySelectorAll('.form-tab-btn').forEach(function(btn){
