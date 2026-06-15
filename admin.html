@@ -115,6 +115,27 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
 .lf-admin-status.resolved{color:var(--muted);background:rgba(255,255,255,.05);border:1px solid var(--border2)}
 .lf-admin-empty{padding:14px;color:var(--muted);font-size:.85rem;text-align:center}
 
+/* absence requests */
+.abs-card{background:var(--surf2);border:1px solid var(--border);border-radius:12px;padding:13px;margin-top:10px;display:grid;gap:8px}
+.abs-card.pending{border-color:rgba(251,191,36,.55);background:rgba(251,191,36,.05)}
+.abs-card.confirmed{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04)}
+.abs-card.dismissed{opacity:.5}
+.abs-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.abs-name{font-weight:800;font-size:.95rem}
+.abs-meta{font-size:.75rem;color:var(--muted);margin-top:2px;line-height:1.5}
+.abs-actions{display:flex;gap:6px;flex-wrap:wrap}
+.abs-status{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-radius:99px;padding:4px 9px;white-space:nowrap;flex:0 0 auto}
+.abs-status.pending{color:#fbbf24;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35)}
+.abs-status.confirmed{color:var(--green);background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3)}
+.abs-status.dismissed{color:var(--muted);background:rgba(255,255,255,.05);border:1px solid var(--border2)}
+.abs-match{font-size:.75rem;margin-top:2px}
+.abs-match.found{color:var(--green)}.abs-match.missing{color:#fbbf24}
+.abs-empty{padding:14px;color:var(--muted);font-size:.85rem;text-align:center}
+.abs-filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.abs-filter-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;font-size:.76rem;font-weight:700;cursor:pointer;transition:all .12s}
+.abs-filter-btn.active{background:var(--soft);color:var(--bright);border-color:var(--bright)}
+.abs-clean-btn{margin-left:auto;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,90,90,.3);background:transparent;color:var(--red);font-family:inherit;font-size:.76rem;font-weight:700;cursor:pointer}
+.abs-clean-btn:hover{background:rgba(255,90,90,.1)}
 /* save bar */
 .save-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:1px solid var(--border2);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:100}
 .save-bar p{font-size:.83rem;color:var(--muted)}
@@ -314,6 +335,25 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
           <p id="lfAdminErr" style="color:var(--red);font-size:.82rem;margin-top:.6rem;display:none"></p>
         </div>
         <div id="lfAdminList" style="margin-top:14px"><div class="lf-admin-empty">Loading Lost &amp; Found…</div></div>
+      </div>
+    </div>
+
+    <!-- ABSENCE REQUESTS -->
+    <div class="section">
+      <div class="sec-head" data-s="absences">
+        <h2 class="disp">Absence Requests <span class="badge" id="absAdminBadge">0 pending</span></h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-absences">
+        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Absence notices submitted by parents through the website. Confirm to mark the student absent in the CRM, or dismiss to ignore.</p>
+        <div class="abs-filter-row">
+          <button class="abs-filter-btn active" data-absf="pending">Pending</button>
+          <button class="abs-filter-btn" data-absf="all">All</button>
+          <button class="abs-filter-btn" data-absf="confirmed">Confirmed</button>
+          <button class="abs-filter-btn" data-absf="dismissed">Dismissed</button>
+          <button class="abs-clean-btn" id="absCleanBtn" title="Remove confirmed and dismissed requests older than 30 days">🗑 Clear Resolved (30d+)</button>
+        </div>
+        <div id="absAdminList" style="margin-top:4px"><div class="abs-empty">Loading…</div></div>
       </div>
     </div>
 
@@ -859,6 +899,201 @@ document.querySelectorAll('.sec-head').forEach(function(h){
 /* ── utils ── */
 function ea(s){return String(s||'').replace(/"/g,'&quot;');}
 function eh(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ══════════════════════════════════════════════
+   ABSENCE REQUESTS — reads/writes crm_data
+══════════════════════════════════════════════ */
+var CRM_URL  = SB_URL + '/rest/v1/crm_data?id=eq.main';
+var _crmDB   = null;   // cached full crm_data.data object
+var _absFilter = 'pending';
+
+function loadAbsenceRequests() {
+  document.getElementById('absAdminList').innerHTML = '<div class="abs-empty">Loading…</div>';
+  fetch(CRM_URL + '&select=data', {
+    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    if (!rows || !rows[0]) throw new Error('No CRM data found');
+    _crmDB = rows[0].data;
+    if (!_crmDB.pendingAbsences) _crmDB.pendingAbsences = [];
+    renderAbsenceList();
+  })
+  .catch(function(e){
+    document.getElementById('absAdminList').innerHTML = '<div class="abs-empty">Error loading: '+eh(e.message)+'</div>';
+  });
+}
+
+function saveCrmDB(onDone) {
+  fetch(SB_URL+'/rest/v1/crm_data?id=eq.main', {
+    method:'PATCH',
+    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
+    body: JSON.stringify({ data: _crmDB })
+  })
+  .then(function(r){
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    if (onDone) onDone();
+  })
+  .catch(function(e){ showToast('Save failed: '+e.message,'err'); });
+}
+
+function normName(n){ return (n||'').toLowerCase().replace(/[^a-z]/g,''); }
+
+function findStudentMatch(name) {
+  if (!_crmDB || !_crmDB.students || !name) return null;
+  var target = normName(name);
+  var active = _crmDB.students.filter(function(s){ return s.status==='Active'; });
+  var full = active.find(function(s){ return normName(s.first+s.last)===target; });
+  if (full) return full;
+  var last = name.trim().split(' ').pop();
+  return active.find(function(s){ return normName(s.last)===normName(last); }) || null;
+}
+
+function fmtAbsDate(d) {
+  if (!d) return '';
+  var parts = d.split('-');
+  if (parts.length !== 3) return d;
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(parts[1],10)-1] + ' ' + parseInt(parts[2],10) + ', ' + parts[0];
+}
+
+function fmtSubmitted(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+
+function renderAbsenceList() {
+  var all = (_crmDB && _crmDB.pendingAbsences) ? _crmDB.pendingAbsences : [];
+  // Badge = pending count
+  var pendingCount = all.filter(function(r){ return r.status==='pending'; }).length;
+  document.getElementById('absAdminBadge').textContent = pendingCount + ' pending';
+
+  var filtered = all.filter(function(r){
+    if (_absFilter==='pending')   return r.status==='pending';
+    if (_absFilter==='confirmed') return r.status==='confirmed';
+    if (_absFilter==='dismissed') return r.status==='dismissed';
+    return true; // 'all'
+  }).slice().sort(function(a,b){ return (b.submittedAt||'').localeCompare(a.submittedAt||''); });
+
+  var list = document.getElementById('absAdminList');
+  if (!filtered.length) {
+    list.innerHTML = '<div class="abs-empty">No '+ (_absFilter==='all'?'':''+_absFilter+' ') +'absence requests.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(function(req) {
+    var student = findStudentMatch(req.studentName);
+    var matchHtml = student
+      ? '<div class="abs-match found">✓ Matched: '+eh(student.first+' '+student.last)+' ('+eh(student.group)+')</div>'
+      : '<div class="abs-match missing">⚠ No roster match — name may need correction</div>';
+
+    var alreadyMarked = student && _crmDB.attendance && _crmDB.attendance[req.date] && _crmDB.attendance[req.date][student.id];
+
+    var actionBtns = '';
+    if (req.status === 'pending') {
+      actionBtns = '<div class="abs-actions">'
+        + '<button class="btn-small primary" onclick="adminConfirmAbsence(\''+ea(req.id)+'\')">✓ Confirm Absent</button>'
+        + '<button class="btn-small red" onclick="adminDismissAbsence(\''+ea(req.id)+'\')">✕ Dismiss</button>'
+        + '</div>';
+    } else if (req.status === 'confirmed') {
+      actionBtns = '<div class="abs-actions">'
+        + '<button class="btn-small" onclick="adminDismissAbsence(\''+ea(req.id)+'\')">↩ Revert to Dismissed</button>'
+        + '</div>';
+    }
+
+    return '<div class="abs-card '+ea(req.status)+'" id="abscard-'+ea(req.id)+'">'
+      + '<div class="abs-top">'
+      +   '<div>'
+      +     '<div class="abs-name">'+eh(req.studentName)+'</div>'
+      +     '<div class="abs-meta">'
+      +       '<strong>Absent:</strong> '+eh(fmtAbsDate(req.date))
+      +       (req.reason ? ' · <em>'+eh(req.reason)+'</em>' : '')
+      +       '<br>From: '+eh(req.parentName||'Unknown')+(req.parentEmail?' · <a href="mailto:'+ea(req.parentEmail)+'" style="color:var(--bright)">'+eh(req.parentEmail)+'</a>':'')
+      +       '<br>Submitted: '+eh(fmtSubmitted(req.submittedAt))
+      +       (alreadyMarked ? '<br><span style="color:var(--green);font-size:.72rem;">Already marked '+alreadyMarked+' in CRM</span>' : '')
+      +     '</div>'
+      +     matchHtml
+      +   '</div>'
+      +   '<span class="abs-status '+ea(req.status)+'">'+ea(req.status)+'</span>'
+      + '</div>'
+      + actionBtns
+      + '</div>';
+  }).join('');
+}
+
+function adminConfirmAbsence(reqId) {
+  if (!_crmDB) return;
+  var req = _crmDB.pendingAbsences.find(function(r){ return r.id===reqId; });
+  if (!req) return;
+  var student = findStudentMatch(req.studentName);
+  if (!student) { showToast('⚠ No roster match — cannot confirm','err'); return; }
+
+  // Mark absent in attendance
+  if (!_crmDB.attendance) _crmDB.attendance = {};
+  if (!_crmDB.attendance[req.date]) _crmDB.attendance[req.date] = {};
+  _crmDB.attendance[req.date][student.id] = 'absent';
+
+  // Log to student history
+  if (!student.history) student.history = [];
+  student.history.push({
+    type:'note',
+    date: new Date().toISOString().slice(0,10),
+    note: 'Parent-reported absence for '+req.date+(req.reason?': "'+req.reason+'"':'')+'. Confirmed via admin panel.'
+  });
+
+  req.status = 'confirmed';
+
+  saveCrmDB(function(){
+    showToast('✓ '+student.first+' '+student.last+' marked absent on '+req.date,'ok');
+    renderAbsenceList();
+  });
+}
+
+function adminDismissAbsence(reqId) {
+  if (!_crmDB) return;
+  var req = _crmDB.pendingAbsences.find(function(r){ return r.id===reqId; });
+  if (!req) return;
+  req.status = 'dismissed';
+  saveCrmDB(function(){
+    showToast('Absence request dismissed','ok');
+    renderAbsenceList();
+  });
+}
+
+// Clean up confirmed/dismissed older than 30 days
+document.getElementById('absCleanBtn').addEventListener('click', function(){
+  if (!_crmDB || !_crmDB.pendingAbsences) return;
+  var cutoff = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+  var before = _crmDB.pendingAbsences.length;
+  _crmDB.pendingAbsences = _crmDB.pendingAbsences.filter(function(r){
+    if (r.status === 'pending') return true;
+    return (r.submittedAt||'') > cutoff;
+  });
+  var removed = before - _crmDB.pendingAbsences.length;
+  if (!removed) { showToast('Nothing to clean up yet','ok'); return; }
+  saveCrmDB(function(){
+    showToast('Removed '+removed+' resolved request'+(removed!==1?'s':'')+' older than 30 days','ok');
+    renderAbsenceList();
+  });
+});
+
+// Filter buttons
+document.querySelectorAll('.abs-filter-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.abs-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    _absFilter = btn.dataset.absf;
+    renderAbsenceList();
+  });
+});
+
+// Load on boot (called after login)
+var _origLoadData = loadData;
+loadData = function() {
+  _origLoadData();
+  loadAbsenceRequests();
+};
 </script>
 </body>
 </html>
