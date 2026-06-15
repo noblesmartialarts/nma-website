@@ -1222,6 +1222,7 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
 /* ── Supabase content layer ── */
 var SUPABASE_URL = 'https://erqblpewozxkpornohvq.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycWJscGV3b3p4a3Bvcm5vaHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzUzMDMsImV4cCI6MjA5NTA1MTMwM30.Ot3sd3X3Fo9rtpAXUfTjrUlB_6Y-QcMuwotUIvdcr5o';
+var SUBMIT_URL = 'https://crm.noblesmartialarts.com/.netlify/functions/submit';
 
 /* Fetch dynamic content from Supabase, merge into CONFIG, then boot the app */
 function fetchSiteContent(onReady) {
@@ -2025,18 +2026,16 @@ fetchSiteContent(function() {
       lfSubmitBtn.disabled=true; lfSubmitBtn.textContent=file?'Uploading photo…':'Posting…';
       uploadLostFoundPhoto(file).then(function(photoUrl){
         lfSubmitBtn.textContent='Posting…';
-        var payload={type:type,item:item,notes:notes,parent_name:name,contact:contact,photo_url:photoUrl,status:'open'};
-        return fetch(SUPABASE_URL+'/rest/v1/'+LF_TABLE,{
-          method:'POST',
-          headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-          body:JSON.stringify(payload)
-        });
-      }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); 
+        var payload={type:'lostfound',itemType:type,item:item,notes:notes,parentName:name,contact:contact,photoUrl:photoUrl};
+        return fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      }).then(function(r){return r.json();})
+      .then(function(res){
+        if(!res.success) throw new Error(res.error||'Unknown error');
         document.getElementById('lfFormInner').style.display='none';
         document.getElementById('lfFormSuccess').style.display='block';
         if(window.trackEvent) trackEvent('form_submit',{form:'lost_found'});
         loadLostFound();
-      }).catch(function(){ showE('Could not submit your post. Please try again or text Sensei Brandon.'); })
+      }).catch(function(e){ showE('Could not submit your post — please try again.'); })
       .finally(function(){ lfSubmitBtn.disabled=false; lfSubmitBtn.textContent='Submit Lost & Found Post'; });
     });
   }
@@ -2076,9 +2075,16 @@ fetchSiteContent(function() {
     if(!wr){showE("Please answer whether you'd recommend NMA.");return;}
     if(!gf){showE("Please share some general feedback.");return;}
     err.style.display='none';
-    var payload={formType:'feedback',name:document.getElementById('fb-name').value.trim(),studentClass:sc,enjoyedProgram:ep.value,whatTheyEnjoy:document.getElementById('fb-whatTheyEnjoy').value.trim(),studentEnjoyed:se.value,studentEnjoys:document.getElementById('fb-studentEnjoys').value.trim(),improvements:document.getElementById('fb-improvements').value.trim(),positiveChanges:(document.querySelector("input[name='positiveChanges']:checked")||{}).value||'',lookingForwardTo:document.getElementById('fb-lookingForwardTo').value.trim(),moreFocusOn:document.getElementById('fb-moreFocusOn').value.trim(),wouldRecommend:wr.value,generalFeedback:gf};
-    if(CONFIG.sheetsUrl){btn.textContent='Submitting...';btn.disabled=true;fetch(CONFIG.sheetsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(){document.getElementById('feedbackFormInner').style.display='none';document.getElementById('feedbackFormSuccess').style.display='block';if(window.trackEvent)trackEvent('form_submit',{form:'feedback'});}).catch(function(){showE('Submission failed. Please try again.');btn.textContent='Submit Feedback';btn.disabled=false;});}
-    else{document.getElementById('feedbackFormInner').style.display='none';document.getElementById('feedbackFormSuccess').style.display='block';}
+    var payload={type:'feedback',name:document.getElementById('fb-name').value.trim(),studentClass:sc,enjoyedProgram:ep.value,whatTheyEnjoy:document.getElementById('fb-whatTheyEnjoy').value.trim(),studentEnjoyed:se.value,studentEnjoys:document.getElementById('fb-studentEnjoys').value.trim(),improvements:document.getElementById('fb-improvements').value.trim(),positiveChanges:(document.querySelector("input[name='positiveChanges']:checked")||{}).value||'',lookingForwardTo:document.getElementById('fb-lookingForwardTo').value.trim(),moreFocusOn:document.getElementById('fb-moreFocusOn').value.trim(),wouldRecommend:wr.value,generalFeedback:gf};
+    btn.textContent='Submitting…';btn.disabled=true;
+    fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(res.success){document.getElementById('feedbackFormInner').style.display='none';document.getElementById('feedbackFormSuccess').style.display='block';if(window.trackEvent)trackEvent('form_submit',{form:'feedback'});}
+        else{showE('Submission failed — please try again.');}
+      })
+      .catch(function(){showE('Submission failed — please try again.');})
+      .finally(function(){btn.textContent='Submit Feedback';btn.disabled=false;});
   });
 
   /* ── adult form ── */
@@ -2097,9 +2103,16 @@ fetchSiteContent(function() {
     if(!name){showE('Please enter your name.');return;}
     if(!email||!email.includes('@')){showE('Please enter a valid email.');return;}
     err.style.display='none';
-    var payload={name:name,email:email,phone:document.getElementById('af-phone').value.trim(),notes:document.getElementById('af-notes').value.trim(),interest:interest.value,classTypes:classTypes.join(', '),times:times.join(', ')};
-    if(CONFIG.sheetsUrl){btn.textContent='Submitting...';btn.disabled=true;fetch(CONFIG.sheetsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(){document.getElementById('adultFormInner').style.display='none';document.getElementById('adultFormSuccess').style.display='block';if(window.trackEvent)trackEvent('form_submit',{form:'adult_interest'});}).catch(function(){showE('Submission failed. Please try again.');btn.textContent='Submit Interest Form';btn.disabled=false;});}
-    else{document.getElementById('adultFormInner').style.display='none';document.getElementById('adultFormSuccess').style.display='block';}
+    var payload={type:'adult',name:name,email:email,phone:document.getElementById('af-phone').value.trim(),notes:document.getElementById('af-notes').value.trim(),interest:interest.value,classTypes:classTypes.join(', '),times:times.join(', ')};
+    btn.textContent='Submitting…';btn.disabled=true;
+    fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(res.success){document.getElementById('adultFormInner').style.display='none';document.getElementById('adultFormSuccess').style.display='block';if(window.trackEvent)trackEvent('form_submit',{form:'adult_interest'});}
+        else{showE('Submission failed — please try again.');}
+      })
+      .catch(function(){showE('Submission failed — please try again.');})
+      .finally(function(){btn.textContent='Submit Interest Form';btn.disabled=false;});
   });
 
 })(); // end rendering IIFE
@@ -2130,6 +2143,9 @@ fetchSiteContent(function() {
   }
   window._loadAbsenceRoster = loadRoster;
 
+  // Load roster immediately — don't wait for tab click
+  loadRoster();
+
   /* ── Autocomplete ── */
   var absInput    = document.getElementById('abs-student-input');
   var absDropdown = document.getElementById('abs-autocomplete');
@@ -2145,6 +2161,13 @@ fetchSiteContent(function() {
     var grp = absGroup.value;
     if (!q || q.length < 1) { absDropdown.style.display = 'none'; return; }
 
+    // Roster not loaded yet
+    if (!_roster.length) {
+      absDropdown.innerHTML = '<div style="padding:11px 14px;font-size:.85rem;color:var(--muted);">Loading student list…</div>';
+      absDropdown.style.display = 'block';
+      return;
+    }
+
     var filtered = _roster.filter(function(s) {
       var fullName = (s.first + ' ' + s.last).toLowerCase();
       var matchName = fullName.includes(q);
@@ -2152,7 +2175,11 @@ fetchSiteContent(function() {
       return matchName && matchGroup;
     }).slice(0, 8);
 
-    if (!filtered.length) { absDropdown.style.display = 'none'; return; }
+    if (!filtered.length) {
+      absDropdown.innerHTML = '<div style="padding:11px 14px;font-size:.85rem;color:var(--muted);">No students found — try last name only, or clear the class filter.</div>';
+      absDropdown.style.display = 'block';
+      return;
+    }
 
     absDropdown.innerHTML = filtered.map(function(s) {
       return '<div class="abs-option" data-id="' + s.id + '" data-name="' + s.first + ' ' + s.last + '" data-group="' + s.group + '" ' +
@@ -2241,53 +2268,33 @@ fetchSiteContent(function() {
     btn.textContent = 'Submitting…';
     btn.disabled = true;
 
-    /* Build pending absence entries */
-    var now = new Date().toISOString();
-    var newRequests = _absDates.map(function(d) {
-      return {
-        id: 'abs_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-        studentName:  sName,
-        studentId:    absHidden.value || null,
-        parentName:   parent,
-        parentEmail:  email,
-        date:         d,
-        reason:       reason,
-        submittedAt:  now,
-        status:       'pending'
-      };
-    });
+    var payload = {
+      type: 'absence',
+      studentName: sName,
+      studentId: absHidden.value || null,
+      parentName: parent,
+      parentEmail: email,
+      dates: _absDates,
+      reason: reason
+    };
 
-    /* Read current DB, push requests, write back */
-    fetch(SUPABASE_URL + '/rest/v1/crm_data?id=eq.main&select=data', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(rows) {
-      var DB = (rows && rows[0] && rows[0].data) ? rows[0].data : {};
-      if (!DB.pendingAbsences) DB.pendingAbsences = [];
-      DB.pendingAbsences = DB.pendingAbsences.concat(newRequests);
-
-      return fetch(SUPABASE_URL + '/rest/v1/crm_data?id=eq.main', {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({ data: DB })
+    fetch(SUBMIT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        if (res.success) {
+          document.getElementById('absenceFormInner').style.display = 'none';
+          document.getElementById('absenceFormSuccess').style.display = 'block';
+        } else {
+          showErr('Submission failed — please try again. (' + (res.error || '') + ')');
+        }
+      })
+      .catch(function(err) {
+        showErr('Submission failed — please try again. (' + (err.message || '') + ')');
+      })
+      .finally(function() {
+        btn.textContent = 'Submit Absence Notice';
+        btn.disabled = false;
       });
-    })
-    .then(function(r) {
-      if (!r.ok) throw new Error('Write failed: ' + r.status);
-      document.getElementById('absenceFormInner').style.display = 'none';
-      document.getElementById('absenceFormSuccess').style.display = 'block';
-    })
-    .catch(function(err) {
-      showErr('Submission failed — please try again. (' + (err.message || '') + ')');
-      btn.textContent = 'Submit Absence Notice';
-      btn.disabled = false;
-    });
   });
 
   /* ── Reset for "Submit Another" ── */
