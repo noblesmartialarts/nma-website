@@ -70,22 +70,39 @@ async function handleAbsence(body, KEY) {
   return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true }) };
 }
 
-// ── Feedback & Adult Interest: append to nma_site_content submissions array ──
+// ── Feedback & Adult Interest: save to Supabase AND forward to Google Sheets ──
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbycNqK_uHUfqfZclcdkM1GjltM1mMd7Y_TwW1VCiTy48mJP0holMnPT1aRM8H1cdZmZ4g/exec';
+
 async function handleFormSubmission(body, KEY) {
+  const submission = { ...body, submittedAt: new Date().toISOString() };
+
+  // 1. Save to Supabase
   const fetchRes = await supaFetch('GET', '/rest/v1/nma_site_content?id=eq.main&select=data', null, KEY);
   const rows = await fetchRes.json();
   if (!rows || !rows[0]) throw new Error('Site content not found');
 
   const data = rows[0].data || {};
   if (!data.submissions) data.submissions = [];
-  data.submissions.push({ ...body, submittedAt: new Date().toISOString() });
-
-  // Keep last 200 submissions max
+  data.submissions.push(submission);
   if (data.submissions.length > 200) data.submissions = data.submissions.slice(-200);
 
   const writeRes = await supaFetch('PATCH', '/rest/v1/nma_site_content?id=eq.main',
     { data, updated_at: new Date().toISOString() }, KEY, 'return=minimal');
   if (!writeRes.ok) throw new Error('Write failed: ' + writeRes.status);
+
+  // 2. Forward to Google Sheets (fire-and-forget — don't fail if Sheets is down)
+  try {
+    // Map 'type' to 'formType' to match what the Google Apps Script expects
+    const sheetsPayload = { ...submission, formType: submission.type };
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sheetsPayload)
+    });
+  } catch (e) {
+    console.warn('Sheets forward failed (non-fatal):', e.message);
+  }
 
   return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true }) };
 }
