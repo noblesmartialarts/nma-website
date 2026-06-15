@@ -1094,6 +1094,20 @@ loadData = function() {
   _origLoadData();
   loadAbsenceRequests();
 };
+
+/* ── Auto-refresh when tab regains focus — no relog needed ── */
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && sessionStorage.getItem('nma_admin') === '1') {
+    loadLostFoundAdmin();
+    loadAbsenceRequests();
+  }
+});
+window.addEventListener('focus', function() {
+  if (sessionStorage.getItem('nma_admin') === '1') {
+    loadLostFoundAdmin();
+    loadAbsenceRequests();
+  }
+});
 </script>
 </body>
 </html>
