@@ -92,14 +92,16 @@ async function handleFormSubmission(body, KEY) {
 
   // 2. Forward to Google Sheets (fire-and-forget — don't fail if Sheets is down)
   try {
-    // Map 'type' to 'formType' to match what the Google Apps Script expects
     const sheetsPayload = { ...submission, formType: submission.type };
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
     await fetch(SHEETS_URL, {
       method: 'POST',
-      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(sheetsPayload)
+      body: JSON.stringify(sheetsPayload),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
   } catch (e) {
     console.warn('Sheets forward failed (non-fatal):', e.message);
   }
