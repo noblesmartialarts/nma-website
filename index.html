@@ -713,19 +713,53 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
   </section>
 
   <!-- Calendar -->
-  <section id="calendarSection" style="display:none">
-    <div class="head"><p class="eye">Schedule</p><h2 class="disp">Upcoming Classes &amp; Events</h2></div>
-    <div class="stack">
-      <div id="calendarEvents" class="stack">
-        <div class="card" style="text-align:center;padding:18px;color:var(--muted)">Loading events…</div>
-      </div>
-      <a id="calendarLink" href="https://calendar.google.com/calendar/embed?src=noblesmartialarts%40gmail.com&ctz=America%2FNew_York" target="_blank" rel="noopener"
-         style="display:flex;align-items:center;justify-content:center;gap:7px;background:var(--surf);border:1px solid var(--border);border-radius:11px;padding:12px;color:var(--bright);text-decoration:none;font-weight:700;font-size:.9rem">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Open Full Calendar in Google
-      </a>
-    </div>
-  </section>
+ <div id="nma-calendar-events">
+  <p style="text-align:center; opacity:0.6;">Loading upcoming events...</p>
+</div>
+
+<script>
+(function() {
+  const CALENDAR_ID = 'noblesmartialarts@gmail.com';
+  const API_KEY = 'AIzaSyDuwsCgVihIrclJeeU6-9BihwSacjuQvb0';
+  const MAX_RESULTS = 5;
+  const now = new Date().toISOString();
+
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?key=${API_KEY}&orderBy=startTime&singleEvents=true&timeMin=${now}&maxResults=${MAX_RESULTS}`;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById('nma-calendar-events');
+      if (!data.items || data.items.length === 0) {
+        container.innerHTML = '<p style="text-align:center; opacity:0.6;">No upcoming events. <a href="https://calendar.google.com/calendar/u/0/r" target="_blank">Open calendar</a></p>';
+        return;
+      }
+
+      const html = data.items.map(event => {
+        const start = event.start.dateTime || event.start.date;
+        const date = new Date(start);
+        const formatted = date.toLocaleDateString('en-US', {
+          weekday: 'short', month: 'short', day: 'numeric'
+        });
+        const time = event.start.dateTime
+          ? date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+          : 'All Day';
+        return `
+          <div style="padding:12px 16px; margin-bottom:8px; background:rgba(255,255,255,0.05); border-radius:8px; border-left:3px solid #4a90d9;">
+            <div style="font-weight:600; font-size:0.95rem;">${event.summary}</div>
+            <div style="font-size:0.82rem; opacity:0.7; margin-top:3px;">📅 ${formatted} · ${time}</div>
+            ${event.description ? `<div style="font-size:0.82rem; opacity:0.6; margin-top:4px;">${event.description}</div>` : ''}
+          </div>`;
+      }).join('');
+
+      container.innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById('nma-calendar-events').innerHTML =
+        '<p style="text-align:center; opacity:0.6;">Unable to load events right now.</p>';
+    });
+})();
+</script>
 
   <!-- Gallery -->
   <section id="gallery" style="display:none">
