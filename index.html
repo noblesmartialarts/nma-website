@@ -107,6 +107,28 @@ body.menu-open{overflow:hidden}
 .menu-link b{display:block;font-size:.94rem;line-height:1.2}
 .menu-link small{display:block;color:var(--muted);font-size:.76rem;margin-top:2px;line-height:1.25}
 .menu-link.active small{color:rgba(255,255,255,.76)}
+/* ── MENU SUB-NAV ── */
+.menu-subnav{display:none;padding:4px 0 2px 38px;gap:5px;flex-direction:column}
+.menu-subnav.open{display:flex}
+.menu-sublink{background:rgba(81,96,255,.10);border:1px solid rgba(81,96,255,.22);border-radius:9px;
+  padding:8px 13px;color:var(--text);font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;
+  cursor:pointer;text-align:left;transition:background .12s,border-color .12s;width:100%}
+.menu-sublink:hover{background:rgba(81,96,255,.22);border-color:var(--bright)}
+.menu-sublink.active{background:var(--bright);color:#fff;border-color:var(--bright)}
+/* Start Here block */
+.menu-start-here{background:linear-gradient(135deg,#0f00f7,#5160ff);border:none;border-radius:14px;
+  padding:14px;width:100%;cursor:pointer;text-align:left;font-family:'Inter',sans-serif;
+  box-shadow:0 6px 20px rgba(15,0,247,.45);transition:filter .15s,transform .15s;margin-bottom:2px}
+.menu-start-here:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.menu-start-here .sh-eye{font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(255,255,255,.7);font-weight:700;margin-bottom:3px}
+.menu-start-here .sh-title{font-size:1.05rem;font-weight:800;color:#fff;line-height:1.2}
+.menu-start-here .sh-sub{font-size:.75rem;color:rgba(255,255,255,.72);margin-top:2px}
+.menu-subnav.start-sub .menu-sublink{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);
+  color:#fff;padding:9px 13px}
+.menu-subnav.start-sub .menu-sublink:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.5)}
+.menu-subnav.start-sub .menu-sublink b{display:block;font-size:.84rem;margin-bottom:1px}
+.menu-subnav.start-sub .menu-sublink small{font-size:.72rem;opacity:.75;font-weight:400}
 @media(max-width:480px){.menu-toggle span{display:none}.menu-toggle{padding:11px;border-radius:50%;width:46px;height:46px;justify-content:center}}
 
 
@@ -505,12 +527,86 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
     <button class="menu-close" id="siteMenuClose" type="button" aria-label="Close site menu">×</button>
   </div>
   <div class="menu-list">
+    <!-- ── START HERE (conversion block) ── -->
+    <button class="menu-start-here" type="button" data-menu-tab="starthereblock">
+      <div class="sh-eye">✦ New to NMA?</div>
+      <div class="sh-title">Start Here →</div>
+      <div class="sh-sub">Everything you need before your first class</div>
+    </button>
+    <div class="menu-subnav start-sub" id="menu-subnav-starthereblock">
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="home" data-menu-scroll="perfectfor">
+        <b>👦 Is NMA right for us?</b><small>Ages, program fit, what to expect</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="home" data-menu-scroll="firstclass">
+        <b>🥋 What happens in class?</b><small>First class, what to wear, how it works</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="home" data-menu-scroll="instructor">
+        <b>👤 Meet Sensei Brandon</b><small>Your child's instructor</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="tab" data-menu-tab="register">
+        <b>✅ Ready to Register?</b><small>Choose Little Dragons or Karate Kids</small>
+      </button>
+    </div>
+
+    <!-- ── STANDARD NAV ── -->
     <button class="menu-link active" type="button" data-menu-tab="home"><span class="menu-emoji">🏠</span><span><b>Home</b><small>Overview, benefits, testimonials</small></span></button>
+
     <button class="menu-link" type="button" data-menu-tab="classes"><span class="menu-emoji">🥋</span><span><b>Classes</b><small>Programs, ages, and levels</small></span></button>
+    <div class="menu-subnav" id="menu-subnav-classes">
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="classes" data-menu-scroll="tab-classes">
+        <b>📋 All Programs</b><small>Little Dragons, Karate Kids, BBC, MC, Legends</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="classes" data-menu-scroll="classCards">
+        <b>🌟 New Students</b><small>Ages 4–6 → LD · Ages 7–13 → KK</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="classes" data-menu-scroll="ldBelts">
+        <b>🏅 Belt Journey</b><small>Every belt from white to black</small>
+      </button>
+    </div>
+
     <button class="menu-link" type="button" data-menu-tab="register"><span class="menu-emoji">✅</span><span><b>Register</b><small>Monthly class registration</small></span></button>
+    <div class="menu-subnav" id="menu-subnav-register">
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="register" data-menu-scroll="tab-register">
+        <b>🐉 Little Dragons</b><small>Ages 4–6 · Mon 11:00–11:30 am</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="register" data-menu-scroll="tab-register">
+        <b>🥋 Karate Kids</b><small>Ages 6–13 · Mon 11:30 am–12:15 pm</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="register" data-menu-scroll="tab-register">
+        <b>⚔️ Black Belt Club</b><small>Purple–Green II · Mon 12:15–1:15 pm</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="register" data-menu-scroll="tab-register">
+        <b>🏆 Master's Club</b><small>Brown+ · Mon 1:30–2:30 pm</small>
+      </button>
+    </div>
+
     <button class="menu-link" type="button" data-menu-tab="hub"><span class="menu-emoji">💙</span><span><b>Parent Hub</b><small>Videos, gear, calendar, links</small></span></button>
+    <div class="menu-subnav" id="menu-subnav-hub">
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="hub" data-menu-scroll="hubGrid">
+        <b>📹 Practice Videos</b><small>Password-protected playlists</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="hub" data-menu-scroll="challengeCard">
+        <b>📅 Monthly Challenge</b><small>This month's student focus</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="ftab" data-menu-tab="forms" data-menu-ftab="absence">
+        <b>📋 Absence Notice</b><small>Let Sensei Brandon know</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="tab" data-menu-tab="lostfound">
+        <b>📦 Lost &amp; Found</b><small>Missing or found items</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="hub" data-menu-scroll="hubGrid">
+        <b>⚔️ Gear &amp; Apparel</b><small>Equipment and uniform orders</small>
+      </button>
+    </div>
+
     <button class="menu-link" type="button" data-menu-tab="lostfound"><span class="menu-emoji">📦</span><span><b>Lost &amp; Found</b><small>Missing or found items</small></span></button>
+
     <button class="menu-link" type="button" data-menu-tab="forms"><span class="menu-emoji">📝</span><span><b>Forms</b><small>Feedback and interest forms</small></span></button>
+    <div class="menu-subnav" id="menu-subnav-forms">
+      <button class="menu-sublink active" type="button" data-menu-action="ftab" data-menu-tab="forms" data-menu-ftab="feedback">📋 Class Feedback</button>
+      <button class="menu-sublink" type="button" data-menu-action="ftab" data-menu-tab="forms" data-menu-ftab="adult">🥋 Adult Interest</button>
+      <button class="menu-sublink" type="button" data-menu-action="ftab" data-menu-tab="forms" data-menu-ftab="absence">📅 Absence Notice</button>
+    </div>
   </div>
 </aside>
 
@@ -946,8 +1042,9 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
   <section>
     <div class="head"><p class="eye">Forms</p><h2 class="disp">Feedback &amp; Interest</h2></div>
     <div class="form-tabs">
-      <button class="form-tab-btn active" data-ftab="feedback">Class Feedback</button>
-      <button class="form-tab-btn" data-ftab="adult">Adult Interest</button>
+      <button class="form-tab-btn active" data-ftab="feedback" onclick="switchFormTab('feedback')">Class Feedback</button>
+      <button class="form-tab-btn" data-ftab="adult" onclick="switchFormTab('adult')">Adult Interest</button>
+      <button class="form-tab-btn" data-ftab="absence" onclick="switchFormTab('absence')">📋 Absence Notice</button>
     </div>
 
     <div class="form-section active" id="ftab-feedback">
@@ -1016,6 +1113,83 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
         </div>
       </div>
     </div>
+
+    <!-- ── ABSENCE NOTIFICATION ── -->
+    <div class="form-section" id="ftab-absence">
+    <div class="form-wrap">
+      <h3 class="disp">Absence Notification</h3>
+      <p class="form-sub">Letting Sensei Brandon know ahead of time helps keep attendance records accurate. Start typing your child's name below — we'll find them from the roster.</p>
+      <div id="absenceFormInner">
+
+        <!-- Step 1: Class group -->
+        <div class="fq">
+          <label class="ql">Your child's class <span class="req">*</span></label>
+          <select id="abs-group">
+            <option value="">— Select class —</option>
+            <option value="Little Dragons">Little Dragons</option>
+            <option value="Karate Kids">Karate Kids</option>
+            <option value="Black Belt Club">Black Belt Club</option>
+            <option value="Master's Club">Master's Club</option>
+            <option value="Legends Club">Legends Club</option>
+          </select>
+        </div>
+
+        <!-- Step 2: Student name autocomplete -->
+        <div class="fq" style="position:relative;">
+          <label class="ql">Student name <span class="req">*</span></label>
+          <input type="text" id="abs-student-input" placeholder="Start typing student's first or last name…" autocomplete="off" style="width:100%;"/>
+          <div id="abs-autocomplete" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--surf2);border:1px solid var(--border2);border-radius:10px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4);margin-top:3px;"></div>
+          <input type="hidden" id="abs-student-id" value=""/>
+          <div id="abs-student-confirmed" style="display:none;margin-top:6px;font-size:.82rem;color:var(--green);font-weight:600;"></div>
+        </div>
+
+        <!-- Step 3: Parent info -->
+        <div class="fq">
+          <label class="ql">Parent / Guardian name <span class="req">*</span></label>
+          <input type="text" id="abs-parent" placeholder="First and last name"/>
+        </div>
+        <div class="fq">
+          <label class="ql">Parent email <span class="req">*</span></label>
+          <input type="email" id="abs-email" placeholder="you@email.com"/>
+        </div>
+
+        <!-- Step 4: Absence dates — multi-date picker -->
+        <div class="fq">
+          <label class="ql">Date(s) they will be absent <span class="req">*</span></label>
+          <div id="abs-dates-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;min-height:10px;"></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="date" id="abs-date-picker" style="flex:1;"/>
+            <button type="button" id="abs-add-date" style="flex:0 0 auto;padding:10px 16px;background:var(--soft);border:1px solid var(--bright);border-radius:10px;color:var(--bright);font-weight:700;font-size:.85rem;cursor:pointer;">+ Add Date</button>
+          </div>
+          <p style="font-size:.75rem;color:var(--muted);margin-top:6px;">You can add multiple dates — tap "+ Add Date" for each one.</p>
+        </div>
+
+        <!-- Step 5: Reason -->
+        <div class="fq">
+          <label class="ql">Reason <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          <select id="abs-reason">
+            <option value="">— Select a reason (optional) —</option>
+            <option>Illness</option>
+            <option>Family Event</option>
+            <option>Vacation</option>
+            <option>School Conflict</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <p id="absenceFormErr" style="color:#ff5a5a;font-size:.82rem;margin-bottom:.6rem;display:none;"></p>
+        <button class="form-submit" id="absenceSubmitBtn">Submit Absence Notice</button>
+      </div>
+
+      <div class="form-success" id="absenceFormSuccess" style="display:none;">
+        <div class="big">✅</div>
+        <h4 class="disp" style="font-size:1.5rem;margin-bottom:.3rem">Absence Logged!</h4>
+        <p style="color:var(--muted)">Sensei Brandon has been notified. We'll see you next time!</p>
+        <button type="button" style="margin-top:16px;padding:10px 22px;background:var(--soft);border:1px solid var(--bright);border-radius:10px;color:var(--bright);font-weight:700;font-size:.88rem;cursor:pointer;" onclick="resetAbsenceForm()">Submit Another</button>
+      </div>
+    </div>
+    </div><!-- /ftab-absence -->
+
   </section>
 </div><!-- /tab-forms -->
 
@@ -1212,10 +1386,27 @@ const CONFIG = {
   },
 };
 
+/* Global form tab switcher — called by onclick on form-tab-btn buttons */
+function switchFormTab(ftab) {
+  document.querySelectorAll('.form-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.form-section').forEach(function(s){ s.classList.remove('active'); });
+  var btn = document.querySelector('.form-tab-btn[data-ftab="' + ftab + '"]');
+  if (btn) btn.classList.add('active');
+  var panel = document.getElementById('ftab-' + ftab);
+  if (panel) panel.classList.add('active');
+  // Update menu sub-links
+  document.querySelectorAll('.menu-sublink[data-menu-ftab]').forEach(function(b){ b.classList.remove('active'); });
+  var ml = document.querySelector('.menu-sublink[data-menu-ftab="' + ftab + '"]');
+  if (ml) ml.classList.add('active');
+  // Load roster lazily if absence tab
+  if (ftab === 'absence' && !window._absenceRosterLoaded) {
+    window._absenceRosterLoaded = true;
+    if (window._loadAbsenceRoster) window._loadAbsenceRoster();
+  }
+}
+
 /* ── Boot: fetch Supabase content then initialise ── */
 fetchSiteContent(function() {
-
-/* ── Analytics init ── */
 (function(){
   var a = CONFIG.analytics || {};
 
@@ -1326,10 +1517,67 @@ fetchSiteContent(function() {
   if(siteMenuClose) siteMenuClose.addEventListener('click',closeSiteMenu);
   if(siteMenuBackdrop) siteMenuBackdrop.addEventListener('click',closeSiteMenu);
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeSiteMenu(); });
-  document.querySelectorAll('.menu-link').forEach(function(btn){
-    btn.addEventListener('click',function(){
+
+  /* ── Shared scroll-to helper ── */
+  function scrollToId(id, delay) {
+    setTimeout(function() {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var tabBarH = document.querySelector('.tab-bar') ? document.querySelector('.tab-bar').offsetHeight : 48;
+      var top = el.getBoundingClientRect().top + window.pageYOffset - tabBarH - 12;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }, delay || 0);
+  }
+
+  /* ── Menu top-level links (menu-link + menu-start-here) ── */
+  document.querySelectorAll('.menu-link, .menu-start-here').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var tabId = btn.dataset.menuTab;
+      // Close all sub-navs, then open this one if it exists
+      document.querySelectorAll('.menu-subnav').forEach(function(nav) { nav.classList.remove('open'); });
+      var subnav = document.getElementById('menu-subnav-' + tabId);
+      if (subnav) {
+        subnav.classList.add('open');
+        // If it's a real tab (not just a block), switch to it
+        if (document.getElementById('tab-' + tabId)) switchTab(tabId);
+        return; // keep menu open so user picks a sub-item
+      }
       closeSiteMenu();
-      switchTab(btn.dataset.menuTab);
+      switchTab(tabId);
+    });
+  });
+
+  /* ── Menu sub-links — three action types ── */
+  document.querySelectorAll('.menu-sublink').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var action  = btn.dataset.menuAction || 'tab';
+      var tabId   = btn.dataset.menuTab;
+      var scrollId = btn.dataset.menuScroll;
+      var ftab    = btn.dataset.menuFtab;
+
+      // Mark active within this subnav only
+      var parentNav = btn.closest('.menu-subnav');
+      if (parentNav) {
+        parentNav.querySelectorAll('.menu-sublink').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+      }
+
+      closeSiteMenu();
+
+      if (action === 'scroll') {
+        // Switch tab first, then scroll to section
+        switchTab(tabId);
+        scrollToId(scrollId, 120);
+
+      } else if (action === 'ftab') {
+        // Switch to a tab AND open a form sub-tab
+        switchTab(tabId);
+        if (typeof switchFormTab === 'function') switchFormTab(ftab);
+
+      } else {
+        // action === 'tab' — just switch tab
+        switchTab(tabId);
+      }
     });
   });
 
@@ -1855,6 +2103,231 @@ fetchSiteContent(function() {
   });
 
 })(); // end rendering IIFE
+
+/* ══════════════════════════════════════════════════
+   ABSENCE NOTIFICATION FORM
+   Loads live roster from crm_data, autocomplete by
+   group, submits pendingAbsences entry to Supabase.
+══════════════════════════════════════════════════ */
+(function() {
+
+  var _roster = [];          // full student list from CRM
+  var _absDates = [];        // selected absence dates (array of 'YYYY-MM-DD')
+  var _selectedStudent = null;
+
+  /* ── Load roster from Supabase crm_data once ── */
+  function loadRoster() {
+    fetch(SUPABASE_URL + '/rest/v1/crm_data?id=eq.main&select=data', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(rows) {
+      if (rows && rows[0] && rows[0].data && rows[0].data.students) {
+        _roster = rows[0].data.students.filter(function(s){ return s.status === 'Active'; });
+      }
+    })
+    .catch(function() { /* roster unavailable — autocomplete degrades gracefully */ });
+  }
+  window._loadAbsenceRoster = loadRoster;
+
+  /* ── Autocomplete ── */
+  var absInput    = document.getElementById('abs-student-input');
+  var absDropdown = document.getElementById('abs-autocomplete');
+  var absHidden   = document.getElementById('abs-student-id');
+  var absConfirm  = document.getElementById('abs-student-confirmed');
+  var absGroup    = document.getElementById('abs-group');
+
+  absInput.addEventListener('input', function() {
+    _selectedStudent = null;
+    absHidden.value = '';
+    absConfirm.style.display = 'none';
+    var q = absInput.value.trim().toLowerCase();
+    var grp = absGroup.value;
+    if (!q || q.length < 1) { absDropdown.style.display = 'none'; return; }
+
+    var filtered = _roster.filter(function(s) {
+      var fullName = (s.first + ' ' + s.last).toLowerCase();
+      var matchName = fullName.includes(q);
+      var matchGroup = !grp || s.group === grp;
+      return matchName && matchGroup;
+    }).slice(0, 8);
+
+    if (!filtered.length) { absDropdown.style.display = 'none'; return; }
+
+    absDropdown.innerHTML = filtered.map(function(s) {
+      return '<div class="abs-option" data-id="' + s.id + '" data-name="' + s.first + ' ' + s.last + '" data-group="' + s.group + '" ' +
+        'style="padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.9rem;transition:background .1s;" ' +
+        'onmouseenter="this.style.background=\'var(--soft)\'" onmouseleave="this.style.background=\'\'">' +
+        '<strong>' + s.first + ' ' + s.last + '</strong>' +
+        '<span style="font-size:.75rem;color:var(--muted);margin-left:8px;">' + s.group + '</span>' +
+        '</div>';
+    }).join('');
+    absDropdown.style.display = 'block';
+
+    absDropdown.querySelectorAll('.abs-option').forEach(function(opt) {
+      opt.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        selectStudent({ id: opt.dataset.id, name: opt.dataset.name, group: opt.dataset.group });
+      });
+    });
+  });
+
+  function selectStudent(s) {
+    _selectedStudent = s;
+    absInput.value = s.name;
+    absHidden.value = s.id;
+    absDropdown.style.display = 'none';
+    absConfirm.textContent = '✓ Found: ' + s.name + ' (' + s.group + ')';
+    absConfirm.style.display = 'block';
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!absDropdown.contains(e.target) && e.target !== absInput) {
+      absDropdown.style.display = 'none';
+    }
+  });
+
+  /* ── Multi-date picker ── */
+  var datePicker  = document.getElementById('abs-date-picker');
+  var addDateBtn  = document.getElementById('abs-add-date');
+  var datesList   = document.getElementById('abs-dates-list');
+
+  // Default picker to today
+  datePicker.value = new Date().toISOString().slice(0, 10);
+
+  addDateBtn.addEventListener('click', function() {
+    var d = datePicker.value;
+    if (!d) return;
+    if (_absDates.indexOf(d) !== -1) return; // no dupes
+    _absDates.push(d);
+    _absDates.sort();
+    renderDates();
+  });
+
+  function renderDates() {
+    datesList.innerHTML = _absDates.map(function(d) {
+      var label = new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+      return '<span style="display:inline-flex;align-items:center;gap:6px;background:var(--soft);border:1px solid var(--bright);border-radius:20px;padding:5px 12px;font-size:.82rem;color:var(--bright);font-weight:600;">' +
+        label +
+        '<button type="button" onclick="removeAbsDate(\'' + d + '\')" style="background:none;border:none;color:var(--bright);cursor:pointer;font-size:1rem;line-height:1;padding:0 0 0 2px;" aria-label="Remove">×</button>' +
+        '</span>';
+    }).join('');
+  }
+
+  window.removeAbsDate = function(d) {
+    _absDates = _absDates.filter(function(x){ return x !== d; });
+    renderDates();
+  };
+
+  /* ── Submit ── */
+  document.getElementById('absenceSubmitBtn').addEventListener('click', function() {
+    var errEl = document.getElementById('absenceFormErr');
+    var btn   = document.getElementById('absenceSubmitBtn');
+    function showErr(m) { errEl.textContent = m; errEl.style.display = 'block'; }
+    errEl.style.display = 'none';
+
+    var grp    = absGroup.value;
+    var sName  = absInput.value.trim();
+    var parent = document.getElementById('abs-parent').value.trim();
+    var email  = document.getElementById('abs-email').value.trim();
+    var reason = document.getElementById('abs-reason').value;
+
+    if (!grp)             { showErr('Please select your child\'s class.'); return; }
+    if (!sName)           { showErr('Please enter your child\'s name.'); return; }
+    if (!parent)          { showErr('Please enter your name.'); return; }
+    if (!email || !email.includes('@')) { showErr('Please enter a valid email address.'); return; }
+    if (!_absDates.length){ showErr('Please add at least one absence date.'); return; }
+
+    btn.textContent = 'Submitting…';
+    btn.disabled = true;
+
+    /* Build pending absence entries */
+    var now = new Date().toISOString();
+    var newRequests = _absDates.map(function(d) {
+      return {
+        id: 'abs_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        studentName:  sName,
+        studentId:    absHidden.value || null,
+        parentName:   parent,
+        parentEmail:  email,
+        date:         d,
+        reason:       reason,
+        submittedAt:  now,
+        status:       'pending'
+      };
+    });
+
+    /* Read current DB, push requests, write back */
+    fetch(SUPABASE_URL + '/rest/v1/crm_data?id=eq.main&select=data', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(rows) {
+      var DB = (rows && rows[0] && rows[0].data) ? rows[0].data : {};
+      if (!DB.pendingAbsences) DB.pendingAbsences = [];
+      DB.pendingAbsences = DB.pendingAbsences.concat(newRequests);
+
+      return fetch(SUPABASE_URL + '/rest/v1/crm_data?id=eq.main', {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ data: DB })
+      });
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error('Write failed: ' + r.status);
+      document.getElementById('absenceFormInner').style.display = 'none';
+      document.getElementById('absenceFormSuccess').style.display = 'block';
+    })
+    .catch(function(err) {
+      showErr('Submission failed — please try again. (' + (err.message || '') + ')');
+      btn.textContent = 'Submit Absence Notice';
+      btn.disabled = false;
+    });
+  });
+
+  /* ── Reset for "Submit Another" ── */
+  window.resetAbsenceForm = function() {
+    _selectedStudent = null;
+    _absDates = [];
+    absInput.value = '';
+    absHidden.value = '';
+    absConfirm.style.display = 'none';
+    absGroup.value = '';
+    document.getElementById('abs-parent').value = '';
+    document.getElementById('abs-email').value = '';
+    document.getElementById('abs-reason').value = '';
+    datePicker.value = new Date().toISOString().slice(0, 10);
+    renderDates();
+    document.getElementById('absenceFormInner').style.display = 'block';
+    document.getElementById('absenceFormSuccess').style.display = 'none';
+    document.getElementById('absenceFormErr').style.display = 'none';
+  };
+
+  /* ── Boot: load roster when forms tab is opened ── */
+  window._absenceRosterLoaded = false;
+  document.querySelectorAll('.tab-btn, .menu-link').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var target = btn.dataset.tab || btn.dataset.menuTab;
+      if (target === 'forms' && !window._absenceRosterLoaded) {
+        window._absenceRosterLoaded = true;
+        loadRoster();
+      }
+    });
+  });
+  // Also lazy-load roster when absence sub-tab is clicked (in case forms was already open)
+  var absTabBtn = document.querySelector('.form-tab-btn[data-ftab="absence"]');
+  if (absTabBtn) {
+    absTabBtn.addEventListener('click', function() {
+      if (!window._absenceRosterLoaded) { window._absenceRosterLoaded = true; loadRoster(); }
+    });
+  }
+
+})(); // end absence form IIFE
 
 }); // end fetchSiteContent
 </script>
