@@ -1869,11 +1869,12 @@ fetchSiteContent(function() {
   document.getElementById('challengeBody').textContent=CONFIG.challenge.body;
 
   /* ── calendar ── */
-  if(CONFIG.calendarEmbedUrl){
-    document.getElementById('calendarSection').style.display='block';
+  var calSection = document.getElementById('calendarSection');
+  var evC = document.getElementById('calendarEvents');
+  if(CONFIG.calendarEmbedUrl && calSection && evC){
+    calSection.style.display='block';
     var calId='noblesmartialarts@gmail.com';
     var feedUrl='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(calId)+'/events?orderBy=startTime&singleEvents=true&timeMin='+encodeURIComponent(new Date().toISOString())+'&maxResults=8&key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY';
-    var evC=document.getElementById('calendarEvents');
     fetch(feedUrl).then(function(r){return r.json();}).then(function(data){
       evC.innerHTML='';
       var items=(data.items||[]).filter(function(e){return e.status!=='cancelled';});
