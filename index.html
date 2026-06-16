@@ -289,6 +289,10 @@ section{padding:36px 0 0}
 .link.primary .chev{color:rgba(255,255,255,.8)}
 .link.venmo{border-left-color:#008CFF}
 .link.venmo .ic{background:rgba(0,140,255,.13);color:#008CFF}
+.link.zelle{border-left-color:#6D1ED4}
+.link.zelle .ic{background:rgba(109,30,212,.13);color:#6D1ED4}
+.link.paypal{border-left-color:#003087}
+.link.paypal .ic{background:rgba(0,48,135,.13);color:#169BD7}
 .links-2col{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 @media(max-width:440px){.links-2col{grid-template-columns:1fr}}
 .socials{display:flex;gap:9px;margin-top:9px}
@@ -927,6 +931,10 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
     <!-- Hub quick-access grid -->
     <div class="hub-grid" id="hubGrid"></div>
 
+    <!-- Pay & Order -->
+    <div class="section-divider" style="margin-top:18px">Payments &amp; Orders</div>
+    <div class="links" id="payLinksList"></div>
+
     <!-- Social -->
     <div class="section-divider" style="margin-top:18px">Connect</div>
     <div class="socials" id="socialRow"></div>
@@ -1358,10 +1366,14 @@ const CONFIG = {
   ],
 
   payLinks: [
-    { icon:"venmo",     label:"NMA Venmo",        sub:"Pay tuition or purchases",
+    { icon:"venmo",     label:"NMA Venmo — Preferred", sub:"@BNobleFamily",
       url:"https://account.venmo.com/u/BNobleFamily", venmo:true },
     { icon:"belt-test", label:"Pay Belt Test Fee", sub:"$10 · Venmo · BNobleFamily",
       url:"https://account.venmo.com/payment-link?audience=private&amount=10&note=Belt%20Testing%20Fee&recipients=%2CBNobleFamily&txn=pay", venmo:true },
+    { icon:"zelle",     label:"NMA Zelle",   sub:"noblesmartialarts@gmail.com",
+      url:"", zelle:true },
+    { icon:"paypal",    label:"NMA PayPal",  sub:"paypal.me/BrandonNoble",
+      url:"https://paypal.me/BrandonNoble", paypal:true },
   ],
 
   gearLinks: [
@@ -1466,6 +1478,8 @@ fetchSiteContent(function() {
     insta:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.1" fill="currentColor" stroke="none"/>',
     fb:'<path d="M14 9h3V5h-3a4 4 0 0 0-4 4v2H7v4h3v6h4v-6h3l1-4h-4V9a1 1 0 0 1 1-1z"/>',
     venmo:'<path d="M17.9 3c.3.8.4 1.6.4 2.7 0 3.4-2.9 7.8-5.2 10.9H7.5L5 3.3l4.5-.4 1.3 9.8c1.2-2 2.6-5.2 2.6-7.3 0-1.2-.2-2-.5-2.7L17.9 3z"/>',
+    zelle:'<path d="M3 6h13l-9 12h13"/><path d="M3 6l4 6M16 6l-4 6"/>',
+    paypal:'<path d="M7 11c3.5.5 6-.5 7-3 1.5-4-1-5-4-5H5L3 18h3.5l.5-3H9c3.5 0 6.5-1.5 7.5-4.5"/><path d="M10.5 18H14c3 0 5.5-1.5 6-4.5"/>',
     'belt-test':'<circle cx="12" cy="8" r="5"/><path d="M12 13v8M8 17l4 4 4-4"/>',
     pay:'<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',
     handbook:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
@@ -1638,8 +1652,8 @@ fetchSiteContent(function() {
         else if (l.action === 'register') switchTab('register');
         else if (l.action === 'forms')    switchTab('forms');
         else if (l.action === 'lostfound') switchTab('lostfound');
-        else if (l.action === 'pay-belt') switchTab('hub');
-        else if (l.action === 'pay-gear') switchTab('hub');
+        else if (l.action === 'pay-belt') { switchTab('hub'); setTimeout(function(){ showPaySection(); }, 80); }
+        else if (l.action === 'pay-gear') { switchTab('hub'); setTimeout(function(){ showPaySection(); }, 80); }
         else if (l.action === 'hub-top')  { switchTab('hub'); }
         else if (l.action.startsWith('tab:')) switchTab(l.action.split(':')[1]);
       });
@@ -1648,7 +1662,7 @@ fetchSiteContent(function() {
       var a = document.createElement('a');
       a.href = l.url;
       if (l.download) { a.download = ''; } else { a.target = '_blank'; a.rel = 'noopener'; }
-      a.className = 'link' + (l.primary ? ' primary' : '') + (l.venmo ? ' venmo' : '');
+      a.className = 'link' + (l.primary ? ' primary' : '') + (l.venmo ? ' venmo' : '') + (l.zelle ? ' zelle' : '') + (l.paypal ? ' paypal' : '');
       a.innerHTML = '<span class="ic">'+svg(ICONS[icon]||ICONS.link)+'</span><span class="txt">'+esc(label)+'<small>'+esc(sub)+'</small></span><span class="chev">'+CHEV+'</span>';
       container.appendChild(a);
     }
@@ -1797,11 +1811,33 @@ fetchSiteContent(function() {
         else if (c.action==='register') switchTab('register');
         else if (c.action==='forms')    switchTab('forms');
         else if (c.action==='lostfound') switchTab('lostfound');
-        else if (c.action==='pay-belt'||c.action==='pay-gear') showPaySection();
+        else if (c.action==='pay-belt'||c.action==='pay-gear') { switchTab('hub'); setTimeout(function(){ var el=document.getElementById('payLinksList'); if(el) el.scrollIntoView({behavior:'smooth'}); },80); }
         else if (c.action==='hub-top')  { switchTab('hub'); window.scrollTo({top:0,behavior:'smooth'}); }
       });
       hg.appendChild(btn);
     }
+  });
+
+  /* ── populate static pay links list ── */
+  var pll = document.getElementById('payLinksList');
+  CONFIG.payLinks.filter(function(l){ return l.url || l.zelle; }).forEach(function(l){
+    var a = document.createElement('a');
+    if (l.zelle) {
+      a.href = '#';
+      a.addEventListener('click', function(e){
+        e.preventDefault();
+        navigator.clipboard.writeText(l.sub).then(function(){
+          var orig = a.querySelector('.txt small').textContent;
+          a.querySelector('.txt small').textContent = 'Copied!';
+          setTimeout(function(){ a.querySelector('.txt small').textContent = orig; }, 2000);
+        });
+      });
+    } else if (l.url) {
+      a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
+    }
+    a.className = 'link' + (l.venmo?' venmo':'') + (l.zelle?' zelle':'') + (l.paypal?' paypal':'');
+    a.innerHTML = '<span class="ic">'+svg(ICONS[l.icon]||ICONS.link)+'</span><span class="txt">'+esc(l.label)+'<small>'+esc(l.sub||'')+'</small></span><span class="chev">'+CHEV+'</span>';
+    pll.appendChild(a);
   });
 
   /* ── videos section (inside hub tab) ── */
@@ -1829,8 +1865,10 @@ fetchSiteContent(function() {
     if (existing) { existing.scrollIntoView({behavior:'smooth'}); return; }
     var sec=document.createElement('section'); sec.id='hubPaySection';
     var linksHtml='';
-    CONFIG.payLinks.filter(function(l){return l.url;}).forEach(function(l){
-      linksHtml+='<a href="'+esc(l.url)+'" target="_blank" rel="noopener" class="link'+(l.venmo?' venmo':'')+'"><span class="ic">'+svg(ICONS[l.icon]||ICONS.link)+'</span><span class="txt">'+esc(l.label)+'<small>'+esc(l.sub||'')+'</small></span><span class="chev">'+CHEV+'</span></a>';
+    CONFIG.payLinks.filter(function(l){return l.url || l.zelle;}).forEach(function(l){
+      var href = l.url || '#';
+      var target = l.url ? ' target="_blank" rel="noopener"' : '';
+      linksHtml+='<a href="'+esc(href)+'"'+target+' class="link'+(l.venmo?' venmo':'')+(l.zelle?' zelle':'')+(l.paypal?' paypal':'')+'"><span class="ic">'+svg(ICONS[l.icon]||ICONS.link)+'</span><span class="txt">'+esc(l.label)+'<small>'+esc(l.sub||'')+'</small></span><span class="chev">'+CHEV+'</span></a>';
     });
     var gearHtml='';
     CONFIG.gearLinks.filter(function(l){return l.url;}).forEach(function(l){
