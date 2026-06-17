@@ -1811,7 +1811,8 @@ fetchSiteContent(function() {
         else if (c.action==='register') switchTab('register');
         else if (c.action==='forms')    switchTab('forms');
         else if (c.action==='lostfound') switchTab('lostfound');
-        else if (c.action==='pay-belt'||c.action==='pay-gear') { switchTab('hub'); setTimeout(function(){ var el=document.getElementById('payLinksList'); if(el) el.scrollIntoView({behavior:'smooth'}); },80); }
+        else if (c.action==='pay-belt') { switchTab('hub'); setTimeout(function(){ showPaySection(); var el=document.getElementById('payLinksList'); if(el) el.scrollIntoView({behavior:'smooth'}); },80); }
+        else if (c.action==='pay-gear') { switchTab('hub'); setTimeout(function(){ showPaySection(); setTimeout(function(){ var sec=document.getElementById('hubPaySection'); if(sec) sec.scrollIntoView({behavior:'smooth'}); },80); },80); }
         else if (c.action==='hub-top')  { switchTab('hub'); window.scrollTo({top:0,behavior:'smooth'}); }
       });
       hg.appendChild(btn);
@@ -1862,7 +1863,16 @@ fetchSiteContent(function() {
   /* ── pay section (inside hub tab) ── */
   function showPaySection() {
     var existing=document.getElementById('hubPaySection');
-    if (existing) { existing.scrollIntoView({behavior:'smooth'}); return; }
+    if (existing) {
+      // Re-render gear links in case they loaded after first render
+      var gearContainer = existing.querySelector('.gear-links-wrap');
+      var gearHtml='';
+      CONFIG.gearLinks.filter(function(l){return l.url;}).forEach(function(l){
+        gearHtml+='<a href="'+esc(l.url)+'" target="_blank" rel="noopener" class="link"><span class="ic">'+svg(ICONS[l.icon]||ICONS.link)+'</span><span class="txt">'+esc(l.label)+'<small>'+esc(l.sub||'')+'</small></span><span class="chev">'+CHEV+'</span></a>';
+      });
+      if (gearContainer) gearContainer.innerHTML = gearHtml ? '<p class="eye" style="margin-top:16px;margin-bottom:8px">Gear &amp; Weapons</p><div class="links">'+gearHtml+'</div>' : '';
+      existing.scrollIntoView({behavior:'smooth'}); return;
+    }
     var sec=document.createElement('section'); sec.id='hubPaySection';
     var linksHtml='';
     CONFIG.payLinks.filter(function(l){return l.url || l.zelle;}).forEach(function(l){
@@ -1874,9 +1884,9 @@ fetchSiteContent(function() {
     CONFIG.gearLinks.filter(function(l){return l.url;}).forEach(function(l){
       gearHtml+='<a href="'+esc(l.url)+'" target="_blank" rel="noopener" class="link"><span class="ic">'+svg(ICONS[l.icon]||ICONS.link)+'</span><span class="txt">'+esc(l.label)+'<small>'+esc(l.sub||'')+'</small></span><span class="chev">'+CHEV+'</span></a>';
     });
-    sec.innerHTML='<div class="head" style="margin-top:20px"><p class="eye">Payments & Orders</p><h2 class="disp">Pay & Order</h2></div>'+
+    sec.innerHTML='<div class="head" style="margin-top:20px"><p class="eye">Payments &amp; Orders</p><h2 class="disp">Pay &amp; Order</h2></div>'+
       '<div class="links">'+linksHtml+'</div>'+
-      (gearHtml?'<p class="eye" style="margin-top:16px;margin-bottom:8px">Gear & Weapons</p><div class="links">'+gearHtml+'</div>':'');
+      '<div class="gear-links-wrap">'+(gearHtml?'<p class="eye" style="margin-top:16px;margin-bottom:8px">Gear &amp; Weapons</p><div class="links">'+gearHtml+'</div>':'')+'</div>';
     document.getElementById('tab-hub').appendChild(sec);
     sec.scrollIntoView({behavior:'smooth'});
   }
