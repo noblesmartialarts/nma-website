@@ -362,18 +362,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
         <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="sec-body" id="sb-avail">
-        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Add your open slots here — you can schedule as far ahead as you want. The public site only ever shows the next 14 days, so nothing overwhelming is visible to clients at once.</p>
+        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Add a window of time you're available (e.g., 3:00–7:00pm) — clients will be able to pick any 30-minute-aligned start time within it that fits the service they've chosen, working around anything already booked plus a 30-minute buffer before and after. You can schedule as far ahead as you want; the public site only ever shows the next 14 days.</p>
         <div class="avail-add-row">
           <div class="field"><label>Date</label><input type="date" id="avail-date"/></div>
-          <div class="field"><label>Start time</label><input type="time" id="avail-time"/></div>
-          <div class="field"><label>Duration</label>
-            <select id="avail-duration">
-              <option value="30">30 min</option>
-              <option value="45" selected>45 min</option>
-              <option value="60">60 min</option>
-              <option value="90">90 min</option>
-            </select>
-          </div>
+          <div class="field"><label>Available from</label><input type="time" id="avail-time" step="1800"/></div>
+          <div class="field"><label>Available until</label><input type="time" id="avail-endtime" step="1800"/></div>
           <div class="field"><label>Repeat weekly</label>
             <select id="avail-repeat">
               <option value="1" selected>Just this once</option>
@@ -1206,8 +1199,7 @@ function renderAvailabilityList() {
   list.innerHTML = order.map(function(d){
     var rows = byDate[d].map(function(s){
       return '<div class="avail-slot">'
-        + '<div><span class="avail-slot-time">'+plAdminTime(s.start_time)+'</span>'
-        + '<span class="avail-slot-dur">'+s.duration_minutes+' min</span></div>'
+        + '<div><span class="avail-slot-time">'+plAdminTime(s.start_time)+' – '+plAdminTime(s.end_time)+'</span></div>'
         + '<div class="avail-slot-actions">'
         + '<span class="avail-status '+s.status+'">'+s.status+'</span>'
         + '<button class="avail-del" data-availid="'+s.id+'" type="button">Remove</button>'
@@ -1226,11 +1218,16 @@ function addAvailabilitySlot() {
   errEl.style.display = 'none';
   var date = document.getElementById('avail-date').value;
   var time = document.getElementById('avail-time').value;
-  var duration = parseInt(document.getElementById('avail-duration').value, 10);
+  var endTime = document.getElementById('avail-endtime').value;
   var repeatWeeks = parseInt(document.getElementById('avail-repeat').value, 10);
 
-  if (!date || !time) {
-    errEl.textContent = 'Pick a date and start time first.';
+  if (!date || !time || !endTime) {
+    errEl.textContent = 'Pick a date, start time, and end time first.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (endTime <= time) {
+    errEl.textContent = '"Available until" needs to be after "Available from".';
     errEl.style.display = 'block';
     return;
   }
@@ -1242,7 +1239,7 @@ function addAvailabilitySlot() {
     rows.push({
       date: d.toISOString().slice(0,10),
       start_time: time,
-      duration_minutes: duration,
+      end_time: endTime,
       status: 'open'
     });
   }
