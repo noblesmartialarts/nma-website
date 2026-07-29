@@ -320,12 +320,21 @@ function renderServiceList() {
   });
 }
 
+/* Local YYYY-MM-DD — NOT toISOString(), which converts to UTC and can
+   already show tomorrow's date in the evening for US timezones. All
+   "today"/date-bucket logic on this page needs to match what the
+   client actually sees on their own calendar right now. */
+function toLocalISODate(d){
+  var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+
 /* ── load availability windows for the next N days ── */
 function loadAvailabilityWindow() {
   var today = new Date();
-  var todayStr = today.toISOString().slice(0,10);
+  var todayStr = toLocalISODate(today);
   var end = new Date(today.getTime() + (LOOKAHEAD_DAYS-1)*24*60*60*1000);
-  var endStr = end.toISOString().slice(0,10);
+  var endStr = toLocalISODate(end);
 
   var windowsReq = fetch(SB_URL + '/rest/v1/private_lesson_availability?date=gte.'+todayStr+'&date=lte.'+endStr+'&order=date.asc,start_time.asc', {
     headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
@@ -376,7 +385,7 @@ function computeValidStarts(dateStr, durationMin) {
   var blockedWindows= rows.filter(function(r){ return r.status === 'blocked'; });
 
   var now = new Date();
-  var isToday = dateStr === now.toISOString().slice(0,10);
+  var isToday = dateStr === toLocalISODate(now);
   var nowMin = now.getHours()*60 + now.getMinutes();
 
   var valid = [];
@@ -412,7 +421,7 @@ function renderDateList() {
   var dates = [];
   for (var i = 0; i < LOOKAHEAD_DAYS; i++) {
     var d = new Date(today.getTime() + i*24*60*60*1000);
-    dates.push(d.toISOString().slice(0,10));
+    dates.push(toLocalISODate(d));
   }
   var withAvailability = dates.filter(function(d){ return computeValidStarts(d, duration).length > 0; });
 
