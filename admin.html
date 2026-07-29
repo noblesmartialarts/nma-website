@@ -136,6 +136,23 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
 .abs-filter-btn.active{background:var(--soft);color:var(--bright);border-color:var(--bright)}
 .abs-clean-btn{margin-left:auto;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,90,90,.3);background:transparent;color:var(--red);font-family:inherit;font-size:.76rem;font-weight:700;cursor:pointer}
 .abs-clean-btn:hover{background:rgba(255,90,90,.1)}
+/* private lesson availability */
+.avail-add-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:10px}
+@media(max-width:560px){.avail-add-row{grid-template-columns:1fr 1fr}}
+.avail-add-row .field{margin-top:0}
+.avail-day-group{margin-top:14px}
+.avail-day-label{font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.avail-slot{background:var(--surf2);border:1px solid var(--border);border-radius:11px;padding:10px 12px;margin-top:7px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.avail-slot-time{font-weight:700;font-size:.9rem}
+.avail-slot-dur{color:var(--muted);font-size:.78rem;margin-left:6px}
+.avail-status{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-radius:99px;padding:4px 9px;white-space:nowrap}
+.avail-status.open{color:var(--green);background:rgba(34,197,94,.13);border:1px solid rgba(34,197,94,.3)}
+.avail-status.booked{color:var(--bright);background:var(--soft);border:1px solid var(--bright)}
+.avail-status.blocked{color:var(--red);background:rgba(255,90,90,.13);border:1px solid rgba(255,90,90,.3)}
+.avail-slot-actions{display:flex;align-items:center;gap:8px}
+.avail-del{background:rgba(255,90,90,.13);border:1px solid rgba(255,90,90,.28);color:var(--red);border-radius:7px;padding:4px 9px;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit}
+.avail-empty{padding:14px;color:var(--muted);font-size:.85rem;text-align:center}
+
 /* save bar */
 .save-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:1px solid var(--border2);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:100}
 .save-bar p{font-size:.83rem;color:var(--muted)}
@@ -335,6 +352,47 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
           <p id="lfAdminErr" style="color:var(--red);font-size:.82rem;margin-top:.6rem;display:none"></p>
         </div>
         <div id="lfAdminList" style="margin-top:14px"><div class="lf-admin-empty">Loading Lost &amp; Found…</div></div>
+      </div>
+    </div>
+
+    <!-- PRIVATE LESSON AVAILABILITY -->
+    <div class="section">
+      <div class="sec-head" data-s="avail">
+        <h2 class="disp">Private Lesson Availability <span class="badge" id="availAdminBadge">0 open</span></h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-avail">
+        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Add your open slots here — you can schedule as far ahead as you want. The public site only ever shows the next 14 days, so nothing overwhelming is visible to clients at once.</p>
+        <div class="avail-add-row">
+          <div class="field"><label>Date</label><input type="date" id="avail-date"/></div>
+          <div class="field"><label>Start time</label><input type="time" id="avail-time"/></div>
+          <div class="field"><label>Duration</label>
+            <select id="avail-duration">
+              <option value="30">30 min</option>
+              <option value="45" selected>45 min</option>
+              <option value="60">60 min</option>
+              <option value="90">90 min</option>
+            </select>
+          </div>
+          <div class="field"><label>Repeat weekly</label>
+            <select id="avail-repeat">
+              <option value="1" selected>Just this once</option>
+              <option value="4">4 weeks</option>
+              <option value="8">8 weeks</option>
+              <option value="12">12 weeks</option>
+            </select>
+          </div>
+        </div>
+        <button class="add-btn" id="availAddBtn" type="button">+ Add Availability</button>
+        <p id="availErr" style="color:var(--red);font-size:.82rem;margin-top:.5rem;display:none"></p>
+
+        <div class="abs-filter-row" style="margin-top:16px">
+          <button class="avail-filter-btn abs-filter-btn active" data-availf="upcoming">Upcoming</button>
+          <button class="avail-filter-btn abs-filter-btn" data-availf="open">Open</button>
+          <button class="avail-filter-btn abs-filter-btn" data-availf="booked">Booked</button>
+          <button class="avail-filter-btn abs-filter-btn" data-availf="blocked">Blocked</button>
+        </div>
+        <div id="availAdminList" style="margin-top:4px"><div class="avail-empty">Loading…</div></div>
       </div>
     </div>
 
@@ -1088,11 +1146,153 @@ document.querySelectorAll('.abs-filter-btn').forEach(function(btn){
   });
 });
 
+/* ══════════════════════════════════════════════
+   PRIVATE LESSON AVAILABILITY — reads/writes private_lesson_availability
+══════════════════════════════════════════════ */
+var PL_URL = SB_URL + '/rest/v1/private_lesson_availability';
+var availSlots = [];
+var _availFilter = 'upcoming';
+
+function loadAvailability() {
+  document.getElementById('availAdminList').innerHTML = '<div class="avail-empty">Loading…</div>';
+  var today = new Date().toISOString().slice(0,10);
+  fetch(PL_URL + '?date=gte.' + today + '&order=date.asc,start_time.asc', {
+    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    availSlots = rows || [];
+    renderAvailabilityList();
+  })
+  .catch(function(e){
+    document.getElementById('availAdminList').innerHTML = '<div class="avail-empty">Error loading: '+eh(e.message)+'</div>';
+  });
+}
+
+function plAdminDate(d) {
+  var dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString([], {weekday:'long', month:'short', day:'numeric'});
+}
+function plAdminTime(t) {
+  var parts = t.split(':');
+  var h = parseInt(parts[0],10), m = parts[1];
+  var ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12; if (h === 0) h = 12;
+  return h + ':' + m + ' ' + ap;
+}
+
+function renderAvailabilityList() {
+  var openCount = availSlots.filter(function(s){ return s.status==='open'; }).length;
+  document.getElementById('availAdminBadge').textContent = openCount + ' open';
+
+  var filtered = availSlots.filter(function(s){
+    if (_availFilter === 'upcoming') return true;
+    return s.status === _availFilter;
+  });
+
+  var list = document.getElementById('availAdminList');
+  if (!filtered.length) {
+    list.innerHTML = '<div class="avail-empty">No slots to show.</div>';
+    return;
+  }
+
+  var byDate = {};
+  var order = [];
+  filtered.forEach(function(s){
+    if (!byDate[s.date]) { byDate[s.date] = []; order.push(s.date); }
+    byDate[s.date].push(s);
+  });
+
+  list.innerHTML = order.map(function(d){
+    var rows = byDate[d].map(function(s){
+      return '<div class="avail-slot">'
+        + '<div><span class="avail-slot-time">'+plAdminTime(s.start_time)+'</span>'
+        + '<span class="avail-slot-dur">'+s.duration_minutes+' min</span></div>'
+        + '<div class="avail-slot-actions">'
+        + '<span class="avail-status '+s.status+'">'+s.status+'</span>'
+        + '<button class="avail-del" data-availid="'+s.id+'" type="button">Remove</button>'
+        + '</div></div>';
+    }).join('');
+    return '<div class="avail-day-group"><div class="avail-day-label">'+plAdminDate(d)+'</div>'+rows+'</div>';
+  }).join('');
+
+  document.querySelectorAll('.avail-del').forEach(function(btn){
+    btn.addEventListener('click', function(){ deleteAvailabilitySlot(btn.dataset.availid); });
+  });
+}
+
+function addAvailabilitySlot() {
+  var errEl = document.getElementById('availErr');
+  errEl.style.display = 'none';
+  var date = document.getElementById('avail-date').value;
+  var time = document.getElementById('avail-time').value;
+  var duration = parseInt(document.getElementById('avail-duration').value, 10);
+  var repeatWeeks = parseInt(document.getElementById('avail-repeat').value, 10);
+
+  if (!date || !time) {
+    errEl.textContent = 'Pick a date and start time first.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var rows = [];
+  var baseDate = new Date(date + 'T00:00:00');
+  for (var i = 0; i < repeatWeeks; i++) {
+    var d = new Date(baseDate.getTime() + i*7*24*60*60*1000);
+    rows.push({
+      date: d.toISOString().slice(0,10),
+      start_time: time,
+      duration_minutes: duration,
+      status: 'open'
+    });
+  }
+
+  fetch(PL_URL, {
+    method:'POST',
+    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
+    body: JSON.stringify(rows)
+  })
+  .then(function(r){
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    showToast(rows.length===1 ? 'Slot added' : rows.length+' slots added','ok');
+    loadAvailability();
+  })
+  .catch(function(e){
+    errEl.textContent = 'Could not save: '+e.message;
+    errEl.style.display = 'block';
+  });
+}
+
+function deleteAvailabilitySlot(id) {
+  if (!confirm('Remove this slot?')) return;
+  fetch(PL_URL + '?id=eq.' + id, {
+    method:'DELETE',
+    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Prefer':'return=minimal' }
+  })
+  .then(function(r){
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    showToast('Slot removed','ok');
+    loadAvailability();
+  })
+  .catch(function(e){ showToast('Delete failed: '+e.message,'err'); });
+}
+
+document.getElementById('availAddBtn').addEventListener('click', addAvailabilitySlot);
+document.querySelectorAll('.avail-filter-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.avail-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    _availFilter = btn.dataset.availf;
+    renderAvailabilityList();
+  });
+});
+
 // Load on boot (called after login)
 var _origLoadData = loadData;
 loadData = function() {
   _origLoadData();
   loadAbsenceRequests();
+  loadAvailability();
 };
 
 /* ── Auto-refresh when tab regains focus — no relog needed ── */
@@ -1100,12 +1300,14 @@ document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'visible' && sessionStorage.getItem('nma_admin') === '1') {
     loadLostFoundAdmin();
     loadAbsenceRequests();
+    loadAvailability();
   }
 });
 window.addEventListener('focus', function() {
   if (sessionStorage.getItem('nma_admin') === '1') {
     loadLostFoundAdmin();
     loadAbsenceRequests();
+    loadAvailability();
   }
 });
 </script>
