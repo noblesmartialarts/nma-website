@@ -59,6 +59,14 @@ h1.disp{font-size:2.1rem}
   padding:12px 18px;font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;margin-right:8px}
 .btn-back:hover{color:var(--text);border-color:var(--bright)}
 
+.price-choice-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.price-choice{background:var(--surf);border:1px solid var(--border2);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:border-color .12s,background .12s}
+.price-choice:hover{border-color:var(--bright)}
+.price-choice.selected{border-color:var(--bright);background:var(--soft)}
+.price-choice .pc-label{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.price-choice .pc-price{font-family:'Bebas Neue';font-size:1.4rem;color:var(--bright);margin-top:2px}
+.price-choice .pc-save{font-size:.7rem;color:var(--green);font-weight:700;margin-top:2px}
+
 .empty{color:var(--muted);font-size:.85rem;text-align:center;padding:20px 0}
 .loading{color:var(--muted);font-size:.85rem;text-align:center;padding:20px 0}
 .wip-banner{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fbbf24;
@@ -203,25 +211,70 @@ function renderServiceList() {
     return;
   }
   listEl.innerHTML = matches.map(function(s){
-    var badge = s.package_available
-      ? '<span class="badge">3-pack: $'+Number(s.package_price).toFixed(0)+'</span>' : '';
-    return '<div class="opt-card" data-code="'+s.service_code+'">'
+    var head = '<div class="opt-card" data-code="'+s.service_code+'" style="cursor:default">'
       + '<div class="t">'+eh(s.service_name)+' — '+s.duration_minutes+' min</div>'
-      + '<div class="d">'+eh(s.description||'')+'</div>'
-      + '<div class="price">$'+Number(s.base_price).toFixed(0)+'</div>'
-      + (s.additional_participant_price ? '<div class="d">+$'+Number(s.additional_participant_price).toFixed(0)+' per additional participant, up to '+s.max_participants+'</div>' : '')
-      + badge
+      + '<div class="d">'+eh(s.description||'')+'</div>';
+
+    if (s.package_available) {
+      var perSessionPkg = s.package_price / s.package_session_count;
+      var savings = (s.base_price - perSessionPkg) * s.package_session_count;
+      head += '<div class="price-choice-row">'
+        + '<div class="price-choice" data-code="'+s.service_code+'" data-choice="single">'
+          + '<div class="pc-label">1 Session</div>'
+          + '<div class="pc-price">$'+Number(s.base_price).toFixed(0)+'</div>'
+        + '</div>'
+        + '<div class="price-choice" data-code="'+s.service_code+'" data-choice="package">'
+          + '<div class="pc-label">3-Pack</div>'
+          + '<div class="pc-price">$'+Number(s.package_price).toFixed(0)+'</div>'
+          + '<div class="pc-save">Save $'+savings.toFixed(0)+'</div>'
+        + '</div>'
       + '</div>';
+      if (s.package_expiration_weeks) {
+        head += '<div class="d" style="margin-top:6px">3-packs are valid for '+s.package_expiration_weeks+' weeks from purchase.</div>';
+      }
+    } else {
+      head += '<div class="price">$'+Number(s.base_price).toFixed(0)+'</div>';
+    }
+    if (s.additional_participant_price) {
+      head += '<div class="d">+$'+Number(s.additional_participant_price).toFixed(0)+' per additional participant, up to '+s.max_participants+'</div>';
+    }
+    head += '</div>';
+    return head;
   }).join('');
+
+  function selectService(code, choice) {
+    listEl.querySelectorAll('.price-choice').forEach(function(c){ c.classList.remove('selected'); });
+    listEl.querySelectorAll('.opt-card').forEach(function(c){ c.classList.remove('selected'); });
+    var svc = matches.filter(function(s){ return s.service_code === code; })[0];
+    state.service = svc;
+    state.packageChoice = choice; // 'single' | 'package'
+
+    if (svc.package_available) {
+      listEl.querySelectorAll('.price-choice[data-code="'+code+'"][data-choice="'+choice+'"]').forEach(function(c){ c.classList.add('selected'); });
+    } else {
+      listEl.querySelectorAll('.opt-card[data-code="'+code+'"]').forEach(function(c){ c.classList.add('selected'); });
+    }
+
+    loadAvailabilityWindow().then(function(){
+      renderDateList();
+      showStep('step-date');
+    });
+  }
+
+  // Package-eligible cards: only the two price-choice buttons are clickable.
+  listEl.querySelectorAll('.price-choice').forEach(function(pc){
+    pc.addEventListener('click', function(e){
+      e.stopPropagation();
+      selectService(pc.dataset.code, pc.dataset.choice);
+    });
+  });
+  // Non-package cards: whole card is clickable, always a single session.
   listEl.querySelectorAll('.opt-card').forEach(function(card){
+    var svc = matches.filter(function(s){ return s.service_code === card.dataset.code; })[0];
+    if (svc.package_available) return; // handled by price-choice buttons above
+    card.style.cursor = 'pointer';
     card.addEventListener('click', function(){
-      listEl.querySelectorAll('.opt-card').forEach(function(c){ c.classList.remove('selected'); });
-      card.classList.add('selected');
-      state.service = matches.filter(function(s){ return s.service_code === card.dataset.code; })[0];
-      loadAvailabilityWindow().then(function(){
-        renderDateList();
-        showStep('step-date');
-      });
+      selectService(card.dataset.code, 'single');
     });
   });
 }
@@ -359,11 +412,18 @@ function renderTimeList() {
 /* ── STEP 5: summary ── */
 function renderSummary() {
   var s = state.service;
+  var isPkg = state.packageChoice === 'package';
+  var priceLabel = isPkg ? '3-pack total' : 'Base price';
+  var priceVal = isPkg ? s.package_price : s.base_price;
+  var pkgNote = isPkg
+    ? '<div class="row"><span>Sessions</span><b>This books session 1 of 3 — you\'ll return to book the other two whenever you\'re ready</b></div>'
+    : '';
   document.getElementById('summaryCard').innerHTML =
     '<div class="row"><span>Service</span><b>'+eh(s.service_name)+' ('+s.duration_minutes+' min)</b></div>'
     + '<div class="row"><span>Date</span><b>'+fmtDate(state.date)+'</b></div>'
     + '<div class="row"><span>Time</span><b>'+fmtTime(state.startTime)+'</b></div>'
-    + '<div class="row total"><span>Base price</span><b>$'+Number(s.base_price).toFixed(0)+'</b></div>';
+    + pkgNote
+    + '<div class="row total"><span>'+priceLabel+'</span><b>$'+Number(priceVal).toFixed(0)+'</b></div>';
   // Continue stays disabled until the booking-details step is built.
 }
 
