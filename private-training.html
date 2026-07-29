@@ -507,7 +507,7 @@ function renderDetailsForm() {
   }
 
   html += '<div class="fq"><label>Training Location <span class="req">*</span></label>'
-    + '<select id="d-locationType"><option value="client_property">My home / property</option><option value="public_space">Public space (park, clubhouse, etc.)</option></select></div>';
+    + '<select id="d-locationType" onchange="plLocationTypeChanged()"><option value="client_property">My home / property</option><option value="public_space">Public space (park, clubhouse, etc.)</option><option value="brandon_gym">Sensei Brandon\'s Apartment Gym</option></select></div>';
   html += '<div class="fq"><label>Location Address / Details <span class="req">*</span></label><textarea id="d-locationAddress" placeholder="Address, or the name and area of the public space"></textarea></div>';
   html += '<div class="fq"><label>Training Focus / Goals</label><textarea id="d-goals" placeholder="What would you like to work on?"></textarea></div>';
   html += '<div class="fq"><label>Injuries or Limitations</label><textarea id="d-injuries" placeholder="Anything Sensei Brandon should know"></textarea></div>';
@@ -524,6 +524,20 @@ function renderDetailsForm() {
   }
   if (isNmaLinked) {
     wireRosterAutocomplete();
+  }
+}
+
+// TODO: replace this placeholder text with the real complex name /
+// whatever detail level Brandon wants visible before he approves the request.
+var BRANDON_GYM_LOCATION_TEXT = "Sensei Brandon's apartment complex gym — exact address will be provided once your request is approved.";
+
+function plLocationTypeChanged() {
+  var typeSel = document.getElementById('d-locationType');
+  var addrEl = document.getElementById('d-locationAddress');
+  if (typeSel.value === 'brandon_gym') {
+    addrEl.value = BRANDON_GYM_LOCATION_TEXT;
+  } else if (addrEl.value === BRANDON_GYM_LOCATION_TEXT) {
+    addrEl.value = '';
   }
 }
 
