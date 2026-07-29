@@ -3,6 +3,7 @@
 // Types: 'absence', 'feedback', 'adult', 'lostfound'
 
 const SUPA_URL = 'https://erqblpewozxkpornohvq.supabase.co';
+const crypto = require('crypto');
 
 exports.handler = async (event) => {
 if (event.httpMethod === 'OPTIONS') {
@@ -30,6 +31,8 @@ if (event.httpMethod === 'OPTIONS') {
       return await handleFormSubmission(body, KEY);
     } else if (type === 'lostfound') {
       return await handleLostFound(body, KEY);
+    } else if (type === 'privateLesson') {
+      return await handlePrivateLessonBooking(body, KEY);
     } else {
       return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Unknown form type: ' + type }) };
     }
@@ -132,6 +135,129 @@ async function handleLostFound(body, KEY) {
   }
 
   return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true }) };
+}
+
+// ── Private Lesson Booking: create/find client, optional package, booking, participants ──
+async function handlePrivateLessonBooking(body, KEY) {
+  const {
+    relationship, serviceCode, packageChoice, date, startTime,
+    clientName, email, phone, linkedStudentId,
+    primaryName, primaryAge, additionalParticipants,
+    locationType, locationAddress, goals, injuries, comments
+  } = body;
+
+  if (!serviceCode || !date || !startTime || !clientName || !email || !phone || !locationAddress) {
+    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing required fields' }) };
+  }
+
+  // 1. Authoritative service lookup — never trust price/duration from the client
+  const svcRes = await supaFetch('GET', '/rest/v1/private_lesson_services?service_code=eq.'+encodeURIComponent(serviceCode)+'&select=*', null, KEY);
+  const svcRows = await svcRes.json();
+  if (!svcRows || !svcRows[0]) {
+    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Unknown service' }) };
+  }
+  const svc = svcRows[0];
+
+  const additional = Array.isArray(additionalParticipants) ? additionalParticipants.filter(function(p){ return p && p.name; }) : [];
+  const participantCount = 1 + additional.length;
+  if (participantCount > svc.max_participants) {
+    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Too many participants for this service' }) };
+  }
+  if (packageChoice === 'package' && !svc.package_available) {
+    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Packages are not available for this service' }) };
+  }
+
+  // 2. Compute end time server-side from the service duration
+  const parts = startTime.split(':').map(Number);
+  const endMin = parts[0]*60 + parts[1] + svc.duration_minutes;
+  const endTime = String(Math.floor(endMin/60)).padStart(2,'0') + ':' + String(endMin%60).padStart(2,'0');
+
+  // 3. Find or create the client by email
+  let clientId;
+  const findRes = await supaFetch('GET', '/rest/v1/private_lesson_clients?email=eq.'+encodeURIComponent(email)+'&select=id', null, KEY);
+  const findRows = await findRes.json();
+  if (findRows && findRows[0]) {
+    clientId = findRows[0].id;
+  } else {
+    const relMap = { student:'student', outside_child:'outside', parent:'parent', outside_adult:'outside' };
+    const clientPayload = {
+      full_name: clientName, email, phone,
+      relationship_type: relMap[relationship] || 'outside',
+      linked_student_id: linkedStudentId || null
+    };
+    const createRes = await supaFetch('POST', '/rest/v1/private_lesson_clients', clientPayload, KEY, 'return=representation');
+    const createRows = await createRes.json();
+    if (!createRes.ok || !createRows[0]) throw new Error('Could not create client record');
+    clientId = createRows[0].id;
+  }
+
+  // 4. Create a package if requested
+  let packageId = null;
+  if (packageChoice === 'package') {
+    const purchaseDate = new Date();
+    const expires = new Date(purchaseDate.getTime() + svc.package_expiration_weeks*7*24*60*60*1000);
+    const pkgPayload = {
+      client_id: clientId, service_id: svc.id, source: 'purchased',
+      sessions_total: svc.package_session_count, sessions_used: 0,
+      price_paid: svc.package_price, payment_method: null,
+      purchase_date: purchaseDate.toISOString().slice(0,10),
+      expires_at: expires.toISOString().slice(0,10),
+      status: 'active'
+    };
+    const pkgRes = await supaFetch('POST', '/rest/v1/private_lesson_packages', pkgPayload, KEY, 'return=representation');
+    const pkgRows = await pkgRes.json();
+    if (!pkgRes.ok || !pkgRows[0]) throw new Error('Could not create package');
+    packageId = pkgRows[0].id;
+  }
+
+  // 5. Reference which admin-entered window this falls within (informational only)
+  const availRes = await supaFetch('GET',
+    '/rest/v1/private_lesson_availability?date=eq.'+date+'&status=eq.open&start_time=lte.'+startTime+'&end_time=gte.'+endTime+'&select=id&limit=1',
+    null, KEY);
+  const availRows = await availRes.json();
+  const availabilitySlotId = (availRows && availRows[0]) ? availRows[0].id : null;
+
+  // 6. Pricing — package covers the base session; extra participants are always billed separately
+  const additionalCharge = additional.length * Number(svc.additional_participant_price || 0);
+  const baseCharged = packageChoice === 'package' ? 0 : Number(svc.base_price);
+  const finalTotal = baseCharged + additionalCharge;
+  const magicToken = crypto.randomBytes(24).toString('base64url');
+
+  const bookingPayload = {
+    package_id: packageId, service_id: svc.id, primary_client_id: clientId,
+    availability_slot_id: availabilitySlotId,
+    session_date: date, start_time: startTime, end_time: endTime,
+    location_type: locationType || null, location_address: locationAddress,
+    training_focus: goals || null, client_goals: goals || null,
+    injuries_limitations: injuries || null,
+    required_equipment_available: true,
+    participant_count: participantCount,
+    base_price_charged: baseCharged, additional_participant_charge: additionalCharge,
+    package_credit_used: packageChoice === 'package',
+    final_total: finalTotal,
+    payment_status: 'unpaid', waiver_status: 'pending',
+    status: 'pending', created_by: 'client',
+    magic_link_token: magicToken,
+    instructor_notes: comments || null
+  };
+  const bookRes = await supaFetch('POST', '/rest/v1/private_lesson_bookings', bookingPayload, KEY, 'return=representation');
+  const bookRows = await bookRes.json();
+  if (!bookRes.ok || !bookRows[0]) throw new Error('Could not create booking');
+  const booking = bookRows[0];
+
+  // 7. Participants — primary attendee plus any additional
+  const participantRows = [{
+    booking_id: booking.id, full_name: primaryName || clientName,
+    age: primaryAge || null, is_primary: true, relationship_to_primary: null
+  }].concat(additional.map(function(p){
+    return { booking_id: booking.id, full_name: p.name, age: p.age || null, is_primary: false, relationship_to_primary: 'additional' };
+  }));
+  await supaFetch('POST', '/rest/v1/private_lesson_participants', participantRows, KEY, 'return=minimal');
+
+  // 8. Email confirmation — not yet wired; needs Resend connected first.
+  // await sendBookingRequestEmail(email, clientName, svc, date, startTime, magicToken);
+
+  return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true, magicToken }) };
 }
 
 // ── Helpers ──
