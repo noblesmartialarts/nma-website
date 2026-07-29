@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Private Training — Noble's Martial Arts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#08080f;--surf:#13131f;--surf2:#1a1a28;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.18);
+  --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
+  --glow:rgba(15,0,247,.4);--text:#f4f4fa;--muted:#9a9ab4;
+  --green:#22c55e;--red:#ff5a5a;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+.disp{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;line-height:.95}
+.wrap{max-width:640px;margin:0 auto;padding:24px 18px 100px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.back-link{color:var(--muted);font-size:.85rem;text-decoration:none;font-weight:600}
+.back-link:hover{color:var(--text)}
+h1.disp{font-size:2.1rem}
+.sub{color:var(--muted);font-size:.9rem;margin-top:4px;margin-bottom:22px;line-height:1.5}
+
+.step{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;display:none}
+.step.active{display:block}
+.step h2{font-size:1.2rem;margin-bottom:4px}
+.step .hint{color:var(--muted);font-size:.83rem;margin-bottom:14px}
+
+.opt-grid{display:grid;gap:9px}
+.opt-card{background:var(--surf2);border:1px solid var(--border2);border-radius:12px;padding:13px 14px;cursor:pointer;transition:border-color .12s,background .12s}
+.opt-card:hover{border-color:var(--bright)}
+.opt-card.selected{border-color:var(--bright);background:var(--soft)}
+.opt-card .t{font-weight:700;font-size:.95rem}
+.opt-card .d{color:var(--muted);font-size:.8rem;margin-top:3px;line-height:1.4}
+.opt-card .price{font-family:'Bebas Neue';color:var(--bright);font-size:1.5rem;margin-top:6px}
+.opt-card .badge{display:inline-block;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;background:var(--soft);color:var(--bright);padding:3px 8px;border-radius:99px;margin-top:6px}
+
+.chip-row{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--surf2);border:1px solid var(--border2);border-radius:10px;padding:9px 13px;font-size:.85rem;font-weight:700;cursor:pointer;color:var(--text)}
+.chip:hover{border-color:var(--bright)}
+.chip.selected{background:var(--bright);border-color:var(--bright);color:#fff}
+.chip .dow{display:block;font-size:.65rem;color:var(--muted);font-weight:600;text-transform:uppercase}
+.chip.selected .dow{color:rgba(255,255,255,.75)}
+
+.summary-card{background:var(--surf2);border:1px solid var(--bright);border-radius:12px;padding:15px;margin-top:6px}
+.summary-card .row{display:flex;justify-content:space-between;font-size:.88rem;padding:4px 0}
+.summary-card .row b{font-weight:700}
+.summary-card .total{border-top:1px solid var(--border);margin-top:8px;padding-top:10px;font-size:1rem;font-weight:800}
+
+.btn-primary{display:inline-flex;align-items:center;gap:7px;background:var(--brand);color:#fff;
+  padding:12px 20px;border-radius:12px;border:none;font-family:inherit;font-size:.92rem;font-weight:700;
+  cursor:pointer;box-shadow:0 6px 18px var(--glow);transition:filter .15s,transform .15s}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-back{background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:12px;
+  padding:12px 18px;font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;margin-right:8px}
+.btn-back:hover{color:var(--text);border-color:var(--bright)}
+
+.empty{color:var(--muted);font-size:.85rem;text-align:center;padding:20px 0}
+.loading{color:var(--muted);font-size:.85rem;text-align:center;padding:20px 0}
+.wip-banner{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fbbf24;
+  border-radius:10px;padding:9px 13px;font-size:.78rem;font-weight:600;margin-bottom:18px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <a class="back-link" href="/">&larr; noblesmartialarts.com</a>
+  </div>
+  <h1 class="disp">Private Training</h1>
+  <p class="sub">Personalized instruction brought to your home or an approved public location. Pick who it's for, choose a service, and find a time that works.</p>
+  <div class="wip-banner">🚧 Work in progress — availability shown here is real, but booking submission isn't live yet.</div>
+
+  <!-- STEP 1: who is this for -->
+  <div class="step active" id="step-who">
+    <h2 class="disp">Who is this for?</h2>
+    <p class="hint">This determines which services and pricing apply.</p>
+    <div class="opt-grid">
+      <div class="opt-card" data-rel="student">
+        <div class="t">My child — currently enrolled NMA student</div>
+        <div class="d">Skill Tune-Up sessions, plus student-rate fitness training</div>
+      </div>
+      <div class="opt-card" data-rel="outside_child">
+        <div class="t">My child — not currently enrolled at NMA</div>
+        <div class="d">Youth martial arts introduction or fitness training</div>
+      </div>
+      <div class="opt-card" data-rel="parent">
+        <div class="t">Myself — I'm a parent/guardian of an enrolled NMA student</div>
+        <div class="d">Adult training at the NMA household rate</div>
+      </div>
+      <div class="opt-card" data-rel="outside_adult">
+        <div class="t">Myself — not connected to NMA</div>
+        <div class="d">Adult training at the community rate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: pick service -->
+  <div class="step" id="step-service">
+    <h2 class="disp">Choose a Service</h2>
+    <p class="hint">Pricing shown is per session. Additional participants may add a fee.</p>
+    <div class="opt-grid" id="serviceList"><div class="loading">Loading services…</div></div>
+    <div style="margin-top:16px"><button class="btn-back" id="backToWho" type="button">&larr; Back</button></div>
+  </div>
+
+  <!-- STEP 3: pick date -->
+  <div class="step" id="step-date">
+    <h2 class="disp">Choose a Date</h2>
+    <p class="hint">Showing the next two weeks of open availability.</p>
+    <div class="chip-row" id="dateList"><div class="loading">Loading availability…</div></div>
+    <div style="margin-top:16px"><button class="btn-back" id="backToService" type="button">&larr; Back</button></div>
+  </div>
+
+  <!-- STEP 4: pick time -->
+  <div class="step" id="step-time">
+    <h2 class="disp">Choose a Start Time</h2>
+    <p class="hint" id="timeHint"></p>
+    <div class="chip-row" id="timeList"></div>
+    <div style="margin-top:16px"><button class="btn-back" id="backToDate" type="button">&larr; Back</button></div>
+  </div>
+
+  <!-- STEP 5: summary -->
+  <div class="step" id="step-summary">
+    <h2 class="disp">Review</h2>
+    <div class="summary-card" id="summaryCard"></div>
+    <div style="margin-top:16px">
+      <button class="btn-back" id="backToTime" type="button">&larr; Back</button>
+      <button class="btn-primary" id="continueBtn" type="button" disabled>Continue &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SB_URL = 'https://erqblpewozxkpornohvq.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycWJscGV3b3p4a3Bvcm5vaHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzUzMDMsImV4cCI6MjA5NTA1MTMwM30.Ot3sd3X3Fo9rtpAXUfTjrUlB_6Y-QcMuwotUIvdcr5o';
+
+var BOOKING_INCREMENT = 30;   // minutes between offered start times
+var BOOKING_BUFFER    = 30;   // minutes required before/after a booked session
+var LOOKAHEAD_DAYS    = 14;
+
+var state = {
+  relationship: null,   // 'student' | 'outside_child' | 'parent' | 'outside_adult'
+  service: null,        // selected service row
+  date: null,            // 'YYYY-MM-DD'
+  startTime: null        // 'HH:MM'
+};
+
+var services = [];
+var availByDate = {};   // date -> array of {date,start_time,end_time,status}
+
+/* ── eligibility filter map ── */
+var RELATIONSHIP_FILTERS = {
+  student:       { eligibility: 'nma_student',   categories: ['NMA Skill Tune-Up','Youth Fitness and Conditioning'] },
+  outside_child: { eligibility: 'community',      categories: ['Youth Martial Arts','Youth Fitness and Conditioning'] },
+  parent:        { eligibility: 'nma_household',  categories: ['Adult Personalized Training'] },
+  outside_adult: { eligibility: 'community',      categories: ['Adult Personalized Training'] }
+};
+
+/* ── step navigation ── */
+function showStep(id) {
+  document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ── STEP 1: relationship ── */
+document.querySelectorAll('#step-who .opt-card').forEach(function(card){
+  card.addEventListener('click', function(){
+    document.querySelectorAll('#step-who .opt-card').forEach(function(c){ c.classList.remove('selected'); });
+    card.classList.add('selected');
+    state.relationship = card.dataset.rel;
+    renderServiceList();
+    showStep('step-service');
+  });
+});
+document.getElementById('backToWho').addEventListener('click', function(){ showStep('step-who'); });
+document.getElementById('backToService').addEventListener('click', function(){ showStep('step-service'); });
+document.getElementById('backToDate').addEventListener('click', function(){ showStep('step-date'); });
+document.getElementById('backToTime').addEventListener('click', function(){ showStep('step-time'); });
+
+/* ── load service catalog once ── */
+function loadServices() {
+  return fetch(SB_URL + '/rest/v1/private_lesson_services?active=eq.true&publicly_visible=eq.true&select=*', {
+    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){ services = rows || []; })
+  .catch(function(){ services = []; });
+}
+
+function renderServiceList() {
+  var listEl = document.getElementById('serviceList');
+  var filt = RELATIONSHIP_FILTERS[state.relationship];
+  var matches = services.filter(function(s){
+    return s.eligibility === filt.eligibility && filt.categories.indexOf(s.category) !== -1;
+  });
+  if (!matches.length) {
+    listEl.innerHTML = '<div class="empty">No matching services yet — check back soon.</div>';
+    return;
+  }
+  listEl.innerHTML = matches.map(function(s){
+    var badge = s.package_available
+      ? '<span class="badge">3-pack: $'+Number(s.package_price).toFixed(0)+'</span>' : '';
+    return '<div class="opt-card" data-code="'+s.service_code+'">'
+      + '<div class="t">'+eh(s.service_name)+' — '+s.duration_minutes+' min</div>'
+      + '<div class="d">'+eh(s.description||'')+'</div>'
+      + '<div class="price">$'+Number(s.base_price).toFixed(0)+'</div>'
+      + (s.additional_participant_price ? '<div class="d">+$'+Number(s.additional_participant_price).toFixed(0)+' per additional participant, up to '+s.max_participants+'</div>' : '')
+      + badge
+      + '</div>';
+  }).join('');
+  listEl.querySelectorAll('.opt-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      listEl.querySelectorAll('.opt-card').forEach(function(c){ c.classList.remove('selected'); });
+      card.classList.add('selected');
+      state.service = matches.filter(function(s){ return s.service_code === card.dataset.code; })[0];
+      loadAvailabilityWindow().then(function(){
+        renderDateList();
+        showStep('step-date');
+      });
+    });
+  });
+}
+
+/* ── load availability windows for the next N days ── */
+function loadAvailabilityWindow() {
+  var today = new Date();
+  var todayStr = today.toISOString().slice(0,10);
+  var end = new Date(today.getTime() + (LOOKAHEAD_DAYS-1)*24*60*60*1000);
+  var endStr = end.toISOString().slice(0,10);
+
+  return fetch(SB_URL + '/rest/v1/private_lesson_availability?date=gte.'+todayStr+'&date=lte.'+endStr+'&order=date.asc,start_time.asc', {
+    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    availByDate = {};
+    (rows||[]).forEach(function(row){
+      if (!availByDate[row.date]) availByDate[row.date] = [];
+      availByDate[row.date].push(row);
+    });
+  })
+  .catch(function(){ availByDate = {}; });
+}
+
+/* ── time helpers ── */
+function toMin(t){ var p = t.split(':'); return parseInt(p[0],10)*60 + parseInt(p[1],10); }
+function toTimeStr(m){ var h = Math.floor(m/60), mm = m%60; return (h<10?'0':'')+h+':'+(mm<10?'0':'')+mm; }
+function fmtTime(t){
+  var p = t.split(':'); var h = parseInt(p[0],10); var m = p[1];
+  var ap = h >= 12 ? 'PM' : 'AM'; h = h % 12; if (h === 0) h = 12;
+  return h + ':' + m + ' ' + ap;
+}
+function fmtDate(d){
+  var dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString([], {month:'short', day:'numeric'});
+}
+function dowShort(d){
+  var dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString([], {weekday:'short'});
+}
+
+/* Compute every valid start time for a given date + duration, honoring
+   open windows, blocked windows, and a 30-min buffer around booked sessions. */
+function computeValidStarts(dateStr, durationMin) {
+  var rows = availByDate[dateStr] || [];
+  var openWindows   = rows.filter(function(r){ return r.status === 'open'; });
+  var bookedWindows = rows.filter(function(r){ return r.status === 'booked'; });
+  var blockedWindows= rows.filter(function(r){ return r.status === 'blocked'; });
+
+  var now = new Date();
+  var isToday = dateStr === now.toISOString().slice(0,10);
+  var nowMin = now.getHours()*60 + now.getMinutes();
+
+  var valid = [];
+  openWindows.forEach(function(w){
+    var ws = toMin(w.start_time), we = toMin(w.end_time);
+    for (var cs = ws; cs + durationMin <= we; cs += BOOKING_INCREMENT) {
+      var ce = cs + durationMin;
+      if (isToday && cs <= nowMin + BOOKING_BUFFER) continue;
+
+      var blocked = blockedWindows.some(function(b){
+        var bs = toMin(b.start_time), be = toMin(b.end_time);
+        return cs < be && ce > bs;
+      });
+      if (blocked) continue;
+
+      var collides = bookedWindows.some(function(b){
+        var bs = toMin(b.start_time) - BOOKING_BUFFER, be = toMin(b.end_time) + BOOKING_BUFFER;
+        return cs < be && ce > bs;
+      });
+      if (collides) continue;
+
+      valid.push(cs);
+    }
+  });
+  return valid;
+}
+
+/* ── STEP 3: date chips ── */
+function renderDateList() {
+  var listEl = document.getElementById('dateList');
+  var duration = state.service.duration_minutes;
+  var today = new Date();
+  var dates = [];
+  for (var i = 0; i < LOOKAHEAD_DAYS; i++) {
+    var d = new Date(today.getTime() + i*24*60*60*1000);
+    dates.push(d.toISOString().slice(0,10));
+  }
+  var withAvailability = dates.filter(function(d){ return computeValidStarts(d, duration).length > 0; });
+
+  if (!withAvailability.length) {
+    listEl.innerHTML = '<div class="empty">No open times in the next two weeks for this service. Please check back soon.</div>';
+    return;
+  }
+  listEl.innerHTML = withAvailability.map(function(d){
+    return '<div class="chip" data-date="'+d+'"><span class="dow">'+dowShort(d)+'</span>'+fmtDate(d)+'</div>';
+  }).join('');
+  listEl.querySelectorAll('.chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      listEl.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('selected'); });
+      chip.classList.add('selected');
+      state.date = chip.dataset.date;
+      renderTimeList();
+      showStep('step-time');
+    });
+  });
+}
+
+/* ── STEP 4: time chips ── */
+function renderTimeList() {
+  var listEl = document.getElementById('timeList');
+  document.getElementById('timeHint').textContent =
+    fmtDate(state.date) + ' · ' + state.service.service_name + ' (' + state.service.duration_minutes + ' min)';
+  var starts = computeValidStarts(state.date, state.service.duration_minutes);
+  if (!starts.length) {
+    listEl.innerHTML = '<div class="empty">No times left on this date — pick another.</div>';
+    return;
+  }
+  listEl.innerHTML = starts.map(function(m){
+    var t = toTimeStr(m);
+    return '<div class="chip" data-time="'+t+'">'+fmtTime(t)+'</div>';
+  }).join('');
+  listEl.querySelectorAll('.chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      listEl.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('selected'); });
+      chip.classList.add('selected');
+      state.startTime = chip.dataset.time;
+      renderSummary();
+      showStep('step-summary');
+    });
+  });
+}
+
+/* ── STEP 5: summary ── */
+function renderSummary() {
+  var s = state.service;
+  document.getElementById('summaryCard').innerHTML =
+    '<div class="row"><span>Service</span><b>'+eh(s.service_name)+' ('+s.duration_minutes+' min)</b></div>'
+    + '<div class="row"><span>Date</span><b>'+fmtDate(state.date)+'</b></div>'
+    + '<div class="row"><span>Time</span><b>'+fmtTime(state.startTime)+'</b></div>'
+    + '<div class="row total"><span>Base price</span><b>$'+Number(s.base_price).toFixed(0)+'</b></div>';
+  // Continue stays disabled until the booking-details step is built.
+}
+
+function eh(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+loadServices();
+</script>
+</body>
+</html>
