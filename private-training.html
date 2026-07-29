@@ -67,6 +67,24 @@ h1.disp{font-size:2.1rem}
 .price-choice .pc-price{font-family:'Bebas Neue';font-size:1.4rem;color:var(--bright);margin-top:2px}
 .price-choice .pc-save{font-size:.7rem;color:var(--green);font-weight:700;margin-top:2px}
 
+.fq{margin-top:14px}
+.fq label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.fq label .req{color:var(--red)}
+.fq input,.fq textarea,.fq select{width:100%;background:var(--surf2);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;color:var(--text);font-size:.9rem;font-family:inherit;outline:none}
+.fq input:focus,.fq textarea:focus,.fq select:focus{border-color:var(--bright)}
+.fq textarea{min-height:70px;resize:vertical}
+.fq label.checkbox-label{display:flex;align-items:center;text-transform:none;font-weight:600;color:var(--text);font-size:.87rem}
+.fq label.checkbox-label input{width:auto;margin-right:9px}
+.participant-row{display:grid;grid-template-columns:2fr 1fr auto;gap:8px;margin-top:8px}
+.participant-row input{width:100%;background:var(--surf2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--text);font-size:.85rem;font-family:inherit}
+.participant-row button{background:rgba(255,90,90,.13);border:1px solid rgba(255,90,90,.28);color:var(--red);border-radius:8px;padding:0 10px;cursor:pointer;font-size:.85rem}
+.add-participant-btn{margin-top:9px;background:var(--soft);color:var(--bright);border:1px solid var(--bright);border-radius:10px;padding:8px 13px;font-size:.82rem;font-weight:700;cursor:pointer}
+.roster-dropdown{position:relative}
+.roster-list{position:absolute;top:100%;left:0;right:0;background:var(--surf2);border:1px solid var(--border2);border-radius:10px;z-index:50;max-height:180px;overflow:auto;display:none;margin-top:3px}
+.roster-opt{padding:9px 12px;cursor:pointer;font-size:.87rem}
+.roster-opt:hover{background:var(--soft)}
+.roster-confirmed{color:var(--green);font-size:.8rem;margin-top:4px;font-weight:600}
+
 .empty{color:var(--muted);font-size:.85rem;text-align:center;padding:20px 0}
 .loading{color:var(--muted);font-size:.85rem;text-align:center;padding:20px 0}
 .wip-banner{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fbbf24;
@@ -131,13 +149,36 @@ h1.disp{font-size:2.1rem}
     <div style="margin-top:16px"><button class="btn-back" id="backToDate" type="button">&larr; Back</button></div>
   </div>
 
-  <!-- STEP 5: summary -->
-  <div class="step" id="step-summary">
-    <h2 class="disp">Review</h2>
-    <div class="summary-card" id="summaryCard"></div>
+  <!-- STEP 5: booking details -->
+  <div class="step" id="step-details">
+    <h2 class="disp">Your Details</h2>
+    <p class="hint" id="detailsHint">A few details so Sensei Brandon can prepare for the session.</p>
+    <div id="detailsFormInner"></div>
+    <p id="detailsErr" style="color:var(--red);font-size:.82rem;margin-top:.6rem;display:none"></p>
     <div style="margin-top:16px">
-      <button class="btn-back" id="backToTime" type="button">&larr; Back</button>
-      <button class="btn-primary" id="continueBtn" type="button" disabled>Continue &rarr;</button>
+      <button class="btn-back" id="backToTime2" type="button">&larr; Back</button>
+      <button class="btn-primary" id="detailsContinueBtn" type="button">Continue to Review &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: review + submit -->
+  <div class="step" id="step-summary">
+    <h2 class="disp">Review &amp; Request</h2>
+    <div class="summary-card" id="summaryCard"></div>
+    <p id="summaryErr" style="color:var(--red);font-size:.82rem;margin-top:10px;display:none"></p>
+    <div style="margin-top:16px">
+      <button class="btn-back" id="backToDetails" type="button">&larr; Back</button>
+      <button class="btn-primary" id="continueBtn" type="button">Request Booking</button>
+    </div>
+  </div>
+
+  <!-- STEP 7: confirmed -->
+  <div class="step" id="step-confirmed">
+    <h2 class="disp">Request Sent!</h2>
+    <div class="summary-card">
+      <p style="line-height:1.6">Thanks — your private lesson request has been sent to Sensei Brandon. He'll review it, confirm payment, and reach out to lock in your session.</p>
+      <p style="line-height:1.6;margin-top:10px;color:var(--muted);font-size:.85rem" id="confirmedPkgNote"></p>
+      <p style="line-height:1.6;margin-top:10px;color:var(--muted);font-size:.85rem">Questions in the meantime? Reach out directly at noblesmartialarts@gmail.com.</p>
     </div>
   </div>
 </div>
@@ -188,7 +229,8 @@ document.querySelectorAll('#step-who .opt-card').forEach(function(card){
 document.getElementById('backToWho').addEventListener('click', function(){ showStep('step-who'); });
 document.getElementById('backToService').addEventListener('click', function(){ showStep('step-service'); });
 document.getElementById('backToDate').addEventListener('click', function(){ showStep('step-date'); });
-document.getElementById('backToTime').addEventListener('click', function(){ showStep('step-time'); });
+document.getElementById('backToTime2').addEventListener('click', function(){ showStep('step-time'); });
+document.getElementById('backToDetails').addEventListener('click', function(){ showStep('step-details'); });
 
 /* ── load service catalog once ── */
 function loadServices() {
@@ -286,18 +328,27 @@ function loadAvailabilityWindow() {
   var end = new Date(today.getTime() + (LOOKAHEAD_DAYS-1)*24*60*60*1000);
   var endStr = end.toISOString().slice(0,10);
 
-  return fetch(SB_URL + '/rest/v1/private_lesson_availability?date=gte.'+todayStr+'&date=lte.'+endStr+'&order=date.asc,start_time.asc', {
+  var windowsReq = fetch(SB_URL + '/rest/v1/private_lesson_availability?date=gte.'+todayStr+'&date=lte.'+endStr+'&order=date.asc,start_time.asc', {
     headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(rows){
+  }).then(function(r){ return r.json(); }).catch(function(){ return []; });
+
+  var bookingsReq = fetch(SB_URL + '/rest/v1/private_lesson_bookings_public?date=gte.'+todayStr+'&date=lte.'+endStr, {
+    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
+  }).then(function(r){ return r.json(); }).catch(function(){ return []; });
+
+  return Promise.all([windowsReq, bookingsReq]).then(function(results){
+    var windowRows = results[0] || [];
+    var bookingRows = results[1] || [];
     availByDate = {};
-    (rows||[]).forEach(function(row){
+    windowRows.forEach(function(row){
       if (!availByDate[row.date]) availByDate[row.date] = [];
       availByDate[row.date].push(row);
     });
-  })
-  .catch(function(){ availByDate = {}; });
+    bookingRows.forEach(function(row){
+      if (!availByDate[row.date]) availByDate[row.date] = [];
+      availByDate[row.date].push({ date:row.date, start_time:row.start_time, end_time:row.end_time, status:'booked' });
+    });
+  });
 }
 
 /* ── time helpers ── */
@@ -403,28 +454,248 @@ function renderTimeList() {
       listEl.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('selected'); });
       chip.classList.add('selected');
       state.startTime = chip.dataset.time;
-      renderSummary();
-      showStep('step-summary');
+      renderDetailsForm();
+      showStep('step-details');
     });
   });
 }
 
 /* ── STEP 5: summary ── */
+/* ── STEP 5: booking details form (dynamic based on relationship + service) ── */
+var _roster = [];
+function loadRosterForBooking() {
+  fetch(SB_URL + '/rest/v1/crm_data?id=eq.main&select=data', {
+    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    if (rows && rows[0] && rows[0].data && rows[0].data.students) {
+      _roster = rows[0].data.students.filter(function(s){ return s.status === 'Active'; });
+    }
+  })
+  .catch(function(){ _roster = []; });
+}
+loadRosterForBooking();
+
+function renderDetailsForm() {
+  var isChild = (state.relationship === 'student' || state.relationship === 'outside_child');
+  var isNmaLinked = (state.relationship === 'student' || state.relationship === 'parent');
+  var maxAdditional = state.service.max_participants - 1;
+
+  var html = '';
+  html += '<div class="fq"><label>Your Name <span class="req">*</span></label><input id="d-clientName" placeholder="First and last name"/></div>';
+  html += '<div class="fq"><label>Email <span class="req">*</span></label><input type="email" id="d-email" placeholder="you@email.com"/></div>';
+  html += '<div class="fq"><label>Phone <span class="req">*</span></label><input type="tel" id="d-phone" placeholder="(919) 555-0000"/></div>';
+
+  if (isNmaLinked) {
+    html += '<div class="fq roster-dropdown"><label>NMA Student Name (for eligibility) <span class="req">*</span></label>'
+      + '<input id="d-studentSearch" placeholder="Start typing student\'s name…" autocomplete="off"/>'
+      + '<input type="hidden" id="d-studentId"/>'
+      + '<div class="roster-list" id="rosterList"></div>'
+      + '<div class="roster-confirmed" id="rosterConfirmed" style="display:none"></div></div>';
+  }
+
+  if (isChild) {
+    html += '<div class="fq"><label>Participant Name (child attending) <span class="req">*</span></label><input id="d-primaryName" placeholder="Child\'s full name"/></div>';
+    html += '<div class="fq"><label>Participant Age <span class="req">*</span></label><input type="number" id="d-primaryAge" min="1" max="17"/></div>';
+  }
+
+  if (maxAdditional > 0) {
+    html += '<div class="fq"><label>Additional Participants (optional, up to '+maxAdditional+')</label>'
+      + '<div id="additionalList"></div>'
+      + '<button class="add-participant-btn" id="addParticipantBtn" type="button">+ Add participant</button></div>';
+  }
+
+  html += '<div class="fq"><label>Training Location <span class="req">*</span></label>'
+    + '<select id="d-locationType"><option value="client_property">My home / property</option><option value="public_space">Public space (park, clubhouse, etc.)</option></select></div>';
+  html += '<div class="fq"><label>Location Address / Details <span class="req">*</span></label><textarea id="d-locationAddress" placeholder="Address, or the name and area of the public space"></textarea></div>';
+  html += '<div class="fq"><label>Training Focus / Goals</label><textarea id="d-goals" placeholder="What would you like to work on?"></textarea></div>';
+  html += '<div class="fq"><label>Injuries or Limitations</label><textarea id="d-injuries" placeholder="Anything Sensei Brandon should know"></textarea></div>';
+
+  if (state.service.required_equipment) {
+    html += '<div class="fq"><label class="checkbox-label"><input type="checkbox" id="d-equipConfirmed"/> I have: '+eh(state.service.required_equipment)+'</label></div>';
+  }
+  html += '<div class="fq"><label>Additional Comments</label><textarea id="d-comments"></textarea></div>';
+
+  document.getElementById('detailsFormInner').innerHTML = html;
+
+  if (maxAdditional > 0) {
+    document.getElementById('addParticipantBtn').addEventListener('click', function(){ addParticipantRow(maxAdditional); });
+  }
+  if (isNmaLinked) {
+    wireRosterAutocomplete();
+  }
+}
+
+function addParticipantRow(max) {
+  var list = document.getElementById('additionalList');
+  if (list.querySelectorAll('.participant-row').length >= max) return;
+  var row = document.createElement('div');
+  row.className = 'participant-row';
+  row.innerHTML = '<input placeholder="Name" class="ap-name"/><input type="number" min="1" max="99" placeholder="Age" class="ap-age"/><button type="button">&times;</button>';
+  row.querySelector('button').addEventListener('click', function(){ row.remove(); });
+  list.appendChild(row);
+}
+
+function wireRosterAutocomplete() {
+  var input = document.getElementById('d-studentSearch');
+  var hidden = document.getElementById('d-studentId');
+  var list = document.getElementById('rosterList');
+  var confirmed = document.getElementById('rosterConfirmed');
+
+  input.addEventListener('input', function() {
+    hidden.value = ''; confirmed.style.display = 'none';
+    var q = input.value.trim().toLowerCase();
+    if (!q) { list.style.display = 'none'; return; }
+    if (!_roster.length) {
+      list.innerHTML = '<div class="roster-opt" style="color:var(--muted)">Loading student list…</div>';
+      list.style.display = 'block';
+      return;
+    }
+    var matches = _roster.filter(function(s){ return (s.first+' '+s.last).toLowerCase().indexOf(q) !== -1; }).slice(0,8);
+    if (!matches.length) {
+      list.innerHTML = '<div class="roster-opt" style="color:var(--muted)">No matches — try last name only</div>';
+      list.style.display = 'block';
+      return;
+    }
+    list.innerHTML = matches.map(function(s){
+      return '<div class="roster-opt" data-id="'+s.id+'" data-name="'+eh(s.first+' '+s.last)+'">'+eh(s.first+' '+s.last)
+        + ' <span style="color:var(--muted);font-size:.75rem">'+eh(s.group||'')+'</span></div>';
+    }).join('');
+    list.style.display = 'block';
+    list.querySelectorAll('.roster-opt').forEach(function(opt){
+      opt.addEventListener('mousedown', function(e){
+        e.preventDefault();
+        input.value = opt.dataset.name;
+        hidden.value = opt.dataset.id;
+        list.style.display = 'none';
+        confirmed.textContent = '✓ Found: ' + opt.dataset.name;
+        confirmed.style.display = 'block';
+      });
+    });
+  });
+  document.addEventListener('mousedown', function(e){
+    if (e.target !== input && !list.contains(e.target)) list.style.display = 'none';
+  });
+}
+
+function showDetailsErr(msg) {
+  var e = document.getElementById('detailsErr');
+  e.textContent = msg; e.style.display = 'block';
+}
+
+document.getElementById('detailsContinueBtn').addEventListener('click', function() {
+  var errEl = document.getElementById('detailsErr');
+  errEl.style.display = 'none';
+
+  var name = document.getElementById('d-clientName').value.trim();
+  var email = document.getElementById('d-email').value.trim();
+  var phone = document.getElementById('d-phone').value.trim();
+  if (!name || !email || !phone) { showDetailsErr('Please fill in your name, email, and phone.'); return; }
+
+  var isChild = (state.relationship === 'student' || state.relationship === 'outside_child');
+  var isNmaLinked = (state.relationship === 'student' || state.relationship === 'parent');
+
+  var studentId = isNmaLinked ? document.getElementById('d-studentId').value : null;
+  if (isNmaLinked && !studentId) { showDetailsErr('Please select the NMA student from the list so eligibility can be verified.'); return; }
+
+  var primaryName = name, primaryAge = null;
+  if (isChild) {
+    primaryName = document.getElementById('d-primaryName').value.trim();
+    primaryAge = document.getElementById('d-primaryAge').value;
+    if (!primaryName || !primaryAge) { showDetailsErr("Please enter the participant's name and age."); return; }
+  }
+
+  var additional = [];
+  document.querySelectorAll('#additionalList .participant-row').forEach(function(row){
+    var n = row.querySelector('.ap-name').value.trim();
+    var a = row.querySelector('.ap-age').value;
+    if (n) additional.push({ name:n, age:a||null });
+  });
+
+  var locationType = document.getElementById('d-locationType').value;
+  var locationAddress = document.getElementById('d-locationAddress').value.trim();
+  if (!locationAddress) { showDetailsErr('Please share the training location.'); return; }
+
+  var equipEl = document.getElementById('d-equipConfirmed');
+  if (equipEl && !equipEl.checked) { showDetailsErr('Please confirm you have the required equipment.'); return; }
+
+  state.details = {
+    clientName:name, email:email, phone:phone, studentId:studentId||null,
+    primaryName:primaryName, primaryAge:primaryAge, additional:additional,
+    locationType:locationType, locationAddress:locationAddress,
+    goals: document.getElementById('d-goals').value.trim(),
+    injuries: document.getElementById('d-injuries').value.trim(),
+    comments: document.getElementById('d-comments').value.trim()
+  };
+  renderSummary();
+  showStep('step-summary');
+});
+
+/* ── STEP 6: review + submit ── */
 function renderSummary() {
-  var s = state.service;
+  var s = state.service, d = state.details;
   var isPkg = state.packageChoice === 'package';
-  var priceLabel = isPkg ? '3-pack total' : 'Base price';
-  var priceVal = isPkg ? s.package_price : s.base_price;
+  var addCount = d.additional.length;
+  var addCharge = addCount * Number(s.additional_participant_price || 0);
+  var baseDue = isPkg ? 0 : Number(s.base_price);
+  var total = baseDue + addCharge;
   var pkgNote = isPkg
-    ? '<div class="row"><span>Sessions</span><b>This books session 1 of 3 — you\'ll return to book the other two whenever you\'re ready</b></div>'
+    ? '<div class="row"><span>Sessions</span><b>Session 1 of 3 — book the rest anytime</b></div>'
+    + '<div class="row"><span>3-pack total</span><b>$'+Number(s.package_price).toFixed(0)+'</b></div>'
     : '';
+
   document.getElementById('summaryCard').innerHTML =
     '<div class="row"><span>Service</span><b>'+eh(s.service_name)+' ('+s.duration_minutes+' min)</b></div>'
     + '<div class="row"><span>Date</span><b>'+fmtDate(state.date)+'</b></div>'
     + '<div class="row"><span>Time</span><b>'+fmtTime(state.startTime)+'</b></div>'
+    + '<div class="row"><span>Participant(s)</span><b>'+eh(d.primaryName)+(addCount? ' + '+addCount+' more':'')+'</b></div>'
+    + '<div class="row"><span>Location</span><b>'+eh(d.locationAddress)+'</b></div>'
     + pkgNote
-    + '<div class="row total"><span>'+priceLabel+'</span><b>$'+Number(priceVal).toFixed(0)+'</b></div>';
-  // Continue stays disabled until the booking-details step is built.
+    + '<div class="row total"><span>Due via Venmo/Zelle</span><b>$'+total.toFixed(0)+'</b></div>'
+    + '<p style="color:var(--muted);font-size:.78rem;margin-top:10px">Sensei Brandon confirms payment and approves each request — nothing is charged automatically.</p>';
+}
+
+document.getElementById('continueBtn').addEventListener('click', submitBooking);
+
+function submitBooking() {
+  var btn = document.getElementById('continueBtn');
+  var errEl = document.getElementById('summaryErr');
+  errEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  var s = state.service, d = state.details;
+  var payload = {
+    type: 'privateLesson',
+    relationship: state.relationship,
+    serviceCode: s.service_code,
+    packageChoice: state.packageChoice,
+    date: state.date,
+    startTime: state.startTime,
+    clientName: d.clientName, email: d.email, phone: d.phone,
+    linkedStudentId: d.studentId,
+    primaryName: d.primaryName, primaryAge: d.primaryAge,
+    additionalParticipants: d.additional,
+    locationType: d.locationType, locationAddress: d.locationAddress,
+    goals: d.goals, injuries: d.injuries, comments: d.comments
+  };
+
+  fetch('/.netlify/functions/submit', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+  })
+  .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, body:j }; }); })
+  .then(function(res){
+    if (!res.ok) throw new Error((res.body && res.body.error) || 'Submission failed');
+    document.getElementById('confirmedPkgNote').textContent = state.packageChoice === 'package'
+      ? "You've booked session 1 of 3 on this package — come back to this page anytime to schedule the other two."
+      : '';
+    showStep('step-confirmed');
+  })
+  .catch(function(e){
+    btn.disabled = false; btn.textContent = 'Request Booking';
+    errEl.textContent = 'Could not submit: ' + e.message;
+    errEl.style.display = 'block';
+  });
 }
 
 function eh(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
