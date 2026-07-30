@@ -135,7 +135,7 @@ h1.disp{font-size:2.1rem}
   <!-- STEP 3: pick date -->
   <div class="step" id="step-date">
     <h2 class="disp">Choose a Date</h2>
-    <p class="hint">Showing the next two weeks of open availability.</p>
+    <p class="hint">Showing the next two weeks of open availability. Sessions require at least 48 hours' notice.</p>
     <div class="chip-row" id="dateList"><div class="loading">Loading availability…</div></div>
     <div style="margin-top:16px"><button class="btn-back" id="backToService" type="button">&larr; Back</button></div>
   </div>
@@ -188,6 +188,7 @@ var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 
 var BOOKING_INCREMENT = 30;   // minutes between offered start times
 var BOOKING_BUFFER    = 30;   // minutes required before/after a booked session
+var MIN_LEAD_HOURS    = 48;   // minimum advance notice required for any booking
 var LOOKAHEAD_DAYS    = 14;
 
 var state = {
@@ -385,15 +386,16 @@ function computeValidStarts(dateStr, durationMin) {
   var blockedWindows= rows.filter(function(r){ return r.status === 'blocked'; });
 
   var now = new Date();
-  var isToday = dateStr === toLocalISODate(now);
-  var nowMin = now.getHours()*60 + now.getMinutes();
+  var cutoff = new Date(now.getTime() + MIN_LEAD_HOURS*60*60*1000);
+  var dp = dateStr.split('-').map(Number); // [year, month, day]
 
   var valid = [];
   openWindows.forEach(function(w){
     var ws = toMin(w.start_time), we = toMin(w.end_time);
     for (var cs = ws; cs + durationMin <= we; cs += BOOKING_INCREMENT) {
       var ce = cs + durationMin;
-      if (isToday && cs <= nowMin + BOOKING_BUFFER) continue;
+      var candidateStart = new Date(dp[0], dp[1]-1, dp[2], Math.floor(cs/60), cs%60);
+      if (candidateStart < cutoff) continue;
 
       var blocked = blockedWindows.some(function(b){
         var bs = toMin(b.start_time), be = toMin(b.end_time);
