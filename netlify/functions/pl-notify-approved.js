@@ -14,7 +14,15 @@ exports.handler = async () => {
   const res = await supaFetch('GET',
     '/rest/v1/private_lesson_bookings?status=eq.set&client_notified_at=is.null&select=*,service:private_lesson_services(*),client:private_lesson_clients(*)', KEY);
   const rows = await res.json();
-  if (!rows || !rows.length) return { statusCode: 200, body: 'nothing to notify' };
+  if (!res.ok) {
+    console.error('pl-notify-approved query failed:', JSON.stringify(rows));
+    return { statusCode: 200, body: 'query error: ' + JSON.stringify(rows) };
+  }
+  if (!rows || !rows.length) {
+    console.log('pl-notify-approved: nothing to notify');
+    return { statusCode: 200, body: 'nothing to notify' };
+  }
+  console.log('pl-notify-approved: found ' + rows.length + ' booking(s) to notify');
 
   var sent = 0;
   for (const booking of rows) {
@@ -22,10 +30,12 @@ exports.handler = async () => {
       await sendApprovalEmail(booking);
       await supaFetch('PATCH', '/rest/v1/private_lesson_bookings?id=eq.' + booking.id, KEY, { client_notified_at: new Date().toISOString() });
       sent++;
+      console.log('pl-notify-approved: sent for booking ' + booking.id);
     } catch (e) {
       console.error('Failed to notify booking ' + booking.id, e);
     }
   }
+  console.log('pl-notify-approved: notified ' + sent + ' of ' + rows.length);
   return { statusCode: 200, body: 'notified ' + sent + ' of ' + rows.length };
 };
 
