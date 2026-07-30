@@ -53,11 +53,11 @@ async function notifyOwnerOfCancellation(booking) {
   if (!process.env.RESEND_API_KEY) return;
   var svc = booking.service || {}, c = booking.client || {};
   try {
-    await fetch('https://api.resend.com/emails', {
+    var res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + process.env.RESEND_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'NMA Private Lessons <onboarding@resend.dev>',
+        from: 'Noble\'s Martial Arts <noreply@noblesmartialarts.com>',
         to: 'noblesmartialarts@gmail.com',
         subject: 'Session Canceled — ' + (c.full_name || 'a client'),
         html: '<p><strong>' + (c.full_name || 'A client') + '</strong> just canceled their session:</p>'
@@ -67,6 +67,7 @@ async function notifyOwnerOfCancellation(booking) {
           + '</ul>'
       })
     });
+    if (!res.ok) console.error('Cancellation notification rejected (' + res.status + '):', await res.text());
   } catch (e) { console.error('Cancellation notification failed:', e); }
 }
 
