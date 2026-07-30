@@ -257,12 +257,48 @@ async function handlePrivateLessonBooking(body, KEY) {
   // 8. Notify Brandon by email that a new request came in.
   // Silently skipped if RESEND_API_KEY isn't set yet — never blocks the booking itself.
   await notifyOwnerOfNewRequest(booking, svc, clientName, email, phone);
+  await sendClientRequestReceivedEmail(booking, svc, clientName, email);
 
   return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true, magicToken }) };
 }
 
+async function sendClientRequestReceivedEmail(booking, svc, clientName, clientEmail) {
+  if (!process.env.RESEND_API_KEY) return;
+  var venmoUrl = 'https://account.venmo.com/u/BNobleFamily';
+  var zelleEmail = 'noblesmartialarts@gmail.com';
+  var cancelUrl = 'https://noblesmartialarts.com/.netlify/functions/pl-client-cancel?id=' + booking.id + '&token=' + booking.magic_link_token;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + process.env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: "Noble's Martial Arts <onboarding@resend.dev>",
+        to: clientEmail,
+        subject: 'Your Private Lesson Request — Noble\'s Martial Arts',
+        html: '<p>Hi ' + clientName + ',</p>'
+          + '<p>Thanks for requesting a private lesson! Here\'s what you submitted:</p>'
+          + '<ul>'
+          + '<li><strong>Service:</strong> ' + svc.service_name + ' (' + svc.duration_minutes + ' min)</li>'
+          + '<li><strong>Date/Time:</strong> ' + booking.session_date + ' at ' + booking.start_time + '</li>'
+          + '<li><strong>Location:</strong> ' + (booking.location_address || '') + '</li>'
+          + '<li><strong>Total Due:</strong> $' + booking.final_total + ' via Venmo or Zelle</li>'
+          + '</ul>'
+          + '<p>Sensei Brandon will confirm your payment and approve the session — you\'ll get a follow-up email once that happens. If you haven\'t sent payment yet, you can do that now:</p>'
+          + '<p><a href="' + venmoUrl + '" style="display:inline-block;background:#0f00f7;color:#fff;padding:9px 16px;border-radius:8px;text-decoration:none;font-weight:bold;margin-right:8px;">Pay via Venmo</a>'
+          + 'Zelle: ' + zelleEmail + '</p>'
+          + '<p style="color:#888;font-size:13px;">Need to cancel this request? <a href="' + cancelUrl + '">Click here</a> — no penalty up to 60 minutes before your session.</p>'
+          + '<p>Questions? Just reply to this email or reach out at noblesmartialarts@gmail.com.</p>'
+      })
+    });
+  } catch (e) {
+    console.error('Client request-received email failed:', e);
+  }
+}
+
 async function notifyOwnerOfNewRequest(booking, svc, clientName, clientEmail, clientPhone) {
   if (!process.env.RESEND_API_KEY) return; // not configured yet
+  var approveUrl = 'https://noblesmartialarts.com/.netlify/functions/pl-action?id=' + booking.id + '&token=' + booking.magic_link_token + '&action=approve';
+  var declineUrl = 'https://noblesmartialarts.com/.netlify/functions/pl-action?id=' + booking.id + '&token=' + booking.magic_link_token + '&action=decline';
   try {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -282,7 +318,11 @@ async function notifyOwnerOfNewRequest(booking, svc, clientName, clientEmail, cl
           + '<li><strong>Location:</strong> ' + (booking.location_address || '') + '</li>'
           + '<li><strong>Due:</strong> $' + booking.final_total + '</li>'
           + '</ul>'
-          + '<p>Review and approve it in the CRM\'s Private Lessons tab.</p>'
+          + '<p style="margin-top:16px;">'
+          + '<a href="' + approveUrl + '" style="display:inline-block;background:#22c55e;color:#08080f;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold;margin-right:10px;">Approve</a>'
+          + '<a href="' + declineUrl + '" style="display:inline-block;background:#ff5a5a;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold;">Decline</a>'
+          + '</p>'
+          + '<p style="color:#888;font-size:13px;">Clicking either button opens a confirmation page — nothing is finalized until you confirm there. You can also review it in the CRM\'s Private Lessons tab.</p>'
       })
     });
   } catch (e) {
