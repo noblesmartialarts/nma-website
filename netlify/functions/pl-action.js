@@ -19,7 +19,7 @@ exports.handler = async (event) => {
 
   const bookRes = await supaFetch('GET',
     '/rest/v1/private_lesson_bookings?id=eq.' + encodeURIComponent(id) +
-    '&select=*,service:private_lesson_services(*),client:private_lesson_clients(*)', KEY);
+    '&select=*,service:private_lesson_services(*),client:private_lesson_clients(*),participants:private_lesson_participants(*)', KEY);
   const bookRows = await bookRes.json();
   const booking = bookRows && bookRows[0];
   if (!booking) return html(404, errorPage('This request could not be found — it may have been deleted.'));
@@ -77,11 +77,14 @@ function pageWrap(inner) {
 
 function confirmPage(booking, action, id, token) {
   var svc = booking.service || {}, c = booking.client || {};
+  var primary = (booking.participants || []).filter(function(p){ return p.is_primary; })[0] || {};
+  var studentRow = (primary.full_name && primary.full_name !== c.full_name) ? '<div class="row"><b>Student:</b> ' + esc(primary.full_name) + '</div>' : '';
   var label = action === 'approve' ? 'Approve' : 'Decline';
   var color = action === 'approve' ? 'btn-approve' : 'btn-decline';
   return pageWrap(
     '<h1>' + label + ' this request?</h1>'
     + '<div class="row"><b>Client:</b> ' + esc(c.full_name) + '</div>'
+    + studentRow
     + '<div class="row"><b>Service:</b> ' + esc(svc.service_name) + '</div>'
     + '<div class="row"><b>Date/Time:</b> ' + esc(booking.session_date) + ' at ' + esc(booking.start_time) + '</div>'
     + '<div class="row"><b>Location:</b> ' + esc(booking.location_address || '') + '</div>'
