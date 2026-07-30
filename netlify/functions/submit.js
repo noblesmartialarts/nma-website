@@ -268,11 +268,12 @@ async function sendClientRequestReceivedEmail(booking, svc, clientName, clientEm
   var zelleEmail = 'noblesmartialarts@gmail.com';
   var cancelUrl = 'https://noblesmartialarts.com/.netlify/functions/pl-client-cancel?id=' + booking.id + '&token=' + booking.magic_link_token;
   try {
-    await fetch('https://api.resend.com/emails', {
+    var res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + process.env.RESEND_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: "Noble's Martial Arts <onboarding@resend.dev>",
+        from: "Noble's Martial Arts <noreply@noblesmartialarts.com>",
+        reply_to: 'noblesmartialarts@gmail.com',
         to: clientEmail,
         subject: 'Your Private Lesson Request — Noble\'s Martial Arts',
         html: '<p>Hi ' + clientName + ',</p>'
@@ -290,6 +291,7 @@ async function sendClientRequestReceivedEmail(booking, svc, clientName, clientEm
           + '<p>Questions? Just reply to this email or reach out at noblesmartialarts@gmail.com.</p>'
       })
     });
+    if (!res.ok) console.error('Client request-received email rejected (' + res.status + '):', await res.text());
   } catch (e) {
     console.error('Client request-received email failed:', e);
   }
@@ -300,14 +302,14 @@ async function notifyOwnerOfNewRequest(booking, svc, clientName, clientEmail, cl
   var approveUrl = 'https://noblesmartialarts.com/.netlify/functions/pl-action?id=' + booking.id + '&token=' + booking.magic_link_token + '&action=approve';
   var declineUrl = 'https://noblesmartialarts.com/.netlify/functions/pl-action?id=' + booking.id + '&token=' + booking.magic_link_token + '&action=decline';
   try {
-    await fetch('https://api.resend.com/emails', {
+    var res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + process.env.RESEND_API_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'NMA Private Lessons <onboarding@resend.dev>',
+        from: 'Noble\'s Martial Arts <noreply@noblesmartialarts.com>',
         to: 'noblesmartialarts@gmail.com',
         subject: 'New Private Lesson Request — ' + clientName,
         html: '<p><strong>New private lesson request:</strong></p>'
@@ -325,6 +327,7 @@ async function notifyOwnerOfNewRequest(booking, svc, clientName, clientEmail, cl
           + '<p style="color:#888;font-size:13px;">Clicking either button opens a confirmation page — nothing is finalized until you confirm there. You can also review it in the CRM\'s Private Lessons tab.</p>'
       })
     });
+    if (!res.ok) console.error('Owner notification email rejected (' + res.status + '):', await res.text());
   } catch (e) {
     console.error('Owner notification email failed:', e);
   }
