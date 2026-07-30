@@ -256,17 +256,18 @@ async function handlePrivateLessonBooking(body, KEY) {
 
   // 8. Notify Brandon by email that a new request came in.
   // Silently skipped if RESEND_API_KEY isn't set yet — never blocks the booking itself.
-  await notifyOwnerOfNewRequest(booking, svc, clientName, email, phone);
-  await sendClientRequestReceivedEmail(booking, svc, clientName, email);
+  await notifyOwnerOfNewRequest(booking, svc, clientName, email, phone, primaryName);
+  await sendClientRequestReceivedEmail(booking, svc, clientName, email, primaryName);
 
   return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true, magicToken }) };
 }
 
-async function sendClientRequestReceivedEmail(booking, svc, clientName, clientEmail) {
+async function sendClientRequestReceivedEmail(booking, svc, clientName, clientEmail, primaryName) {
   if (!process.env.RESEND_API_KEY) return;
   var venmoUrl = 'https://account.venmo.com/u/BNobleFamily';
   var zelleEmail = 'noblesmartialarts@gmail.com';
   var cancelUrl = 'https://noblesmartialarts.com/.netlify/functions/pl-client-cancel?id=' + booking.id + '&token=' + booking.magic_link_token;
+  var participantLine = (primaryName && primaryName !== clientName) ? '<li><strong>Student:</strong> ' + primaryName + '</li>' : '';
   try {
     var res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -279,6 +280,7 @@ async function sendClientRequestReceivedEmail(booking, svc, clientName, clientEm
         html: '<p>Hi ' + clientName + ',</p>'
           + '<p>Thanks for requesting a private lesson! Here\'s what you submitted:</p>'
           + '<ul>'
+          + participantLine
           + '<li><strong>Service:</strong> ' + svc.service_name + ' (' + svc.duration_minutes + ' min)</li>'
           + '<li><strong>Date/Time:</strong> ' + booking.session_date + ' at ' + booking.start_time + '</li>'
           + '<li><strong>Location:</strong> ' + (booking.location_address || '') + '</li>'
@@ -297,10 +299,11 @@ async function sendClientRequestReceivedEmail(booking, svc, clientName, clientEm
   }
 }
 
-async function notifyOwnerOfNewRequest(booking, svc, clientName, clientEmail, clientPhone) {
+async function notifyOwnerOfNewRequest(booking, svc, clientName, clientEmail, clientPhone, primaryName) {
   if (!process.env.RESEND_API_KEY) return; // not configured yet
   var approveUrl = 'https://noblesmartialarts.com/.netlify/functions/pl-action?id=' + booking.id + '&token=' + booking.magic_link_token + '&action=approve';
   var declineUrl = 'https://noblesmartialarts.com/.netlify/functions/pl-action?id=' + booking.id + '&token=' + booking.magic_link_token + '&action=decline';
+  var participantLine = (primaryName && primaryName !== clientName) ? '<li><strong>Student:</strong> ' + primaryName + '</li>' : '';
   try {
     var res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -315,6 +318,7 @@ async function notifyOwnerOfNewRequest(booking, svc, clientName, clientEmail, cl
         html: '<p><strong>New private lesson request:</strong></p>'
           + '<ul>'
           + '<li><strong>Client:</strong> ' + clientName + ' (' + clientEmail + ', ' + clientPhone + ')</li>'
+          + participantLine
           + '<li><strong>Service:</strong> ' + svc.service_name + '</li>'
           + '<li><strong>Date/Time:</strong> ' + booking.session_date + ' at ' + booking.start_time + '</li>'
           + '<li><strong>Location:</strong> ' + (booking.location_address || '') + '</li>'
