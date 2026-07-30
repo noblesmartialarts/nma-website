@@ -17,7 +17,7 @@ exports.handler = async (event) => {
 
   const bookRes = await supaFetch('GET',
     '/rest/v1/private_lesson_bookings?id=eq.' + encodeURIComponent(id) +
-    '&select=*,service:private_lesson_services(*),client:private_lesson_clients(*)', KEY);
+    '&select=*,service:private_lesson_services(*),client:private_lesson_clients(*),participants:private_lesson_participants(*)', KEY);
   const bookRows = await bookRes.json();
   const booking = bookRows && bookRows[0];
   if (!booking) return html(404, errorPage('This session could not be found.'));
@@ -46,12 +46,47 @@ exports.handler = async (event) => {
   if (!updRes.ok) return html(500, errorPage('Something went wrong — please email noblesmartialarts@gmail.com to cancel.'));
 
   await notifyOwnerOfCancellation(booking);
+  await sendClientCancellationConfirmedEmail(booking);
   return html(200, successPage());
 };
+
+async function sendClientCancellationConfirmedEmail(booking) {
+  if (!process.env.RESEND_API_KEY) return;
+  var svc = booking.service || {}, c = booking.client || {};
+  if (!c.email) return;
+  var primary = (booking.participants || []).filter(function(p){ return p.is_primary; })[0] || {};
+  var participantLine = (primary.full_name && primary.full_name !== c.full_name) ? '<li><strong>Student:</strong> ' + primary.full_name + '</li>' : '';
+  try {
+    var res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + process.env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: "Noble's Martial Arts <noreply@noblesmartialarts.com>",
+        reply_to: 'noblesmartialarts@gmail.com',
+        to: c.email,
+        subject: 'Your Private Lesson Has Been Canceled',
+        html: '<p>Hi ' + (c.full_name || '') + ',</p>'
+          + '<p>This confirms your private lesson has been canceled — no penalty applies:</p>'
+          + '<ul>'
+          + participantLine
+          + '<li><strong>Service:</strong> ' + (svc.service_name || '') + '</li>'
+          + '<li><strong>Was scheduled:</strong> ' + booking.session_date + ' at ' + booking.start_time + '</li>'
+          + '</ul>'
+          + '<p>Want to book another session? Just visit the Private Training page on our website anytime.</p>'
+          + '<p>Questions? Reply to this email or reach out at noblesmartialarts@gmail.com.</p>'
+      })
+    });
+    if (!res.ok) console.error('Client cancellation-confirmed email rejected (' + res.status + '):', await res.text());
+  } catch (e) {
+    console.error('Client cancellation-confirmed email failed:', e);
+  }
+}
 
 async function notifyOwnerOfCancellation(booking) {
   if (!process.env.RESEND_API_KEY) return;
   var svc = booking.service || {}, c = booking.client || {};
+  var primary = (booking.participants || []).filter(function(p){ return p.is_primary; })[0] || {};
+  var participantLine = (primary.full_name && primary.full_name !== c.full_name) ? '<li><strong>Student:</strong> ' + primary.full_name + '</li>' : '';
   try {
     var res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -62,6 +97,7 @@ async function notifyOwnerOfCancellation(booking) {
         subject: 'Session Canceled — ' + (c.full_name || 'a client'),
         html: '<p><strong>' + (c.full_name || 'A client') + '</strong> just canceled their session:</p>'
           + '<ul>'
+          + participantLine
           + '<li><strong>Service:</strong> ' + (svc.service_name || '') + '</li>'
           + '<li><strong>Was scheduled:</strong> ' + booking.session_date + ' at ' + booking.start_time + '</li>'
           + '</ul>'
