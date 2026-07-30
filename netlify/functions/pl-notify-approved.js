@@ -42,11 +42,12 @@ exports.handler = async () => {
 async function sendApprovalEmail(booking) {
   var svc = booking.service || {}, c = booking.client || {};
   var cancelUrl = 'https://noblesmartialarts.com/.netlify/functions/pl-client-cancel?id=' + booking.id + '&token=' + booking.magic_link_token;
-  await fetch('https://api.resend.com/emails', {
+  var res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + process.env.RESEND_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: "Noble's Martial Arts <onboarding@resend.dev>",
+      from: "Noble's Martial Arts <noreply@noblesmartialarts.com>",
+      reply_to: 'noblesmartialarts@gmail.com',
       to: c.email,
       subject: 'Your Private Lesson is Confirmed! 🥋',
       html: '<p>Hi ' + (c.full_name || '') + ',</p>'
@@ -61,6 +62,10 @@ async function sendApprovalEmail(booking) {
         + '<p>See you soon!</p>'
     })
   });
+  if (!res.ok) {
+    var errBody = await res.text();
+    throw new Error('Resend API error (' + res.status + '): ' + errBody);
+  }
 }
 
 function supaFetch(method, path, KEY, body) {
