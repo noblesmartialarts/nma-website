@@ -254,10 +254,40 @@ async function handlePrivateLessonBooking(body, KEY) {
   }));
   await supaFetch('POST', '/rest/v1/private_lesson_participants', participantRows, KEY, 'return=minimal');
 
-  // 8. Email confirmation — not yet wired; needs Resend connected first.
-  // await sendBookingRequestEmail(email, clientName, svc, date, startTime, magicToken);
+  // 8. Notify Brandon by email that a new request came in.
+  // Silently skipped if RESEND_API_KEY isn't set yet — never blocks the booking itself.
+  await notifyOwnerOfNewRequest(booking, svc, clientName, email, phone);
 
   return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true, magicToken }) };
+}
+
+async function notifyOwnerOfNewRequest(booking, svc, clientName, clientEmail, clientPhone) {
+  if (!process.env.RESEND_API_KEY) return; // not configured yet
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + process.env.RESEND_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'NMA Private Lessons <onboarding@resend.dev>',
+        to: 'noblesmartialarts@gmail.com',
+        subject: 'New Private Lesson Request — ' + clientName,
+        html: '<p><strong>New private lesson request:</strong></p>'
+          + '<ul>'
+          + '<li><strong>Client:</strong> ' + clientName + ' (' + clientEmail + ', ' + clientPhone + ')</li>'
+          + '<li><strong>Service:</strong> ' + svc.service_name + '</li>'
+          + '<li><strong>Date/Time:</strong> ' + booking.session_date + ' at ' + booking.start_time + '</li>'
+          + '<li><strong>Location:</strong> ' + (booking.location_address || '') + '</li>'
+          + '<li><strong>Due:</strong> $' + booking.final_total + '</li>'
+          + '</ul>'
+          + '<p>Review and approve it in the CRM\'s Private Lessons tab.</p>'
+      })
+    });
+  } catch (e) {
+    console.error('Owner notification email failed:', e);
+  }
 }
 
 // ── Helpers ──
