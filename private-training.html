@@ -177,6 +177,7 @@ h1.disp{font-size:2.1rem}
     <div class="summary-card">
       <p style="line-height:1.6">Thanks — your private lesson request has been sent to Sensei Brandon. He'll review it, confirm payment, and reach out to lock in your session.</p>
       <p style="line-height:1.6;margin-top:10px;color:var(--muted);font-size:.85rem" id="confirmedPkgNote"></p>
+      <div id="confirmedPaymentLinks"></div>
       <p style="line-height:1.6;margin-top:10px;color:var(--muted);font-size:.85rem">Questions in the meantime? Reach out directly at noblesmartialarts@gmail.com.</p>
     </div>
   </div>
@@ -657,16 +658,29 @@ document.getElementById('detailsContinueBtn').addEventListener('click', function
 });
 
 /* ── STEP 6: review + submit ── */
+var VENMO_URL = 'https://account.venmo.com/u/BNobleFamily';
+var ZELLE_EMAIL = 'noblesmartialarts@gmail.com';
+
+function paymentLinksHtml(amount, noteName, noteDate){
+  if (!(amount > 0)) return '';
+  var note = eh(noteName) + ' - ' + eh(noteDate);
+  return '<div style="background:var(--surf2);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-top:12px;">'
+    + '<div style="font-weight:700;font-size:.85rem;margin-bottom:9px;">Ways to Pay</div>'
+    + '<a href="'+VENMO_URL+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:var(--brand);color:#fff;padding:9px 16px;border-radius:10px;font-size:.85rem;font-weight:700;text-decoration:none;">Pay via Venmo &rarr;</a>'
+    + '<div style="font-size:.82rem;color:var(--muted);margin-top:10px;">Or Zelle to <b style="color:var(--text)">'+ZELLE_EMAIL+'</b></div>'
+    + '<div style="font-size:.75rem;color:var(--muted);margin-top:6px;">Please include "<b>'+note+'</b>" in the payment note so it can be matched to your request.</div>'
+    + '</div>';
+}
+
 function renderSummary() {
   var s = state.service, d = state.details;
   var isPkg = state.packageChoice === 'package';
   var addCount = d.additional.length;
   var addCharge = addCount * Number(s.additional_participant_price || 0);
-  var baseDue = isPkg ? 0 : Number(s.base_price);
-  var total = baseDue + addCharge;
+  var total = isPkg ? (Number(s.package_price) + addCharge) : (Number(s.base_price) + addCharge);
+  state.dueTotal = total; // reused on the confirmation screen
   var pkgNote = isPkg
     ? '<div class="row"><span>Sessions</span><b>Session 1 of 3 — book the rest anytime</b></div>'
-    + '<div class="row"><span>3-pack total</span><b>$'+Number(s.package_price).toFixed(0)+'</b></div>'
     : '';
 
   document.getElementById('summaryCard').innerHTML =
@@ -677,7 +691,8 @@ function renderSummary() {
     + '<div class="row"><span>Location</span><b>'+eh(d.locationAddress)+'</b></div>'
     + pkgNote
     + '<div class="row total"><span>Due via Venmo/Zelle</span><b>$'+total.toFixed(0)+'</b></div>'
-    + '<p style="color:var(--muted);font-size:.78rem;margin-top:10px">Sensei Brandon confirms payment and approves each request — nothing is charged automatically.</p>';
+    + '<p style="color:var(--muted);font-size:.78rem;margin-top:10px">Sensei Brandon confirms payment and approves each request — nothing is charged automatically.</p>'
+    + paymentLinksHtml(total, d.clientName, fmtDate(state.date));
 }
 
 document.getElementById('continueBtn').addEventListener('click', submitBooking);
@@ -713,6 +728,8 @@ function submitBooking() {
     document.getElementById('confirmedPkgNote').textContent = state.packageChoice === 'package'
       ? "You've booked session 1 of 3 on this package — come back to this page anytime to schedule the other two."
       : '';
+    document.getElementById('confirmedPaymentLinks').innerHTML =
+      paymentLinksHtml(state.dueTotal, d.clientName, fmtDate(state.date));
     showStep('step-confirmed');
   })
   .catch(function(e){
