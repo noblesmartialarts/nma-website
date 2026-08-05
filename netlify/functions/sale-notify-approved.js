@@ -52,6 +52,7 @@ async function sendApprovalEmail(order) {
       subject: 'Your NMA Sale Item Request is Approved! 🥋',
       html: '<p>Hi ' + order.requestor_name + ',</p>'
         + "<p>Good news — Sensei Brandon has approved your item request:</p>"
+        + (order.student_name ? '<p><strong>Student:</strong> ' + order.student_name + '</p>' : '')
         + '<ul>' + itemLines + '</ul>'
         + '<p><strong>Total Due:</strong> $' + total + '</p>'
         + '<p><a href="' + venmoUrl + '" style="display:inline-block;background:#0f00f7;color:#fff;padding:9px 16px;border-radius:8px;text-decoration:none;font-weight:bold;margin-right:8px;">Pay via Venmo</a>'
