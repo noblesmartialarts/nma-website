@@ -108,6 +108,7 @@ function confirmPage(order, action, id, token) {
   return pageWrap(
     '<h1>' + label + ' this request?</h1>'
     + '<div class="row"><b>From:</b> ' + esc(order.requestor_name) + ' (' + esc(order.requestor_email) + ')</div>'
+    + (order.student_name ? '<div class="row"><b>Student:</b> ' + esc(order.student_name) + '</div>' : '')
     + '<div class="row"><b>Items:</b><ul>' + itemLines + '</ul></div>'
     + '<div class="row"><b>Total:</b> $' + Number(order.total).toFixed(2) + '</div>'
     + (action === 'approve' ? '<p style="font-size:.85rem;color:#9a9ab4;margin-top:14px;">Approving will send the requestor an email with the Venmo link for this total.</p>' : '')
