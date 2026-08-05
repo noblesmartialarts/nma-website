@@ -1575,6 +1575,28 @@ fetchSiteContent(function() {
     'forms':    'tab-forms',
   };
 
+  /* ── URL routing: deep-linkable paths for each section ── */
+  // Incoming path -> { tab, after } — 'after' runs once, shortly after the tab is shown
+  var ROUTES = {
+    '/registration':    { tab: 'register' },
+    '/practice-videos': { tab: 'hub', after: function(){ if (typeof showVideos === 'function') showVideos(); } },
+    '/parent-hub':      { tab: 'hub' },
+    '/sale':            { tab: 'sale' },
+    '/lost-and-found':  { tab: 'lostfound' },
+    '/forms':           { tab: 'forms' },
+    '/classes':         { tab: 'classes' },
+  };
+  // tab -> canonical path, used to update the address bar on every tab switch
+  var TAB_PATHS = {
+    'home':      '/',
+    'classes':   '/classes',
+    'register':  '/registration',
+    'hub':       '/parent-hub',
+    'lostfound': '/lost-and-found',
+    'sale':      '/sale',
+    'forms':     '/forms',
+  };
+
 
   /* ── top-left menu drawer ── */
   function setMenuActive(tabId){
@@ -1673,7 +1695,7 @@ fetchSiteContent(function() {
     });
   });
 
-  function switchTab(tabId) {
+  function switchTab(tabId, skipPush) {
     document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
     var btn = document.querySelector('.tab-btn[data-tab="'+tabId+'"]');
@@ -1689,11 +1711,34 @@ fetchSiteContent(function() {
       var top = target.getBoundingClientRect().top + window.pageYOffset - tabBarH - 8;
       window.scrollTo({top: Math.max(0, top), behavior:'smooth'});
     }
+    // keep the address bar in sync so each section is a real, shareable/bookmarkable link
+    if (!skipPush) {
+      var path = TAB_PATHS[tabId] || '/';
+      if (window.location.pathname !== path) {
+        window.history.pushState({tab: tabId}, '', path);
+      }
+    }
     // analytics
     if (window.trackEvent) trackEvent('tab_view', {tab: tabId});
   }
   document.querySelectorAll('.tab-btn').forEach(function(btn){
     btn.addEventListener('click', function(){ switchTab(btn.dataset.tab); });
+  });
+
+  /* ── handle deep links: initial load + browser back/forward ── */
+  (function routeFromLocation(isPopState){
+    var route = ROUTES[window.location.pathname];
+    if (route) {
+      switchTab(route.tab, true);
+      if (route.after) setTimeout(route.after, 120);
+    } else if (isPopState) {
+      // Unknown path on a back/forward navigation — fall back to home rather than erroring
+      switchTab('home', true);
+    }
+  })(false);
+  window.addEventListener('popstate', function(e){
+    var tabId = (e.state && e.state.tab) || (ROUTES[window.location.pathname] && ROUTES[window.location.pathname].tab) || 'home';
+    switchTab(tabId, true);
   });
 
   /* ── hero CTAs ── */
