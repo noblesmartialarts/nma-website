@@ -343,7 +343,7 @@ async function notifyOwnerOfNewRequest(booking, svc, clientName, clientEmail, cl
 const crypto2 = require('crypto');
 
 async function handleSaleOrder(body, KEY) {
-  const { requestorName, requestorEmail, requestorPhone, items } = body;
+  const { requestorName, requestorEmail, requestorPhone, studentId, studentName, items } = body;
   if (!requestorName || !requestorEmail || !Array.isArray(items) || !items.length) {
     return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing required fields' }) };
   }
@@ -390,6 +390,8 @@ async function handleSaleOrder(body, KEY) {
     requestor_name: requestorName,
     requestor_email: requestorEmail,
     requestor_phone: requestorPhone || null,
+    student_id: studentId || null,
+    student_name: studentName || null,
     items: orderItems,
     total: total,
     status: 'pending',
@@ -424,6 +426,7 @@ async function notifyOwnerOfSaleRequest(order) {
         html: '<p><strong>New sale item request:</strong></p>'
           + '<ul>'
           + '<li><strong>From:</strong> ' + order.requestor_name + ' (' + order.requestor_email + (order.requestor_phone ? ', ' + order.requestor_phone : '') + ')</li>'
+          + (order.student_name ? '<li><strong>Student:</strong> ' + order.student_name + '</li>' : '')
           + itemLines
           + '<li><strong>Total:</strong> $' + Number(order.total).toFixed(2) + '</li>'
           + '</ul>'
