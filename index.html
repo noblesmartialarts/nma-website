@@ -1096,6 +1096,13 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
       <div id="saleCartList" style="margin-bottom:1rem"></div>
       <div class="sale-cart-total" id="saleCartTotal">Total: $0.00</div>
       <div id="saleFormInner" style="margin-top:1rem">
+        <div class="fq" style="position:relative;">
+          <label class="ql">Student name <span style="color:var(--muted);font-weight:400">(optional — helps Sensei Brandon match this to your child)</span></label>
+          <input type="text" id="sale-student-input" placeholder="Start typing student's first or last name…" autocomplete="off" style="width:100%;"/>
+          <div id="sale-autocomplete" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--surf2);border:1px solid var(--border2);border-radius:10px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4);margin-top:3px;"></div>
+          <input type="hidden" id="sale-student-id" value=""/>
+          <div id="sale-student-confirmed" style="display:none;margin-top:6px;font-size:.82rem;color:var(--green);font-weight:600;"></div>
+        </div>
         <div class="fq"><label class="ql">Your name <span class="req">*</span></label><input type="text" id="sale-name" placeholder="Parent name"/></div>
         <div class="fq"><label class="ql">Email <span class="req">*</span></label><input type="email" id="sale-email" placeholder="you@email.com"/></div>
         <div class="fq"><label class="ql">Phone <span style="color:var(--muted);font-weight:400">(optional)</span></label><input type="tel" id="sale-phone" placeholder="(919) 555-1234"/></div>
@@ -2252,6 +2259,80 @@ fetchSiteContent(function() {
     totalEl.textContent='Total: $'+total.toFixed(2);
   }
 
+  /* ── sale: student autocomplete (mirrors absence notice roster search) ── */
+  var _saleRoster = [];
+  var _saleSelectedStudent = null;
+
+  fetch(SUPABASE_URL + '/rest/v1/crm_data?id=eq.main&select=data', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows) {
+    if (rows && rows[0] && rows[0].data && rows[0].data.students) {
+      _saleRoster = rows[0].data.students.filter(function(s){ return s.status === 'Active'; });
+    }
+  })
+  .catch(function() { /* roster unavailable — autocomplete degrades gracefully */ });
+
+  var saleStudentInput = document.getElementById('sale-student-input');
+  var saleAutocomplete = document.getElementById('sale-autocomplete');
+  var saleStudentHidden = document.getElementById('sale-student-id');
+  var saleStudentConfirmed = document.getElementById('sale-student-confirmed');
+
+  if (saleStudentInput) {
+    saleStudentInput.addEventListener('input', function() {
+      _saleSelectedStudent = null;
+      saleStudentHidden.value = '';
+      saleStudentConfirmed.style.display = 'none';
+      var q = saleStudentInput.value.trim().toLowerCase();
+      if (!q) { saleAutocomplete.style.display = 'none'; return; }
+
+      if (!_saleRoster.length) {
+        saleAutocomplete.innerHTML = '<div style="padding:11px 14px;font-size:.85rem;color:var(--muted);">Loading student list…</div>';
+        saleAutocomplete.style.display = 'block';
+        return;
+      }
+
+      var filtered = _saleRoster.filter(function(s) {
+        return (s.first + ' ' + s.last).toLowerCase().includes(q);
+      }).slice(0, 8);
+
+      if (!filtered.length) {
+        saleAutocomplete.innerHTML = '<div style="padding:11px 14px;font-size:.85rem;color:var(--muted);">No students found — try last name only.</div>';
+        saleAutocomplete.style.display = 'block';
+        return;
+      }
+
+      saleAutocomplete.innerHTML = filtered.map(function(s) {
+        return '<div class="sale-student-option" data-id="' + s.id + '" data-name="' + s.first + ' ' + s.last + '" data-group="' + s.group + '" ' +
+          'style="padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.9rem;" ' +
+          'onmouseenter="this.style.background=\'var(--soft)\'" onmouseleave="this.style.background=\'\'">' +
+          '<strong>' + s.first + ' ' + s.last + '</strong>' +
+          '<span style="font-size:.75rem;color:var(--muted);margin-left:8px;">' + s.group + '</span>' +
+          '</div>';
+      }).join('');
+      saleAutocomplete.style.display = 'block';
+
+      saleAutocomplete.querySelectorAll('.sale-student-option').forEach(function(opt) {
+        opt.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          _saleSelectedStudent = { id: opt.dataset.id, name: opt.dataset.name, group: opt.dataset.group };
+          saleStudentInput.value = _saleSelectedStudent.name;
+          saleStudentHidden.value = _saleSelectedStudent.id;
+          saleAutocomplete.style.display = 'none';
+          saleStudentConfirmed.textContent = '✓ Found: ' + _saleSelectedStudent.name + ' (' + _saleSelectedStudent.group + ')';
+          saleStudentConfirmed.style.display = 'block';
+        });
+      });
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!saleAutocomplete.contains(e.target) && e.target !== saleStudentInput) {
+        saleAutocomplete.style.display = 'none';
+      }
+    });
+  }
+
   var saleSubmitBtn=document.getElementById('saleSubmitBtn');
   if(saleSubmitBtn){
     saleSubmitBtn.addEventListener('click',function(){
@@ -2267,7 +2348,12 @@ fetchSiteContent(function() {
       err.style.display='none';
 
       var items=ids.map(function(id){ return { itemId:id, qty:saleCart[id] }; });
-      var payload={ type:'sale', requestorName:name, requestorEmail:email, requestorPhone:phone, items:items };
+      var payload={
+        type:'sale', requestorName:name, requestorEmail:email, requestorPhone:phone,
+        studentId: _saleSelectedStudent ? _saleSelectedStudent.id : null,
+        studentName: _saleSelectedStudent ? _saleSelectedStudent.name : null,
+        items:items
+      };
 
       saleSubmitBtn.disabled=true; saleSubmitBtn.textContent='Sending…';
       fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
@@ -2285,7 +2371,10 @@ fetchSiteContent(function() {
   var saleRequestAnother=document.getElementById('saleRequestAnother');
   if(saleRequestAnother){
     saleRequestAnother.addEventListener('click',function(){
-      ['sale-name','sale-email','sale-phone'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+      ['sale-name','sale-email','sale-phone','sale-student-input'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+      var sh=document.getElementById('sale-student-id'); if(sh) sh.value='';
+      var sc=document.getElementById('sale-student-confirmed'); if(sc) sc.style.display='none';
+      _saleSelectedStudent = null;
       document.getElementById('saleFormSuccess').style.display='none';
       document.getElementById('saleFormInner').style.display='block';
       document.getElementById('saleCheckoutCard').style.display='none';
