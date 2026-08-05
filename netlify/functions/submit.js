@@ -33,6 +33,8 @@ if (event.httpMethod === 'OPTIONS') {
       return await handleLostFound(body, KEY);
     } else if (type === 'privateLesson') {
       return await handlePrivateLessonBooking(body, KEY);
+    } else if (type === 'sale') {
+      return await handleSaleOrder(body, KEY);
     } else {
       return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Unknown form type: ' + type }) };
     }
@@ -334,6 +336,107 @@ async function notifyOwnerOfNewRequest(booking, svc, clientName, clientEmail, cl
     if (!res.ok) console.error('Owner notification email rejected (' + res.status + '):', await res.text());
   } catch (e) {
     console.error('Owner notification email failed:', e);
+  }
+}
+
+// ── Sale: validate stock, reserve it, create order, notify owner (no client email yet) ──
+const crypto2 = require('crypto');
+
+async function handleSaleOrder(body, KEY) {
+  const { requestorName, requestorEmail, requestorPhone, items } = body;
+  if (!requestorName || !requestorEmail || !Array.isArray(items) || !items.length) {
+    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing required fields' }) };
+  }
+
+  // 1. Look up each item fresh from the DB — never trust price/stock from the client
+  const ids = items.map(function(i){ return i.itemId; });
+  const idFilter = ids.map(function(id){ return encodeURIComponent(id); }).join(',');
+  const itemsRes = await supaFetch('GET', '/rest/v1/nma_sale_items?id=in.(' + idFilter + ')&active=eq.true&select=*', null, KEY);
+  const dbItems = await itemsRes.json();
+  if (!itemsRes.ok || !dbItems || !dbItems.length) {
+    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'One or more items are no longer available' }) };
+  }
+  const byId = {};
+  dbItems.forEach(function(i){ byId[i.id] = i; });
+
+  // 2. Validate stock and build the authoritative order line items
+  var orderItems = [];
+  var total = 0;
+  for (var k = 0; k < items.length; k++) {
+    var req = items[k];
+    var db = byId[req.itemId];
+    var qty = Math.max(1, parseInt(req.qty, 10) || 1);
+    if (!db) {
+      return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'An item in your order is no longer available' }) };
+    }
+    var available = db.quantity - db.reserved;
+    if (qty > available) {
+      return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: '"' + db.title + '" only has ' + available + ' left' }) };
+    }
+    orderItems.push({ item_id: db.id, title: db.title, qty: qty, unit_price: db.price });
+    total += qty * Number(db.price);
+  }
+
+  // 3. Reserve stock on each item (best-effort sequential PATCH — small scale, no contention expected)
+  for (var j = 0; j < orderItems.length; j++) {
+    var oi = orderItems[j];
+    var dbItem = byId[oi.item_id];
+    await supaFetch('PATCH', '/rest/v1/nma_sale_items?id=eq.' + oi.item_id, { reserved: dbItem.reserved + oi.qty }, KEY, 'return=minimal');
+  }
+
+  // 4. Create the order
+  const magicToken = crypto2.randomBytes(24).toString('base64url');
+  const orderPayload = {
+    requestor_name: requestorName,
+    requestor_email: requestorEmail,
+    requestor_phone: requestorPhone || null,
+    items: orderItems,
+    total: total,
+    status: 'pending',
+    magic_link_token: magicToken
+  };
+  const orderRes = await supaFetch('POST', '/rest/v1/nma_sale_orders', orderPayload, KEY, 'return=representation');
+  const orderRows = await orderRes.json();
+  if (!orderRes.ok || !orderRows[0]) throw new Error('Could not create sale order');
+  const order = orderRows[0];
+
+  // 5. Notify owner with Approve/Decline links (client is only emailed after approval, via the scheduled notifier)
+  await notifyOwnerOfSaleRequest(order);
+
+  return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true }) };
+}
+
+async function notifyOwnerOfSaleRequest(order) {
+  if (!process.env.RESEND_API_KEY) return; // not configured yet, don't block the order
+  var approveUrl = 'https://noblesmartialarts.com/.netlify/functions/sale-action?id=' + order.id + '&token=' + order.magic_link_token + '&action=approve';
+  var declineUrl = 'https://noblesmartialarts.com/.netlify/functions/sale-action?id=' + order.id + '&token=' + order.magic_link_token + '&action=decline';
+  var itemLines = order.items.map(function(i){
+    return '<li>' + i.qty + ' × ' + i.title + ' — $' + (i.qty * i.unit_price).toFixed(2) + '</li>';
+  }).join('');
+  try {
+    var res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + process.env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: "Noble's Martial Arts <noreply@noblesmartialarts.com>",
+        to: 'noblesmartialarts@gmail.com',
+        subject: 'New Sale Item Request — ' + order.requestor_name,
+        html: '<p><strong>New sale item request:</strong></p>'
+          + '<ul>'
+          + '<li><strong>From:</strong> ' + order.requestor_name + ' (' + order.requestor_email + (order.requestor_phone ? ', ' + order.requestor_phone : '') + ')</li>'
+          + itemLines
+          + '<li><strong>Total:</strong> $' + Number(order.total).toFixed(2) + '</li>'
+          + '</ul>'
+          + '<p style="margin-top:16px;">'
+          + '<a href="' + approveUrl + '" style="display:inline-block;background:#22c55e;color:#08080f;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold;margin-right:10px;">Approve</a>'
+          + '<a href="' + declineUrl + '" style="display:inline-block;background:#ff5a5a;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold;">Decline</a>'
+          + '</p>'
+          + '<p style="color:#888;font-size:13px;">Clicking either button opens a confirmation page — nothing is finalized until you confirm there.</p>'
+      })
+    });
+    if (!res.ok) console.error('Sale owner notification email rejected (' + res.status + '):', await res.text());
+  } catch (e) {
+    console.error('Sale owner notification email failed:', e);
   }
 }
 
