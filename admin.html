@@ -315,6 +315,33 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
       </div>
     </div>
 
+    <!-- SALE ITEMS -->
+    <div class="section">
+      <div class="sec-head" data-s="saleitems">
+        <h2 class="disp">Sale Items <span class="badge" id="saleAdminBadge">0 active</span></h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-saleitems">
+        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Post overstock or apparel items for parents to request in the Parent Hub. Requests come to you by email to Approve or Decline — approving sends the requestor a Venmo link for the exact amount owed.</p>
+        <div class="lf-admin-form">
+          <h3 class="disp" style="font-size:1.35rem;margin-bottom:.2rem">Post New Item</h3>
+          <div class="field"><label>Title</label><input id="sale-item-title" placeholder="e.g. NMA Hoodie — Youth Large"/></div>
+          <div class="field"><label>Description</label><textarea id="sale-item-desc" placeholder="Optional details — size, condition, color, etc."></textarea></div>
+          <div class="field-row">
+            <div class="field"><label>Price ($)</label><input type="number" step="0.01" min="0" id="sale-item-price" placeholder="20.00"/></div>
+            <div class="field"><label>Quantity</label><input type="number" step="1" min="1" id="sale-item-qty" placeholder="1"/></div>
+          </div>
+          <div class="field"><label>Photo</label><input type="file" id="sale-item-photo" accept="image/*"/><p class="hint">Optional, but recommended.</p></div>
+          <div class="lf-admin-actions">
+            <button class="btn-small primary" id="saleItemPostBtn">Post Item</button>
+            <button class="btn-small" id="saleItemRefreshBtn" type="button">Refresh List</button>
+          </div>
+          <p id="saleItemErr" style="color:var(--red);font-size:.82rem;margin-top:.6rem;display:none"></p>
+        </div>
+        <div id="saleItemList" style="margin-top:14px"><div class="lf-admin-empty">Loading Sale Items…</div></div>
+      </div>
+    </div>
+
     <!-- CONTACT & SOCIAL -->
     <div class="section">
       <div class="sec-head" data-s="social">
@@ -938,6 +965,123 @@ if(lfAdminPostBtn){
 var lfAdminRefreshBtn=document.getElementById('lfAdminRefreshBtn');
 if(lfAdminRefreshBtn){ lfAdminRefreshBtn.addEventListener('click',loadLostFoundAdmin); }
 
+/* ══════════════════════════════════════════════
+   SALE ITEMS — reads/writes nma_sale_items directly (anon key, password-gated page)
+══════════════════════════════════════════════ */
+var SALE_TABLE='nma_sale_items';
+var saleItems=[];
+
+function uploadSaleItemPhoto(file){
+  if(!file) return Promise.resolve('');
+  var fname='sale-'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  return fetch(STORAGE_UPLOAD_URL+fname,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true'},
+    body:file
+  }).then(function(r){ return r.json(); }).then(function(res){
+    if(res && res.error) throw new Error(res.error.message||'Photo upload failed');
+    return STORAGE_URL+fname;
+  });
+}
+
+function loadSaleItems(){
+  var list=document.getElementById('saleItemList');
+  if(!list) return;
+  list.innerHTML='<div class="lf-admin-empty">Loading Sale Items…</div>';
+  fetch(SB_URL+'/rest/v1/'+SALE_TABLE+'?select=*&order=created_at.desc',{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(rows){ saleItems=rows||[]; renderSaleItemsAdmin(); })
+  .catch(function(e){ list.innerHTML='<div class="lf-admin-empty">Could not load Sale Items: '+eh(e.message)+'</div>'; });
+}
+
+function renderSaleItemsAdmin(){
+  var list=document.getElementById('saleItemList');
+  if(!list) return;
+  var activeCount=saleItems.filter(function(i){ return i.active; }).length;
+  var badge=document.getElementById('saleAdminBadge');
+  if(badge) badge.textContent=activeCount+' active';
+  var rows=saleItems.slice().sort(function(a,b){ return new Date(b.created_at||0)-new Date(a.created_at||0); });
+  list.innerHTML='';
+  if(!rows.length){ list.innerHTML='<div class="lf-admin-empty">No sale items posted yet.</div>'; return; }
+  rows.forEach(function(it){
+    var div=document.createElement('div');
+    var available=it.quantity-it.reserved;
+    var statusLabel = !it.active ? 'Archived' : (available<=0 ? 'Sold Out' : (it.reserved>0 ? 'Pending Request' : 'Available'));
+    var statusClass = !it.active ? 'resolved' : (available<=0 ? 'resolved' : (it.reserved>0 ? 'pending_resolution' : 'open'));
+    div.className='lf-admin-card'+(it.active && it.reserved>0 ? ' pending' : '');
+    var photo=it.photo_url?'<img class="lf-admin-photo" src="'+ea(it.photo_url)+'" alt="'+ea(it.title||'')+'"/>':'';
+    var actions='<button class="btn-small '+(it.active?'red':'green')+' sale-act" data-act="'+(it.active?'archive':'activate')+'" data-id="'+ea(it.id)+'">'+(it.active?'Archive':'Reactivate')+'</button>'+
+      '<button class="btn-small red sale-act" data-act="delete" data-id="'+ea(it.id)+'">Delete</button>';
+    div.innerHTML=photo+
+      '<div class="lf-admin-top"><div><div class="lf-admin-title">'+eh(it.title||'Item')+'</div>'+
+      '<div class="lf-admin-meta">$'+Number(it.price).toFixed(2)+' · '+available+' of '+it.quantity+' available'+(it.reserved>0?' ('+it.reserved+' reserved)':'')+'</div>'+
+      '</div><span class="lf-admin-status '+statusClass+'">'+eh(statusLabel)+'</span></div>'+
+      (it.description?'<div class="lf-admin-notes">'+eh(it.description)+'</div>':'')+
+      '<div class="lf-admin-actions">'+actions+'</div>';
+    list.appendChild(div);
+  });
+  list.querySelectorAll('.sale-act').forEach(function(btn){
+    btn.addEventListener('click',function(){ handleSaleItemAction(btn.dataset.id,btn.dataset.act); });
+  });
+}
+
+function handleSaleItemAction(id,act){
+  if(!id||!act) return;
+  if(act==='delete'){
+    if(!confirm('Delete this sale item? This cannot be undone.')) return;
+    fetch(SB_URL+'/rest/v1/'+SALE_TABLE+'?id=eq.'+encodeURIComponent(id),{
+      method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'}
+    }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); showToast('Deleted','ok'); loadSaleItems(); })
+    .catch(function(){ showToast('Delete failed','err'); });
+    return;
+  }
+  var payload={ updated_at:new Date().toISOString(), active: act==='activate' };
+  fetch(SB_URL+'/rest/v1/'+SALE_TABLE+'?id=eq.'+encodeURIComponent(id),{
+    method:'PATCH',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(payload)
+  }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); showToast(act==='activate'?'Item reactivated':'Item archived','ok'); loadSaleItems(); })
+  .catch(function(){ showToast('Update failed','err'); });
+}
+
+var saleItemPostBtn=document.getElementById('saleItemPostBtn');
+if(saleItemPostBtn){
+  saleItemPostBtn.addEventListener('click',function(){
+    var title=document.getElementById('sale-item-title').value.trim();
+    var desc=document.getElementById('sale-item-desc').value.trim();
+    var price=parseFloat(document.getElementById('sale-item-price').value);
+    var qty=parseInt(document.getElementById('sale-item-qty').value,10);
+    var file=(document.getElementById('sale-item-photo').files||[])[0];
+    var err=document.getElementById('saleItemErr');
+    function showE(m){ err.textContent=m; err.style.display='block'; }
+    if(!title){ showE('Please enter a title.'); return; }
+    if(isNaN(price)||price<0){ showE('Please enter a valid price.'); return; }
+    if(isNaN(qty)||qty<1){ showE('Please enter a quantity of at least 1.'); return; }
+    err.style.display='none';
+    saleItemPostBtn.disabled=true; saleItemPostBtn.textContent=file?'Uploading photo…':'Posting…';
+    uploadSaleItemPhoto(file).then(function(photoUrl){
+      saleItemPostBtn.textContent='Posting…';
+      return fetch(SB_URL+'/rest/v1/'+SALE_TABLE,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({ title:title, description:desc, photo_url:photoUrl, price:price, quantity:qty, reserved:0, active:true })
+      });
+    }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status);
+      document.getElementById('sale-item-title').value='';
+      document.getElementById('sale-item-desc').value='';
+      document.getElementById('sale-item-price').value='';
+      document.getElementById('sale-item-qty').value='';
+      document.getElementById('sale-item-photo').value='';
+      showToast('Item posted','ok'); loadSaleItems();
+    }).catch(function(){ showE('Could not post item. Check Supabase setup and try again.'); })
+    .finally(function(){ saleItemPostBtn.disabled=false; saleItemPostBtn.textContent='Post Item'; });
+  });
+}
+var saleItemRefreshBtn=document.getElementById('saleItemRefreshBtn');
+if(saleItemRefreshBtn){ saleItemRefreshBtn.addEventListener('click',loadSaleItems); }
+
 /* ── accordion ── */
 document.querySelectorAll('.sec-head').forEach(function(h){
   h.addEventListener('click',function(){
@@ -1290,6 +1434,7 @@ loadData = function() {
   _origLoadData();
   loadAbsenceRequests();
   loadAvailability();
+  loadSaleItems();
 };
 
 /* ── Auto-refresh when tab regains focus — no relog needed ── */
@@ -1298,6 +1443,7 @@ document.addEventListener('visibilitychange', function() {
     loadLostFoundAdmin();
     loadAbsenceRequests();
     loadAvailability();
+    loadSaleItems();
   }
 });
 window.addEventListener('focus', function() {
@@ -1305,6 +1451,7 @@ window.addEventListener('focus', function() {
     loadLostFoundAdmin();
     loadAbsenceRequests();
     loadAvailability();
+    loadSaleItems();
   }
 });
 </script>
