@@ -462,6 +462,29 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
 .lf-resolve-btn:disabled{opacity:.65;cursor:not-allowed;color:var(--muted)}
 .lf-empty{padding:18px;color:var(--muted);text-align:center;font-size:.88rem}
 
+/* Sale items */
+.sale-grid{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:560px){.sale-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:900px){.sale-grid{grid-template-columns:1fr 1fr 1fr}}
+.sale-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.sale-card.soldout{opacity:.55}
+.sale-photo{width:100%;height:170px;object-fit:cover;background:var(--surf2)}
+.sale-photo-placeholder{width:100%;height:170px;background:var(--surf2);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:2rem}
+.sale-body{padding:13px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.sale-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.sale-title{font-weight:800;font-size:.98rem;line-height:1.3}
+.sale-price{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--bright);white-space:nowrap}
+.sale-desc{color:var(--muted);font-size:.83rem;line-height:1.4}
+.sale-badge{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-radius:99px;padding:4px 9px;display:inline-block;width:fit-content}
+.sale-badge.available{color:var(--green);background:rgba(34,197,94,.13);border:1px solid rgba(34,197,94,.28)}
+.sale-badge.pending{color:#fbbf24;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35)}
+.sale-badge.soldout{color:var(--muted);background:rgba(255,255,255,.05);border:1px solid var(--border2)}
+.sale-qty-row{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:6px}
+.sale-qty-row label{font-size:.8rem;color:var(--muted);font-weight:700}
+.sale-qty-row select{flex:1;padding:7px 9px;border-radius:8px;border:1px solid var(--border2);background:var(--surf2);color:var(--text);font-family:inherit;font-size:.85rem}
+.sale-cart-item{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;padding:7px 0;border-bottom:1px solid var(--border)}
+.sale-cart-total{font-weight:800;font-size:1.05rem;text-align:right;padding-top:6px}
+
 /* ── MOBILE-FIRST OPTIMIZATIONS ── */
 /* Ensure hero is compact on small screens */
 @media(max-width:480px){
@@ -599,6 +622,9 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
       </button>
       <button class="menu-sublink" type="button" data-menu-action="tab" data-menu-tab="lostfound">
         <b>📦 Lost &amp; Found</b><small>Missing or found items</small>
+      </button>
+      <button class="menu-sublink" type="button" data-menu-action="tab" data-menu-tab="sale">
+        <b>🏷️ Sale Items</b><small>Overstock &amp; apparel deals</small>
       </button>
       <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="hub" data-menu-scroll="hubGrid">
         <b>⚔️ Gear &amp; Apparel</b><small>Equipment and uniform orders</small>
@@ -1050,6 +1076,42 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
   </section>
 </div><!-- /tab-lostfound -->
 
+<!-- ═══════════════ TAB: SALE ═══════════════ -->
+<div class="tab-panel" id="tab-sale">
+  <section id="saleTop">
+    <div class="head">
+      <p class="eye">Parent Hub</p>
+      <h2 class="disp">Sale Items</h2>
+      <p>Overstock apparel and gear at a discount. Select what you'd like below — Sensei Brandon reviews each request and sends a Venmo link once approved.</p>
+    </div>
+
+    <div class="lf-intro">
+      <strong>First-come, first-served:</strong> a "Pending" badge means someone else has already requested that item and it's awaiting approval — it may still sell out before your request is reviewed.
+    </div>
+
+    <div id="saleGrid" class="sale-grid"><div class="lf-empty">Loading items…</div></div>
+
+    <div class="lf-form-card" id="saleCheckoutCard" style="margin-top:16px;display:none">
+      <h3 class="disp">Your Request</h3>
+      <div id="saleCartList" style="margin-bottom:1rem"></div>
+      <div class="sale-cart-total" id="saleCartTotal">Total: $0.00</div>
+      <div id="saleFormInner" style="margin-top:1rem">
+        <div class="fq"><label class="ql">Your name <span class="req">*</span></label><input type="text" id="sale-name" placeholder="Parent name"/></div>
+        <div class="fq"><label class="ql">Email <span class="req">*</span></label><input type="email" id="sale-email" placeholder="you@email.com"/></div>
+        <div class="fq"><label class="ql">Phone <span style="color:var(--muted);font-weight:400">(optional)</span></label><input type="tel" id="sale-phone" placeholder="(919) 555-1234"/></div>
+        <p id="saleFormErr" style="color:#ff5a5a;font-size:.82rem;margin-bottom:.6rem;display:none"></p>
+        <button class="form-submit" id="saleSubmitBtn">Submit Request</button>
+      </div>
+      <div class="form-success" id="saleFormSuccess">
+        <div class="big">🛍️</div>
+        <h4 class="disp" style="font-size:1.5rem;margin-bottom:.3rem">Request Sent!</h4>
+        <p style="color:var(--muted)">Sensei Brandon will review your request and email you a Venmo link once it's approved.</p>
+        <button class="btn-secondary" id="saleRequestAnother" style="margin-top:12px;width:100%;justify-content:center">Browse More Items</button>
+      </div>
+    </div>
+  </section>
+</div><!-- /tab-sale -->
+
 <!-- ═══════════════ TAB: FORMS ═══════════════ -->
 <div class="tab-panel" id="tab-forms">
   <section>
@@ -1365,6 +1427,7 @@ const CONFIG = {
     { icon:"⚔️", label:"Gear & Weapons", sub:"Equipment orders",              action:"pay-gear" },
     { icon:"📅", label:"Weekly Updates",  sub:"Announcements",                  action:"hub-top" },
     { icon:"📦", label:"Lost & Found",     sub:"Missing items",                  action:"lostfound" },
+    { icon:"🏷️", label:"Sale Items",      sub:"Overstock & apparel deals",      action:"sale" },
     { icon:"📚", label:"Handbook",        sub:"Download PDF",                   url:"handbook.pdf", download:true },
     { icon:"📄", label:"Forms",           sub:"Feedback & interest",            action:"forms" },
     { icon:"📧", label:"Contact",         sub:"noblesmartialarts@gmail.com",    url:"mailto:noblesmartialarts@gmail.com" },
@@ -1490,6 +1553,7 @@ fetchSiteContent(function() {
     handbook:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
     sword:'<path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/>',
     link:'<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+    tag:'<path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.24L4 3v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l3.59-3.59a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"/>',
   };
 
   /* ── tab switching ── */
@@ -1500,6 +1564,7 @@ fetchSiteContent(function() {
     'register': 'tab-register',
     'hub':      'tab-hub',
     'lostfound':'lostfoundTop',
+    'sale':     'saleTop',
     'forms':    'tab-forms',
   };
 
@@ -1657,6 +1722,7 @@ fetchSiteContent(function() {
         else if (l.action === 'register') switchTab('register');
         else if (l.action === 'forms')    switchTab('forms');
         else if (l.action === 'lostfound') switchTab('lostfound');
+        else if (l.action === 'sale') switchTab('sale');
         else if (l.action === 'pay-belt') { switchTab('hub'); setTimeout(function(){ showPaySection(); }, 80); }
         else if (l.action === 'pay-gear') { switchTab('hub'); setTimeout(function(){ showPaySection(); }, 80); }
         else if (l.action === 'hub-top')  { switchTab('hub'); }
@@ -1816,6 +1882,7 @@ fetchSiteContent(function() {
         else if (c.action==='register') switchTab('register');
         else if (c.action==='forms')    switchTab('forms');
         else if (c.action==='lostfound') switchTab('lostfound');
+        else if (c.action==='sale') switchTab('sale');
         else if (c.action==='pay-belt') { switchTab('hub'); setTimeout(function(){ showPaySection(); var el=document.getElementById('payLinksList'); if(el) el.scrollIntoView({behavior:'smooth'}); },80); }
         else if (c.action==='pay-gear') { switchTab('hub'); setTimeout(function(){ showPaySection(); setTimeout(function(){ var sec=document.getElementById('hubPaySection'); if(sec) sec.scrollIntoView({behavior:'smooth'}); },80); },80); }
         else if (c.action==='hub-top')  { switchTab('hub'); window.scrollTo({top:0,behavior:'smooth'}); }
@@ -2103,6 +2170,128 @@ fetchSiteContent(function() {
     });
   }
   loadLostFound();
+
+  /* ── sale items ── */
+  var SALE_TABLE = 'nma_sale_items';
+  var saleItemsData = [];
+  var saleCart = {}; // { itemId: qty }
+
+  function loadSaleItems(){
+    if(!document.getElementById('tab-sale')) return;
+    var grid=document.getElementById('saleGrid');
+    fetch(SUPABASE_URL+'/rest/v1/'+SALE_TABLE+'?select=*&active=eq.true&order=created_at.desc',{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    })
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(rows){ saleItemsData=rows||[]; renderSaleGrid(); })
+    .catch(function(){ if(grid) grid.innerHTML='<div class="lf-empty">Could not load sale items right now.</div>'; });
+  }
+
+  function renderSaleGrid(){
+    var grid=document.getElementById('saleGrid');
+    if(!grid) return;
+    if(!saleItemsData.length){ grid.innerHTML='<div class="lf-empty">No items for sale right now — check back soon!</div>'; return; }
+    grid.innerHTML='';
+    saleItemsData.forEach(function(it){
+      var available = it.quantity - it.reserved;
+      var soldOut = available <= 0;
+      var card=document.createElement('div');
+      card.className='sale-card'+(soldOut?' soldout':'');
+      var photo = it.photo_url
+        ? '<img class="sale-photo" src="'+esc(it.photo_url)+'" alt="'+esc(it.title||'')+'"/>'
+        : '<div class="sale-photo-placeholder">🥋</div>';
+      var badge = soldOut
+        ? '<span class="sale-badge soldout">Sold Out</span>'
+        : (it.reserved>0 ? '<span class="sale-badge pending">Pending Request</span>' : '<span class="sale-badge available">Available</span>');
+      var qtyOptions='';
+      var maxQty = Math.min(available, 10);
+      for (var q=1; q<=maxQty; q++){
+        qtyOptions += '<option value="'+q+'"'+(saleCart[it.id]===q?' selected':'')+'>'+q+'</option>';
+      }
+      var qtyRow = soldOut ? '' :
+        '<div class="sale-qty-row"><label>Qty</label><select class="sale-qty-select" data-id="'+esc(it.id)+'">'+
+        '<option value="0">—</option>'+qtyOptions+'</select></div>';
+      card.innerHTML = photo +
+        '<div class="sale-body">'+
+        '<div class="sale-title-row"><div class="sale-title">'+esc(it.title||'Item')+'</div><div class="sale-price">$'+Number(it.price).toFixed(2)+'</div></div>'+
+        badge +
+        (it.description ? '<div class="sale-desc">'+esc(it.description)+'</div>' : '') +
+        qtyRow +
+        '</div>';
+      grid.appendChild(card);
+    });
+    grid.querySelectorAll('.sale-qty-select').forEach(function(sel){
+      sel.addEventListener('change', function(){
+        var id=sel.dataset.id, qty=parseInt(sel.value,10)||0;
+        if (qty>0) saleCart[id]=qty; else delete saleCart[id];
+        renderSaleCart();
+      });
+    });
+  }
+
+  function renderSaleCart(){
+    var card=document.getElementById('saleCheckoutCard');
+    var list=document.getElementById('saleCartList');
+    var totalEl=document.getElementById('saleCartTotal');
+    var ids=Object.keys(saleCart);
+    if(!ids.length){ if(card) card.style.display='none'; return; }
+    if(card) card.style.display='block';
+    var total=0;
+    list.innerHTML='';
+    ids.forEach(function(id){
+      var it=saleItemsData.find(function(x){ return x.id===id; });
+      if(!it) return;
+      var qty=saleCart[id];
+      var lineTotal=qty*Number(it.price);
+      total+=lineTotal;
+      var row=document.createElement('div');
+      row.className='sale-cart-item';
+      row.innerHTML='<span>'+qty+' × '+esc(it.title)+'</span><span>$'+lineTotal.toFixed(2)+'</span>';
+      list.appendChild(row);
+    });
+    totalEl.textContent='Total: $'+total.toFixed(2);
+  }
+
+  var saleSubmitBtn=document.getElementById('saleSubmitBtn');
+  if(saleSubmitBtn){
+    saleSubmitBtn.addEventListener('click',function(){
+      var name=(document.getElementById('sale-name').value||'').trim();
+      var email=(document.getElementById('sale-email').value||'').trim();
+      var phone=(document.getElementById('sale-phone').value||'').trim();
+      var err=document.getElementById('saleFormErr');
+      function showErr(m){ err.textContent=m; err.style.display='block'; }
+      var ids=Object.keys(saleCart);
+      if(!ids.length){ showErr('Please select at least one item.'); return; }
+      if(!name){ showErr('Please enter your name.'); return; }
+      if(!email || email.indexOf('@')===-1){ showErr('Please enter a valid email.'); return; }
+      err.style.display='none';
+
+      var items=ids.map(function(id){ return { itemId:id, qty:saleCart[id] }; });
+      var payload={ type:'sale', requestorName:name, requestorEmail:email, requestorPhone:phone, items:items };
+
+      saleSubmitBtn.disabled=true; saleSubmitBtn.textContent='Sending…';
+      fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error||'HTTP '+r.status); return j; }); })
+      .then(function(){
+        document.getElementById('saleFormInner').style.display='none';
+        document.getElementById('saleFormSuccess').style.display='block';
+        saleCart={};
+        loadSaleItems();
+      })
+      .catch(function(e){ showErr(e.message||'Something went wrong — please try again.'); })
+      .finally(function(){ saleSubmitBtn.disabled=false; saleSubmitBtn.textContent='Submit Request'; });
+    });
+  }
+  var saleRequestAnother=document.getElementById('saleRequestAnother');
+  if(saleRequestAnother){
+    saleRequestAnother.addEventListener('click',function(){
+      ['sale-name','sale-email','sale-phone'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+      document.getElementById('saleFormSuccess').style.display='none';
+      document.getElementById('saleFormInner').style.display='block';
+      document.getElementById('saleCheckoutCard').style.display='none';
+    });
+  }
+  loadSaleItems();
 
   /* ── feedback form ── */
   document.querySelectorAll('.form-tab-btn').forEach(function(btn){
