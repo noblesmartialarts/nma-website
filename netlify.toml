@@ -2,6 +2,41 @@
   publish = "."
   functions = "netlify/functions"
 
+[[redirects]]
+  from = "/registration"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/practice-videos"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/parent-hub"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/sale"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/lost-and-found"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/forms"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/classes"
+  to = "/index.html"
+  status = 200
+
 [functions."pl-notify-approved"]
   schedule = "*/5 * * * *"
 
