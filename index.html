@@ -1994,7 +1994,7 @@ fetchSiteContent(function() {
   CLASS_DATA.forEach(function(c){
     var div=document.createElement('div'); div.className='class-card';
     var skillsH=c.skills.map(function(s){ return '<span class="chip chip-dim">'+esc(s)+'</span>'; }).join('');
-    var beltsH=c.belts.slice(0,6).map(function(b){ return '<span class="belt-chip" style="background:'+b.c+';color:'+(b.d?'#fff':'#111')+';border:1.5px solid '+(b.d?'rgba(255,255,255,.15)':'rgba(0,0,0,.12)')+'">'+esc(b.n)+'</span>'; }).join('');
+    var beltsH=c.belts.map(function(b){ return '<span class="belt-chip" style="background:'+b.c+';color:'+(b.d?'#fff':'#111')+';border:1.5px solid '+(b.d?'rgba(255,255,255,.15)':'rgba(0,0,0,.12)')+'">'+esc(b.n)+'</span>'; }).join('');
     var nsTag=c.newStudent?'<span class="new-tag">New student start here</span>':'';
     div.innerHTML='<div class="class-card-hero" style="background:linear-gradient(135deg,'+c.color+'22,'+c.color+'08)"><div class="class-card-emoji">'+c.emoji+'</div><h3 class="disp">'+esc(c.name)+' '+nsTag+'</h3><div class="cc-meta">'+esc(c.ages)+' · Mon '+esc(c.time)+'</div></div>'+
       '<div class="class-card-body"><p style="color:var(--muted);font-size:.9rem;margin-bottom:9px">'+esc(c.desc)+'</p>'+
