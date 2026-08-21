@@ -2,6 +2,46 @@
   publish = "."
   functions = "netlify/functions"
 
+# --- Legacy pages from the old site, still showing up in Google search ---
+# 301s so search engines update their index to point at current content
+# instead of a dead page.
+[[redirects]]
+  from = "/little-dragons-1"
+  to = "/classes"
+  status = 301
+
+[[redirects]]
+  from = "/karate-kids"
+  to = "/classes"
+  status = 301
+
+[[redirects]]
+  from = "/black-belt-club-1"
+  to = "/classes"
+  status = 301
+
+[[redirects]]
+  from = "/masters-club"
+  to = "/classes"
+  status = 301
+
+[[redirects]]
+  from = "/masters-club-1"
+  to = "/classes"
+  status = 301
+
+[[redirects]]
+  from = "/submit-a-review"
+  to = "/"
+  status = 301
+
+# Catches all old blog posts under /f/*, not just the ones currently
+# showing up in search results, in case others surface later.
+[[redirects]]
+  from = "/f/*"
+  to = "/"
+  status = 301
+
 [[redirects]]
   from = "/registration"
   to = "/index.html"

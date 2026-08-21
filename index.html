@@ -2,13 +2,51 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<script>
+try{
+  if(localStorage.getItem('nma-theme')==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+  }
+}catch(e){}
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Noble's Martial Arts — Wake Forest, NC</title>
 <meta name="description" content="Building confident, respectful kids through martial arts in Wake Forest, NC. Fun, high-energy classes for ages 4–13. Enroll today!"/>
+<link rel="canonical" href="https://noblesmartialarts.com/"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
 <meta property="og:title" content="Noble's Martial Arts — Wake Forest, NC"/>
 <meta property="og:description" content="Building confident, respectful kids through martial arts. Ages 4–13. Wake Forest, NC."/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://noblesmartialarts.com"/>
+<meta property="og:image" content="https://noblesmartialarts.com/og-image.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SportsActivityLocation",
+  "name": "Noble's Martial Arts",
+  "description": "Building confident, respectful kids through martial arts in Wake Forest, NC. Kenpo Karate and Krav Maga classes for ages 4–13.",
+  "url": "https://noblesmartialarts.com",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "133 W. Owen Ave",
+    "addressLocality": "Wake Forest",
+    "addressRegion": "NC",
+    "postalCode": "27587",
+    "addressCountry": "US"
+  },
+  "founder": {
+    "@type": "Person",
+    "name": "Brandon Noble"
+  },
+  "areaServed": "Wake Forest, NC",
+  "priceRange": "$45-$57"
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -18,12 +56,20 @@
   --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);
   --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
   --glow:rgba(15,0,247,.42);--text:#f4f4fa;--muted:#9a9ab4;--r:16px;--mw:800px;
-  --green:#22c55e;
+  --green:#22c55e;--menu-bg:rgba(19,19,31,.92);
+}
+html[data-theme="light"]{
+  --bg:#f6f5fb;--bg2:#ffffff;--surf:#ffffff;--surf2:#f0eefc;
+  --border:rgba(15,0,247,.09);--border2:rgba(15,0,247,.18);
+  --brand:#0f00f7;--bright:#372be0;--soft:rgba(15,0,247,.08);
+  --glow:rgba(15,0,247,.14);--text:#14121f;--muted:#6b6880;
+  --green:#15803d;--menu-bg:rgba(255,255,255,.92);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;
-  line-height:1.6;-webkit-font-smoothing:antialiased;padding:0 0 env(safe-area-inset-bottom)}
+  line-height:1.6;-webkit-font-smoothing:antialiased;padding:0 0 env(safe-area-inset-bottom);
+  transition:background-color .25s ease,color .25s ease}
 .wrap{max-width:var(--mw);margin:0 auto;padding:0 18px}
 @media(min-width:1024px){:root{--mw:980px}.wrap{padding:0 32px}}
 @media(min-width:1280px){:root{--mw:1140px}}
@@ -86,13 +132,26 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 
 /* ── TOP-LEFT MENU DRAWER ── */
 .menu-toggle{position:fixed;top:calc(10px + env(safe-area-inset-top));left:12px;z-index:1300;
-  display:inline-flex;align-items:center;gap:7px;background:rgba(19,19,31,.92);color:var(--text);
+  display:inline-flex;align-items:center;gap:7px;background:var(--menu-bg);color:var(--text);
   border:1px solid var(--border2);border-radius:12px;padding:10px 12px;
   font-family:'Inter',sans-serif;font-size:.82rem;font-weight:800;letter-spacing:.03em;
   cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.35);backdrop-filter:blur(10px);
   transition:transform .15s,background .15s,border-color .15s}
 .menu-toggle:hover{transform:translateY(-1px);background:var(--surf2);border-color:var(--bright)}
 .menu-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:1300;
+  display:inline-flex;align-items:center;justify-content:center;background:var(--menu-bg);color:var(--text);
+  border:1px solid var(--border2);border-radius:50%;width:44px;height:44px;padding:0;
+  cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.35);backdrop-filter:blur(10px);
+  transition:transform .15s,background .15s,border-color .15s}
+.theme-toggle:hover{transform:translateY(-1px);background:var(--surf2);border-color:var(--bright)}
+.theme-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.theme-toggle .ic-moon{display:block}
+.theme-toggle .ic-sun{display:none}
+html[data-theme="light"] .theme-toggle .ic-moon{display:none}
+html[data-theme="light"] .theme-toggle .ic-sun{display:block}
 .menu-backdrop{display:none;position:fixed;inset:0;z-index:1290;background:rgba(0,0,0,.68);backdrop-filter:blur(4px)}
 .menu-backdrop.open{display:block}
 .side-menu{position:fixed;top:0;left:0;bottom:0;z-index:1310;width:min(84vw,330px);
@@ -562,6 +621,10 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
   <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
   <span>Menu</span>
 </button>
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="false">
+  <svg class="ic-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="ic-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+</button>
 <div class="menu-backdrop" id="siteMenuBackdrop" aria-hidden="true"></div>
 <aside class="side-menu" id="siteMenu" aria-hidden="true" aria-label="Site menu">
   <div class="side-menu-header">
@@ -746,7 +809,7 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
     <div class="head">
       <p class="eye">What Students Gain at NMA</p>
       <h2 class="disp">More than martial arts</h2>
-      <p>Every class is designed to develop skills that last a lifetime — on and off the mat.</p>
+      <p>Every class is designed to develop skills that last a lifetime — in class, at home, and everywhere in between.</p>
     </div>
     <div class="benefits-grid">
       <div class="benefit-card"><div class="benefit-icon">💪</div><div class="benefit-title">Confidence</div><div class="benefit-desc">Speak up, try new things, and believe in themselves</div></div>
@@ -800,7 +863,7 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
       <div class="why-item"><strong>Individual Attention</strong><span>Sensei Brandon works with each student on correct form, not just group instruction</span></div>
       <div class="why-item"><strong>Character First</strong><span>We build black belt behavior at home and in life, not just on the mat</span></div>
       <div class="why-item"><strong>Structured Progression</strong><span>Clear belt goals give students something to work toward every single class</span></div>
-      <div class="why-item"><strong>Community</strong><span>A welcoming homeschool community where families and students belong</span></div>
+      <div class="why-item"><strong>Community</strong><span>A welcoming community — especially for homeschool families — where students belong</span></div>
       <div class="why-item"><strong>Small Class Sizes</strong><span>Intentionally limited enrollment ensures quality instruction and individual attention</span></div>
       <div class="why-item"><strong>30+ Years Experience</strong><span>Sensei Brandon has trained 5,000+ students and promoted 400+ black belts</span></div>
     </div>
@@ -1315,7 +1378,7 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
   <div class="fsoc" id="footerSoc"></div>
   <p><b style="color:var(--text)">Noble's Martial Arts</b> · Wake Forest, NC</p>
   <p style="margin-top:5px">Confidence · Integrity · Respect</p>
-  <p style="margin-top:11px">© <span id="year"></span> Noble's Martial Arts. All rights reserved.</p>
+  <p style="margin-top:11px">© <span id="year"></span> Noble's Martial Arts. All rights reserved. · <a href="/privacy" style="color:var(--muted);text-decoration:underline">Privacy Policy</a></p>
 </footer>
 
 <script>
@@ -1649,6 +1712,28 @@ fetchSiteContent(function() {
   if(siteMenuClose) siteMenuClose.addEventListener('click',closeSiteMenu);
   if(siteMenuBackdrop) siteMenuBackdrop.addEventListener('click',closeSiteMenu);
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeSiteMenu(); });
+
+  /* ── theme toggle (dark default, light optional, remembered) ── */
+  function applyTheme(theme){
+    var btn=document.getElementById('themeToggle');
+    if(theme==='light'){
+      document.documentElement.setAttribute('data-theme','light');
+      if(btn){ btn.setAttribute('aria-pressed','true'); btn.setAttribute('aria-label','Switch to dark mode'); }
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if(btn){ btn.setAttribute('aria-pressed','false'); btn.setAttribute('aria-label','Switch to light mode'); }
+    }
+  }
+  var themeToggle=document.getElementById('themeToggle');
+  if(themeToggle){
+    applyTheme(document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark');
+    themeToggle.addEventListener('click',function(){
+      var isLight=document.documentElement.getAttribute('data-theme')==='light';
+      var next=isLight?'dark':'light';
+      applyTheme(next);
+      try{ localStorage.setItem('nma-theme',next); }catch(e){}
+    });
+  }
 
   /* ── Shared scroll-to helper ── */
   function scrollToId(id, delay) {

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://noblesmartialarts.com/sitemap.xml

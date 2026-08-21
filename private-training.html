@@ -4,6 +4,11 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Private Training — Noble's Martial Arts</title>
+<meta name="description" content="Book personalized 1-on-1 or semi-private martial arts training with Noble's Martial Arts in Wake Forest, NC."/>
+<link rel="canonical" href="https://noblesmartialarts.com/private-training"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -12,10 +17,18 @@
   --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.18);
   --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
   --glow:rgba(15,0,247,.4);--text:#f4f4fa;--muted:#9a9ab4;
-  --green:#22c55e;--red:#ff5a5a;--r:14px;
+  --green:#22c55e;--red:#ff5a5a;--r:14px;--menu-bg:rgba(19,19,31,.92);
+}
+html[data-theme="light"]{
+  --bg:#f6f5fb;--surf:#ffffff;--surf2:#f0eefc;
+  --border:rgba(15,0,247,.09);--border2:rgba(15,0,247,.18);
+  --brand:#0f00f7;--bright:#372be0;--soft:rgba(15,0,247,.08);
+  --glow:rgba(15,0,247,.14);--text:#14121f;--muted:#6b6880;
+  --green:#15803d;--red:#d92d20;--menu-bg:rgba(255,255,255,.92);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;
+  transition:background-color .25s ease,color .25s ease}
 .disp{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;line-height:.95}
 .wrap{max-width:640px;margin:0 auto;padding:24px 18px 100px}
 .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
@@ -23,6 +36,18 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
 .back-link:hover{color:var(--text)}
 h1.disp{font-size:2.1rem}
 .sub{color:var(--muted);font-size:.9rem;margin-top:4px;margin-bottom:22px;line-height:1.5}
+
+.theme-toggle{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:1300;
+  display:inline-flex;align-items:center;justify-content:center;background:var(--menu-bg);color:var(--text);
+  border:1px solid var(--border2);border-radius:50%;width:44px;height:44px;padding:0;
+  cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.35);backdrop-filter:blur(10px);
+  transition:transform .15s,background .15s,border-color .15s}
+.theme-toggle:hover{transform:translateY(-1px);background:var(--surf2);border-color:var(--bright)}
+.theme-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.theme-toggle .ic-moon{display:block}
+.theme-toggle .ic-sun{display:none}
+html[data-theme="light"] .theme-toggle .ic-moon{display:none}
+html[data-theme="light"] .theme-toggle .ic-sun{display:block}
 
 .step{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;display:none}
 .step.active{display:block}
@@ -90,8 +115,20 @@ h1.disp{font-size:2.1rem}
 .wip-banner{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fbbf24;
   border-radius:10px;padding:9px 13px;font-size:.78rem;font-weight:600;margin-bottom:18px}
 </style>
+<script>
+try{
+  if(localStorage.getItem('nma-theme')==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+  }
+}catch(e){}
+</script>
 </head>
 <body>
+
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="false">
+  <svg class="ic-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="ic-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+</button>
 
 <div class="wrap">
   <div class="top">
@@ -184,6 +221,30 @@ h1.disp{font-size:2.1rem}
 </div>
 
 <script>
+/* ── theme toggle (dark default, light optional, remembered) ── */
+(function(){
+  function applyTheme(theme){
+    var btn=document.getElementById('themeToggle');
+    if(theme==='light'){
+      document.documentElement.setAttribute('data-theme','light');
+      if(btn){ btn.setAttribute('aria-pressed','true'); btn.setAttribute('aria-label','Switch to dark mode'); }
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if(btn){ btn.setAttribute('aria-pressed','false'); btn.setAttribute('aria-label','Switch to light mode'); }
+    }
+  }
+  var themeToggle=document.getElementById('themeToggle');
+  if(themeToggle){
+    applyTheme(document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark');
+    themeToggle.addEventListener('click',function(){
+      var isLight=document.documentElement.getAttribute('data-theme')==='light';
+      var next=isLight?'dark':'light';
+      applyTheme(next);
+      try{ localStorage.setItem('nma-theme',next); }catch(e){}
+    });
+  }
+})();
+
 var SB_URL = 'https://erqblpewozxkpornohvq.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycWJscGV3b3p4a3Bvcm5vaHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzUzMDMsImV4cCI6MjA5NTA1MTMwM30.Ot3sd3X3Fo9rtpAXUfTjrUlB_6Y-QcMuwotUIvdcr5o';
 

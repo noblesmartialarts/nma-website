@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Privacy Policy — Noble's Martial Arts</title>
+<meta name="description" content="How Noble's Martial Arts collects, uses, and protects family information submitted through this website."/>
+<meta name="robots" content="index,follow"/>
+<link rel="canonical" href="https://noblesmartialarts.com/privacy"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#08080f;--surf:#13131f;--surf2:#1a1a28;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.18);
+  --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
+  --glow:rgba(15,0,247,.4);--text:#f4f4fa;--muted:#9a9ab4;
+  --green:#22c55e;--red:#ff5a5a;--r:14px;--menu-bg:rgba(19,19,31,.92);
+}
+html[data-theme="light"]{
+  --bg:#f6f5fb;--surf:#ffffff;--surf2:#f0eefc;
+  --border:rgba(15,0,247,.09);--border2:rgba(15,0,247,.18);
+  --brand:#0f00f7;--bright:#372be0;--soft:rgba(15,0,247,.08);
+  --glow:rgba(15,0,247,.14);--text:#14121f;--muted:#6b6880;
+  --green:#15803d;--red:#d92d20;--menu-bg:rgba(255,255,255,.92);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;
+  transition:background-color .25s ease,color .25s ease}
+.disp{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;line-height:.95}
+.wrap{max-width:680px;margin:0 auto;padding:24px 18px 80px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.back-link{color:var(--muted);font-size:.85rem;text-decoration:none;font-weight:600}
+.back-link:hover{color:var(--text)}
+h1.disp{font-size:2.1rem}
+.sub{color:var(--muted);font-size:.9rem;margin-top:4px;margin-bottom:8px;line-height:1.5}
+.updated{color:var(--muted);font-size:.78rem;margin-bottom:28px}
+
+.theme-toggle{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:1300;
+  display:inline-flex;align-items:center;justify-content:center;background:var(--menu-bg);color:var(--text);
+  border:1px solid var(--border2);border-radius:50%;width:44px;height:44px;padding:0;
+  cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.35);backdrop-filter:blur(10px);
+  transition:transform .15s,background .15s,border-color .15s}
+.theme-toggle:hover{transform:translateY(-1px);background:var(--surf2);border-color:var(--bright)}
+.theme-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.theme-toggle .ic-moon{display:block}
+.theme-toggle .ic-sun{display:none}
+html[data-theme="light"] .theme-toggle .ic-moon{display:none}
+html[data-theme="light"] .theme-toggle .ic-sun{display:block}
+
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px}
+.card h2{font-size:1.15rem;margin-bottom:10px;color:var(--text)}
+.card h2 .num{color:var(--bright);margin-right:6px}
+.card p{font-size:.92rem;line-height:1.65;color:var(--text);margin-bottom:10px}
+.card p:last-child{margin-bottom:0}
+.card ul{margin:0 0 10px 20px;font-size:.92rem;line-height:1.65;color:var(--text)}
+.card ul:last-child{margin-bottom:0}
+.card li{margin-bottom:4px}
+.card b{color:var(--text)}
+.muted-note{color:var(--muted);font-size:.85rem;line-height:1.6}
+
+.table-wrap{overflow-x:auto;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:.7rem}
+td{color:var(--text)}
+
+.contact-box{background:var(--surf2);border:1px solid var(--bright);border-radius:12px;padding:16px 18px;margin-top:6px}
+.contact-box a{color:var(--bright);font-weight:700;text-decoration:none}
+.contact-box a:hover{text-decoration:underline}
+
+footer{padding:32px 18px 56px;text-align:center;color:var(--muted);font-size:.8rem}
+footer a{color:inherit}
+</style>
+<script>
+try{
+  if(localStorage.getItem('nma-theme')==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+  }
+}catch(e){}
+</script>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="false">
+  <svg class="ic-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="ic-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+</button>
+
+<div class="wrap">
+  <div class="top">
+    <a class="back-link" href="/">&larr; noblesmartialarts.com</a>
+  </div>
+  <h1 class="disp">Privacy Policy</h1>
+  <p class="sub">A plain-language explanation of what information this website collects, why, who sees it, and how to request that it be deleted.</p>
+  <p class="updated">Last updated: August 2026</p>
+
+  <div class="card">
+    <h2><span class="num">1.</span>Who this covers</h2>
+    <p>This policy covers <b>noblesmartialarts.com</b> and the forms on it — registration links, the Absence Notice, Lost &amp; Found posts, Sale Items requests, Private Training booking, and the Class Feedback / Adult Interest forms. It's operated by Sensei Brandon Noble for Noble's Martial Arts in Wake Forest, NC. It does not cover third-party sites this site links to, like Wake Forest Parks &amp; Recreation's RecDesk registration system, which has its own privacy policy.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">2.</span>What information is collected</h2>
+    <p>Depending on which form you use, this site may collect:</p>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Form</th><th>Information collected</th></tr>
+        <tr><td>Absence Notice</td><td>Student name, class, parent/guardian name, parent email, absence date(s), optional reason</td></tr>
+        <tr><td>Lost &amp; Found</td><td>Item description, optional photo, your name, best contact method</td></tr>
+        <tr><td>Sale Items request</td><td>Student name (optional), your name, email, phone (optional)</td></tr>
+        <tr><td>Private Training booking</td><td>Name, contact info, session preferences, scheduling details</td></tr>
+        <tr><td>Class Feedback / Adult Interest</td><td>Your responses, optional name, optional contact info</td></tr>
+      </table>
+    </div>
+    <p style="margin-top:12px">The site also automatically collects basic, non-identifying analytics (like page views) through Google Analytics to understand how the site is used.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">3.</span>Why it's collected</h2>
+    <ul>
+      <li>To keep accurate class attendance and rosters</li>
+      <li>To reunite lost items with the right family</li>
+      <li>To process sale item requests and coordinate payment</li>
+      <li>To schedule and confirm private training sessions</li>
+      <li>To respond to feedback and interest submissions</li>
+      <li>To understand which parts of the site are useful, in aggregate</li>
+    </ul>
+    <p>Information is used only for the purpose it was submitted for — it is not used for unrelated marketing.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">4.</span>Who sees it</h2>
+    <p>Submitted information is visible to Sensei Brandon Noble as the operator of Noble's Martial Arts, and is stored using Supabase, the database service that powers this site's forms, the CRM used to run classes, and the admin panel. Lost &amp; Found posts (item, photo, and status — not your contact details) are shown publicly on the Lost &amp; Found page so other families can recognize items.</p>
+    <p><b>Information is never sold, and is not shared with advertisers or unrelated third parties.</b> It may be shared with service providers who help run the site and its notifications — for example, Twilio for text message notifications or Resend for email — solely to deliver those messages.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">5.</span>How it's protected</h2>
+    <p>Form submissions are sent over an encrypted (HTTPS) connection and stored in a access-controlled Supabase database. Only Sensei Brandon has access to the admin tools where this information is reviewed. As with any online system, no method of storage or transmission is perfectly secure, but reasonable steps are taken to protect family information.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">6.</span>Children's information</h2>
+    <p>Some forms on this site (like the Absence Notice) include a student's name and class as part of normal class administration for enrolled families. This information is submitted by a parent or guardian, not by the student directly, and is used only for attendance and program administration — never for marketing to children.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">7.</span>Your choices &amp; how to request deletion</h2>
+    <p>You can ask to see what information has been submitted about you or your student, correct it, or have it deleted, at any time. Just reach out — see contact info below. Requests are typically handled within a few days. Note that some information (like attendance records for currently enrolled students) may need to be kept for as long as your student is actively enrolled, for program administration purposes.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">8.</span>Changes to this policy</h2>
+    <p>If this policy changes, the "Last updated" date at the top of this page will change too. Significant changes will be noted here.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">9.</span>Questions or requests</h2>
+    <p class="muted-note">For any privacy question, or to request access to or deletion of your information, contact:</p>
+    <div class="contact-box">
+      <p style="margin-bottom:4px"><b>Sensei Brandon Noble</b><br>Noble's Martial Arts</p>
+      <p style="margin-bottom:0"><a href="mailto:noblesmartialarts@gmail.com">noblesmartialarts@gmail.com</a></p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p><b style="color:var(--text)">Noble's Martial Arts</b> · Wake Forest, NC</p>
+  <p style="margin-top:5px">Confidence · Integrity · Respect</p>
+  <p style="margin-top:11px"><a href="/">&larr; Back to home</a></p>
+</footer>
+
+<script>
+(function(){
+  function applyTheme(theme){
+    var btn=document.getElementById('themeToggle');
+    if(theme==='light'){
+      document.documentElement.setAttribute('data-theme','light');
+      if(btn){ btn.setAttribute('aria-pressed','true'); btn.setAttribute('aria-label','Switch to dark mode'); }
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if(btn){ btn.setAttribute('aria-pressed','false'); btn.setAttribute('aria-label','Switch to light mode'); }
+    }
+  }
+  var themeToggle=document.getElementById('themeToggle');
+  if(themeToggle){
+    applyTheme(document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark');
+    themeToggle.addEventListener('click',function(){
+      var isLight=document.documentElement.getAttribute('data-theme')==='light';
+      var next=isLight?'dark':'light';
+      applyTheme(next);
+      try{ localStorage.setItem('nma-theme',next); }catch(e){}
+    });
+  }
+})();
+</script>
+</body>
+</html>
