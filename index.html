@@ -56,14 +56,14 @@ try{
   --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);
   --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
   --glow:rgba(15,0,247,.42);--text:#f4f4fa;--muted:#9a9ab4;--r:16px;--mw:800px;
-  --green:#22c55e;--menu-bg:rgba(19,19,31,.92);
+  --green:#22c55e;--menu-bg:rgba(19,19,31,.92);--on-green:#000;
 }
 html[data-theme="light"]{
   --bg:#f6f5fb;--bg2:#ffffff;--surf:#ffffff;--surf2:#f0eefc;
   --border:rgba(15,0,247,.09);--border2:rgba(15,0,247,.18);
   --brand:#0f00f7;--bright:#372be0;--soft:rgba(15,0,247,.08);
-  --glow:rgba(15,0,247,.14);--text:#14121f;--muted:#6b6880;
-  --green:#15803d;--menu-bg:rgba(255,255,255,.92);
+  --glow:rgba(15,0,247,.14);--text:#14121f;--muted:#4f4c6b;
+  --green:#15803d;--menu-bg:rgba(255,255,255,.92);--on-green:#fff;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -122,7 +122,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .tab-btn{flex:0 0 auto;padding:8px 11px;border:none;background:transparent;color:var(--muted);
   font-family:'Inter',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.03em;
   border-radius:9px;cursor:pointer;transition:background .15s,color .15s;
-  display:flex;align-items:center;gap:5px;white-space:nowrap}
+  display:flex;align-items:center;gap:5px;white-space:nowrap;text-decoration:none}
 .tab-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;
   stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 .tab-btn.active{background:var(--brand);color:#fff;box-shadow:0 3px 12px var(--glow)}
@@ -170,7 +170,8 @@ body.menu-open{overflow:hidden}
 .menu-list{display:grid;gap:9px}
 .menu-link{width:100%;display:flex;align-items:center;gap:12px;text-align:left;background:var(--surf2);
   border:1px solid var(--border);border-radius:13px;padding:13px 14px;color:var(--text);
-  cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s,border-color .15s,transform .15s}
+  cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s,border-color .15s,transform .15s;
+  text-decoration:none}
 .menu-link:hover{transform:translateX(2px);background:rgba(81,96,255,.09);border-color:var(--border2)}
 .menu-link.active{background:var(--brand);border-color:var(--bright);box-shadow:0 8px 22px var(--glow)}
 .menu-emoji{font-size:1.25rem;line-height:1;width:26px;text-align:center;flex:0 0 auto}
@@ -324,7 +325,7 @@ section{padding:36px 0 0}
   padding:9px 16px;border-radius:10px;font-size:.88rem;box-shadow:0 5px 16px var(--glow);
   transition:transform .15s,filter .15s}
 .prog .reg:hover{transform:translateY(-2px);filter:brightness(1.1)}
-.new-tag{background:var(--green);color:#000;font-size:.64rem;font-weight:800;
+.new-tag{background:var(--green);color:var(--on-green);font-size:.64rem;font-weight:800;
   letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:4px;margin-left:7px}
 
 /* ── PARENT HUB ── */
@@ -678,7 +679,7 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
         <b>🐉 Little Dragons</b><small>Ages 4–6 · Mon 11:00–11:30 am</small>
       </button>
       <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="register" data-menu-scroll="tab-register">
-        <b>🥋 Karate Kids</b><small>Ages 6–13 · Mon 11:30 am–12:15 pm</small>
+        <b>🥋 Karate Kids</b><small>Ages 7–13 · Mon 11:30 am–12:15 pm</small>
       </button>
       <button class="menu-sublink" type="button" data-menu-action="scroll" data-menu-tab="register" data-menu-scroll="tab-register">
         <b>⚔️ Black Belt Club</b><small>Purple–Green II · Mon 12:15–1:15 pm</small>
@@ -1493,7 +1494,7 @@ const CONFIG = {
     { name:"Little Dragons", ages:"Ages 4-6",    day:"Mon", time:"11:00-11:30 am",
       desc:"High-energy class building listening skills, confidence, coordination, and age-appropriate self-defense. ~18-month journey to the Little Dragon Black Belt.",
       regUrl:"https://wakeforestnc.recdesk.com/Community/Program/Detail?programId=20102", newStudent:true },
-    { name:"Karate Kids",    ages:"Ages 6-13",   day:"Mon", time:"11:30 am-12:15 pm",
+    { name:"Karate Kids",    ages:"Ages 7-13",   day:"Mon", time:"11:30 am-12:15 pm",
       desc:"Kenpo Karate and Krav Maga with belt progression toward the Black Belt Club. Builds discipline, respect, and confidence.",
       regUrl:"https://wakeforestnc.recdesk.com/Community/Program/Detail?programId=20112", newStudent:true },
     { name:"Black Belt Club",ages:"Ages 6-15",   day:"Mon", time:"12:15-1:15 pm",
@@ -1509,6 +1510,7 @@ const CONFIG = {
 
   hubCards: [
     { icon:"📹", label:"Practice Videos", sub:"Password-protected playlists",  action:"videos" },
+    { icon:"📅", label:"Absence Notice",  sub:"Let us know ahead of time",      action:"absence" },
     { icon:"📝", label:"Registration",    sub:"Monthly RecDesk links",          action:"register" },
     { icon:"🥋", label:"Belt Testing",    sub:"$10 fee · Venmo",               action:"pay-belt" },
     { icon:"👕", label:"Order Apparel",   sub:"T-shirts & uniforms",            url:"https://form.jotform.com/noblesmartialarts/nma-t-shirt-order" },
@@ -1971,7 +1973,7 @@ fetchSiteContent(function() {
      desc:'High-energy classes for our youngest students — building listening skills, confidence, coordination, and age-appropriate self-defense in a fun, supportive environment.',
      journey:'~18 months to the Little Dragon Black Belt, then to Karate Kids.',
      skills:['Listening & focus','Body control','Self-confidence','Respect','Self-defense basics'],belts:LD_BELTS.slice(0,9)},
-    {name:'Karate Kids',emoji:'🥋',color:'#3b82f6',ages:'Ages 6-13',time:'11:30 am-12:15 pm',newStudent:true,
+    {name:'Karate Kids',emoji:'🥋',color:'#3b82f6',ages:'Ages 7-13',time:'11:30 am-12:15 pm',newStudent:true,
      desc:'Kenpo Karate and Krav Maga with belt progression. LD graduates enter with a special Yellow II or Orange II belt honoring their achievement.',
      journey:'~6 months (White to Orange), then to Black Belt Club.',
      skills:['Goal setting','Bully prevention','Stranger awareness','Courtesy','Leadership'],belts:KK_BELTS},
@@ -2036,6 +2038,7 @@ fetchSiteContent(function() {
         if (c.action==='videos')    { switchTab('hub'); setTimeout(showVideos,80); }
         else if (c.action==='register') switchTab('register');
         else if (c.action==='forms')    switchTab('forms');
+        else if (c.action==='absence')  { switchTab('forms'); setTimeout(function(){ switchFormTab('absence'); },80); }
         else if (c.action==='lostfound') switchTab('lostfound');
         else if (c.action==='sale') switchTab('sale');
         else if (c.action==='pay-belt') { switchTab('hub'); setTimeout(function(){ showPaySection(); var el=document.getElementById('payLinksList'); if(el) el.scrollIntoView({behavior:'smooth'}); },80); }
