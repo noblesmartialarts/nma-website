@@ -56,14 +56,14 @@ try{
   --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);
   --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
   --glow:rgba(15,0,247,.42);--text:#f4f4fa;--muted:#9a9ab4;--r:16px;--mw:800px;
-  --green:#22c55e;--menu-bg:rgba(19,19,31,.92);--on-green:#000;
+  --green:#22c55e;--menu-bg:rgba(19,19,31,.92);--on-green:#000;--cc-meta:rgba(255,255,255,.65);
 }
 html[data-theme="light"]{
   --bg:#f6f5fb;--bg2:#ffffff;--surf:#ffffff;--surf2:#f0eefc;
   --border:rgba(15,0,247,.09);--border2:rgba(15,0,247,.18);
   --brand:#0f00f7;--bright:#372be0;--soft:rgba(15,0,247,.08);
   --glow:rgba(15,0,247,.14);--text:#14121f;--muted:#4f4c6b;
-  --green:#15803d;--menu-bg:rgba(255,255,255,.92);--on-green:#fff;
+  --green:#15803d;--menu-bg:rgba(255,255,255,.92);--on-green:#fff;--cc-meta:#4f4c6b;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -464,8 +464,8 @@ section{padding:36px 0 0}
 .class-card-hero{padding:18px 20px}
 .class-card-emoji{font-size:1.9rem;margin-bottom:7px}
 .class-card h3{font-size:1.9rem;margin-bottom:2px}
-.class-card .cc-meta{color:rgba(255,255,255,.65);font-size:.83rem;font-weight:600}
-.class-card-body{padding:14px 20px 18px;border-top:1px solid rgba(255,255,255,.07)}
+.class-card .cc-meta{color:var(--cc-meta);font-size:.83rem;font-weight:600}
+.class-card-body{padding:14px 20px 18px;border-top:1px solid var(--border)}
 .chip{padding:4px 10px;border-radius:99px;font-size:.77rem;font-weight:700}
 .chip-dim{background:var(--surf2);color:var(--muted)}
 .chip-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
