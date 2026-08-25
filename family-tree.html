@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Black Belt Family Tree — Noble's Martial Arts</title>
+<meta name="description" content="The lineage of Noble's Martial Arts — from the instructors who trained Sensei Brandon Noble to every black belt promoted since 2023."/>
+<link rel="canonical" href="https://noblesmartialarts.com/family-tree"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#08080f;--surf:#13131f;--surf2:#1a1a28;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);
+  --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
+  --glow:rgba(15,0,247,.42);--text:#f4f4fa;--muted:#9a9ab4;--r:16px;
+  --menu-bg:rgba(19,19,31,.92);--ember:#ed2c12;--on-ember:#000;
+}
+html[data-theme="light"]{
+  --bg:#f6f5fb;--surf:#ffffff;--surf2:#f0eefc;
+  --border:rgba(15,0,247,.09);--border2:rgba(15,0,247,.18);
+  --brand:#0f00f7;--bright:#372be0;--soft:rgba(15,0,247,.08);
+  --glow:rgba(15,0,247,.14);--text:#14121f;--muted:#4f4c6b;
+  --menu-bg:rgba(255,255,255,.92);--ember:#ed2c12;--on-ember:#000;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;
+  transition:background-color .25s ease,color .25s ease}
+.disp{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;line-height:.95}
+.wrap{max-width:640px;margin:0 auto;padding:24px 18px 90px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.back-link{color:var(--muted);font-size:.85rem;text-decoration:none;font-weight:600}
+.back-link:hover{color:var(--text)}
+
+.theme-toggle{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:1300;
+  display:inline-flex;align-items:center;justify-content:center;background:var(--menu-bg);color:var(--text);
+  border:1px solid var(--border2);border-radius:50%;width:44px;height:44px;padding:0;
+  cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.35);backdrop-filter:blur(10px);
+  transition:transform .15s,background .15s,border-color .15s}
+.theme-toggle:hover{transform:translateY(-1px);background:var(--surf2);border-color:var(--bright)}
+.theme-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.theme-toggle .ic-moon{display:block}
+.theme-toggle .ic-sun{display:none}
+html[data-theme="light"] .theme-toggle .ic-moon{display:none}
+html[data-theme="light"] .theme-toggle .ic-sun{display:block}
+
+/* ── HERO / EMBLEM ── */
+.hero{text-align:center;padding:8px 0 30px}
+.emblem-frame{width:180px;height:180px;margin:0 auto 22px;border-radius:24px;overflow:hidden;
+  background:#000;border:1px solid var(--border2);box-shadow:0 16px 40px rgba(0,0,0,.35)}
+.emblem-frame img{width:100%;height:100%;object-fit:cover;display:block}
+.hero h1.disp{font-size:2.5rem;line-height:.95}
+.hero .tagline{color:var(--muted);font-size:.92rem;font-style:italic;margin-top:8px;letter-spacing:.01em}
+.hero .stat{display:inline-flex;align-items:center;gap:7px;margin-top:18px;background:var(--surf2);
+  border:1px solid var(--border);border-radius:99px;padding:8px 16px;font-size:.82rem;font-weight:700;color:var(--bright)}
+.hero .stat b{font-family:'Bebas Neue';font-size:1.15rem;letter-spacing:.02em;color:var(--bright)}
+
+/* ── TREE STRUCTURE ── */
+.tree{position:relative;padding-left:26px;margin-top:8px}
+.tree::before{content:'';position:absolute;left:9px;top:6px;bottom:6px;width:2px;
+  background:linear-gradient(180deg,var(--border2),var(--ember) 15%,var(--ember) 85%,var(--border2))}
+.tnode{position:relative;margin-bottom:14px}
+.tnode::before{content:'';position:absolute;left:-26px;top:8px;width:11px;height:11px;border-radius:50%;
+  background:var(--bg);border:2.5px solid var(--ember);z-index:2}
+.tnode:last-child{margin-bottom:0}
+
+.section-label{display:flex;align-items:center;gap:8px;margin:34px 0 12px;position:relative;left:-26px}
+.section-label .dot{width:8px;height:8px;border-radius:50%;background:var(--ember);flex:0 0 auto}
+.section-label .eye{color:var(--muted);font-weight:800;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em}
+.section-label:first-of-type{margin-top:6px}
+
+.root-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:13px 15px}
+.root-card .name{font-weight:700;font-size:.98rem}
+.root-card .years{color:var(--muted);font-size:.8rem;margin-top:2px}
+
+.trunk-card{background:var(--surf);border:1.5px solid var(--ember);border-radius:14px;padding:18px;
+  box-shadow:0 8px 24px rgba(237,44,18,.12)}
+.trunk-card .name{font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:.03em}
+.trunk-card .org{color:var(--bright);font-weight:700;font-size:.9rem;margin-top:2px}
+.trunk-card .years{color:var(--muted);font-size:.8rem;margin-top:6px}
+
+.cohort{margin-bottom:8px}
+.cohort-date{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.cohort-date .bar{width:4px;height:16px;background:var(--ember);border-radius:2px;flex:0 0 auto}
+.cohort-date .d{font-family:'Bebas Neue';font-size:1.25rem;letter-spacing:.03em}
+.cohort-date .n{color:var(--muted);font-size:.75rem;font-weight:700;margin-left:auto}
+.leaf-row{display:flex;flex-wrap:wrap;gap:8px}
+.leaf{background:#111;color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:99px;
+  padding:7px 14px;font-size:.83rem;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.leaf .bb-dot{width:6px;height:6px;border-radius:50%;background:var(--ember);flex:0 0 auto}
+
+.closing{margin-top:40px;padding-top:24px;border-top:1px solid var(--border);text-align:center}
+.closing p{color:var(--muted);font-size:.85rem;line-height:1.6;max-width:36rem;margin:0 auto}
+.closing a{color:var(--bright);font-weight:700;text-decoration:none}
+.closing a:hover{text-decoration:underline}
+
+footer{padding:32px 18px 48px;text-align:center;color:var(--muted);font-size:.8rem}
+footer a{color:inherit}
+
+@media(max-width:400px){
+  .emblem-frame{width:150px;height:150px}
+  .hero h1.disp{font-size:2.1rem}
+}
+</style>
+<script>
+try{
+  if(localStorage.getItem('nma-theme')==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+  }
+}catch(e){}
+</script>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="false">
+  <svg class="ic-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="ic-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+</button>
+
+<div class="wrap">
+  <div class="top">
+    <a class="back-link" href="/">&larr; noblesmartialarts.com</a>
+  </div>
+
+  <div class="hero">
+    <div class="emblem-frame"><img src="/family-tree-emblem.png" alt="Noble's Martial Arts emblem — a bonsai tree over a rising sun"/></div>
+    <h1 class="disp">Black Belt Family Tree</h1>
+    <p class="tagline">Roots ground us. Growth defines us.</p>
+    <div class="stat"><b id="bbCount">0</b><span>black belts promoted since 2023</span></div>
+  </div>
+
+  <div class="tree" id="treeRoot"></div>
+
+  <div class="closing">
+    <p>Every name on this page trained under this roof. If you don't see a name that should be here, or a date that needs correcting, reach out at <a href="mailto:noblesmartialarts@gmail.com">noblesmartialarts@gmail.com</a>.</p>
+  </div>
+</div>
+
+<footer>
+  <p><b style="color:var(--text)">Noble's Martial Arts</b> · Wake Forest, NC</p>
+  <p style="margin-top:5px">Confidence · Integrity · Respect</p>
+  <p style="margin-top:11px"><a href="/">&larr; Back to home</a> · <a href="/privacy">Privacy Policy</a></p>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   TO ADD A NEW PROMOTION COHORT:
+   Copy a block inside COHORTS and edit the date + names. New
+   cohorts should go at the END of the array (oldest → newest),
+   since the tree grows chronologically down the page.
+   ══════════════════════════════════════════════════════════════ */
+var ROOTS = [
+  { name:'Darryl Liner',  years:'1992 – 1998' },
+  { name:'Doyle McMahan', years:'1998 – Present' }
+];
+var TRUNK = { name:'Brandon Noble', org:"Noble's Martial Arts", years:'Founded 2023' };
+var COHORTS = [
+  { date:'February 23, 2026', names:['Brayden Noble','Cameron Noble','Elijah Yorgason','Jonas Meng','Judah Forham','Ivy Yorgason'] },
+  { date:'August 24, 2026',   names:['Abel Greenwood','Hunter Woodruff','Maddison Hilliard','Roman Greenwood'] }
+];
+
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+}); }
+
+(function render(){
+  var html = '';
+
+  html += '<div class="section-label"><span class="dot"></span><span class="eye">The Roots</span></div>';
+  ROOTS.forEach(function(r){
+    html += '<div class="tnode"><div class="root-card"><div class="name">'+esc(r.name)+'</div><div class="years">'+esc(r.years)+'</div></div></div>';
+  });
+
+  html += '<div class="section-label"><span class="dot"></span><span class="eye">The Trunk</span></div>';
+  html += '<div class="tnode"><div class="trunk-card"><div class="name">'+esc(TRUNK.name)+'</div><div class="org">'+esc(TRUNK.org)+'</div><div class="years">'+esc(TRUNK.years)+'</div></div></div>';
+
+  html += '<div class="section-label"><span class="dot"></span><span class="eye">The Branches</span></div>';
+  var total = 0;
+  COHORTS.forEach(function(c){
+    total += c.names.length;
+    var leaves = c.names.map(function(n){ return '<span class="leaf"><span class="bb-dot"></span>'+esc(n)+'</span>'; }).join('');
+    html += '<div class="tnode"><div class="cohort">'+
+      '<div class="cohort-date"><span class="bar"></span><span class="d">'+esc(c.date)+'</span><span class="n">'+c.names.length+' promoted</span></div>'+
+      '<div class="leaf-row">'+leaves+'</div></div></div>';
+  });
+
+  document.getElementById('treeRoot').innerHTML = html;
+  document.getElementById('bbCount').textContent = total;
+})();
+
+/* ── theme toggle (dark default, light optional, remembered) ── */
+(function(){
+  function applyTheme(theme){
+    var btn=document.getElementById('themeToggle');
+    if(theme==='light'){
+      document.documentElement.setAttribute('data-theme','light');
+      if(btn){ btn.setAttribute('aria-pressed','true'); btn.setAttribute('aria-label','Switch to dark mode'); }
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if(btn){ btn.setAttribute('aria-pressed','false'); btn.setAttribute('aria-label','Switch to light mode'); }
+    }
+  }
+  var themeToggle=document.getElementById('themeToggle');
+  if(themeToggle){
+    applyTheme(document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark');
+    themeToggle.addEventListener('click',function(){
+      var isLight=document.documentElement.getAttribute('data-theme')==='light';
+      var next=isLight?'dark':'light';
+      applyTheme(next);
+      try{ localStorage.setItem('nma-theme',next); }catch(e){}
+    });
+  }
+})();
+</script>
+</body>
+</html>
