@@ -546,8 +546,13 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
 @media(min-width:900px){.sale-grid{grid-template-columns:1fr 1fr 1fr}}
 .sale-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
 .sale-card.soldout{opacity:.55}
-.sale-photo{width:100%;height:170px;object-fit:cover;background:var(--surf2)}
+.sale-photo{width:100%;height:170px;object-fit:cover;background:var(--surf2);cursor:zoom-in}
 .sale-photo-placeholder{width:100%;height:170px;background:var(--surf2);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:2rem}
+.sale-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
+.sale-lightbox.open{display:flex}
+.sale-lightbox img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.sale-lightbox-close{position:absolute;top:18px;right:22px;color:#fff;font-size:2.2rem;line-height:1;cursor:pointer;opacity:.85}
+.sale-lightbox-close:hover{opacity:1}
 .sale-body{padding:13px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
 .sale-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .sale-title{font-weight:800;font-size:.98rem;line-height:1.3}
@@ -1174,6 +1179,11 @@ a:focus-visible{outline:2px solid var(--bright);outline-offset:3px;border-radius
     </div>
 
     <div id="saleGrid" class="sale-grid"><div class="lf-empty">Loading items…</div></div>
+
+    <div id="salePhotoLightbox" class="sale-lightbox" onclick="closeSalePhotoLightbox()">
+      <span class="sale-lightbox-close" aria-label="Close">&times;</span>
+      <img id="salePhotoLightboxImg" src="" alt="">
+    </div>
 
     <div class="lf-form-card" id="saleCheckoutCard" style="margin-top:16px;display:none">
       <h3 class="disp">Your Request</h3>
@@ -2337,6 +2347,20 @@ fetchSiteContent(function() {
   var saleItemsData = [];
   var saleCart = {}; // { itemId: qty }
 
+  function openSalePhotoLightbox(imgEl){
+    var lb=document.getElementById('salePhotoLightbox');
+    var lbImg=document.getElementById('salePhotoLightboxImg');
+    if(!lb||!lbImg||!imgEl) return;
+    lbImg.src=imgEl.src;
+    lbImg.alt=imgEl.alt||'';
+    lb.classList.add('open');
+  }
+  function closeSalePhotoLightbox(){
+    var lb=document.getElementById('salePhotoLightbox');
+    if(lb)lb.classList.remove('open');
+  }
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape')closeSalePhotoLightbox(); });
+
   function loadSaleItems(){
     if(!document.getElementById('tab-sale')) return;
     var grid=document.getElementById('saleGrid');
@@ -2359,7 +2383,7 @@ fetchSiteContent(function() {
       var card=document.createElement('div');
       card.className='sale-card'+(soldOut?' soldout':'');
       var photo = it.photo_url
-        ? '<img class="sale-photo" src="'+esc(it.photo_url)+'" alt="'+esc(it.title||'')+'"/>'
+        ? '<img class="sale-photo" src="'+esc(it.photo_url)+'" alt="'+esc(it.title||'')+'" onclick="openSalePhotoLightbox(this)"/>'
         : '<div class="sale-photo-placeholder">🥋</div>';
       var badge = soldOut
         ? '<span class="sale-badge soldout">Sold Out</span>'
