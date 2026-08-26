@@ -77,6 +77,13 @@
   to = "/index.html"
   status = 200
 
+# --- Branded short link for the parent photo-sharing Jotform ---
+[[redirects]]
+  from = "/photos"
+  to = "https://form.jotform.com/262372828972065"
+  status = 301
+  force = true
+
 [functions."pl-notify-approved"]
   schedule = "*/5 * * * *"
 
