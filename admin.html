@@ -978,9 +978,13 @@ function uploadSaleItemPhoto(file){
     method:'POST',
     headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true'},
     body:file
-  }).then(function(r){ return r.json(); }).then(function(res){
-    if(res && res.error) throw new Error(res.error.message||'Photo upload failed');
-    return STORAGE_URL+fname;
+  }).then(function(r){
+    return r.text().then(function(t){
+      var res=null; try{ res=t?JSON.parse(t):null; }catch(e){}
+      if(!r.ok) throw new Error('Photo upload failed — HTTP '+r.status+(res&&res.message?': '+res.message:(t?': '+t.slice(0,200):'')));
+      if(res && res.error) throw new Error(res.error.message||'Photo upload failed');
+      return STORAGE_URL+fname;
+    });
   });
 }
 
@@ -1067,6 +1071,9 @@ if(saleItemPostBtn){
         method:'POST',
         headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body:JSON.stringify({ title:title, description:desc, photo_url:photoUrl, price:price, quantity:qty, reserved:0, active:true })
+      }).then(function(r){
+        if(r.ok)return r;
+        return r.text().then(function(t){ throw new Error('HTTP '+r.status+(t?': '+t:'')); });
       });
     }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status);
       document.getElementById('sale-item-title').value='';
@@ -1075,7 +1082,7 @@ if(saleItemPostBtn){
       document.getElementById('sale-item-qty').value='';
       document.getElementById('sale-item-photo').value='';
       showToast('Item posted','ok'); loadSaleItems();
-    }).catch(function(){ showE('Could not post item. Check Supabase setup and try again.'); })
+    }).catch(function(e){ showE('Could not post item: '+(e&&e.message?e.message:'unknown error')+'. Check Supabase setup and try again.'); })
     .finally(function(){ saleItemPostBtn.disabled=false; saleItemPostBtn.textContent='Post Item'; });
   });
 }
