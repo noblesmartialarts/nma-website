@@ -325,11 +325,21 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
         <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Post overstock or apparel items for parents to request in the Parent Hub. Requests come to you by email to Approve or Decline — approving sends the requestor a Venmo link for the exact amount owed.</p>
         <div class="lf-admin-form">
           <h3 class="disp" style="font-size:1.35rem;margin-bottom:.2rem">Post New Item</h3>
-          <div class="field"><label>Title</label><input id="sale-item-title" placeholder="e.g. NMA Hoodie — Youth Large"/></div>
-          <div class="field"><label>Description</label><textarea id="sale-item-desc" placeholder="Optional details — size, condition, color, etc."></textarea></div>
-          <div class="field-row">
-            <div class="field"><label>Price ($)</label><input type="number" step="0.01" min="0" id="sale-item-price" placeholder="20.00"/></div>
-            <div class="field"><label>Quantity</label><input type="number" step="1" min="1" id="sale-item-qty" placeholder="1"/></div>
+          <div class="field"><label>Title</label><input id="sale-item-title" placeholder="e.g. NMA Hoodie"/></div>
+          <div class="field"><label>Category</label>
+            <select id="sale-item-category">
+              <option>Apparel</option>
+              <option>Training Gear</option>
+              <option>Weapon</option>
+            </select>
+          </div>
+          <div class="field"><label>Description</label><textarea id="sale-item-desc" placeholder="Optional details — condition, brand, etc."></textarea></div>
+          <div class="field"><label>Price ($)</label><input type="number" step="0.01" min="0" id="sale-item-price" placeholder="20.00"/></div>
+          <div class="field">
+            <label>Sizes / Colors / Quantity</label>
+            <p class="hint" style="margin-top:-2px;margin-bottom:8px">One photo can cover several sizes or colors — add a row for each. Leave Size and Color blank for a single one-size item.</p>
+            <div id="sale-variant-rows"></div>
+            <button class="btn-small" id="saleVariantAddBtn" type="button" style="margin-top:6px">+ Add Size / Color</button>
           </div>
           <div class="field"><label>Photo</label><input type="file" id="sale-item-photo" accept="image/*"/><p class="hint">Optional, but recommended.</p></div>
           <div class="lf-admin-actions">
@@ -970,6 +980,43 @@ if(lfAdminRefreshBtn){ lfAdminRefreshBtn.addEventListener('click',loadLostFoundA
 ══════════════════════════════════════════════ */
 var SALE_TABLE='nma_sale_items';
 var saleItems=[];
+var saleVariantRowId=0;
+
+function addSaleVariantRow(size,color,qty){
+  var wrap=document.getElementById('sale-variant-rows');
+  if(!wrap)return;
+  var rid='svr-'+(saleVariantRowId++);
+  var row=document.createElement('div');
+  row.className='sale-variant-row';
+  row.id=rid;
+  row.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;';
+  row.innerHTML=
+    '<input class="sv-size" placeholder="Size (optional)" value="'+ea(size||'')+'" style="flex:1;min-width:0"/>'+
+    '<input class="sv-color" placeholder="Color (optional)" value="'+ea(color||'')+'" style="flex:1;min-width:0"/>'+
+    '<input class="sv-qty" type="number" min="1" step="1" placeholder="Qty" value="'+ea(qty!=null?qty:1)+'" style="width:70px;flex:none"/>'+
+    '<button type="button" class="btn-small sv-remove" style="flex:none" onclick="document.getElementById(\''+rid+'\').remove()">✕</button>';
+  wrap.appendChild(row);
+}
+function resetSaleVariantRows(){
+  var wrap=document.getElementById('sale-variant-rows');
+  if(wrap)wrap.innerHTML='';
+  addSaleVariantRow('','',1);
+}
+function collectSaleVariants(){
+  var rows=document.querySelectorAll('#sale-variant-rows .sale-variant-row');
+  var out=[];
+  rows.forEach(function(row,i){
+    var size=row.querySelector('.sv-size').value.trim();
+    var color=row.querySelector('.sv-color').value.trim();
+    var qty=parseInt(row.querySelector('.sv-qty').value,10);
+    if(isNaN(qty)||qty<1)return; // skip incomplete rows silently
+    out.push({id:'v'+Date.now()+i,size:size,color:color,quantity:qty,reserved:0});
+  });
+  return out;
+}
+resetSaleVariantRows();
+var saleVariantAddBtn=document.getElementById('saleVariantAddBtn');
+if(saleVariantAddBtn)saleVariantAddBtn.addEventListener('click',function(){ addSaleVariantRow('','',1); });
 
 function uploadSaleItemPhoto(file){
   if(!file) return Promise.resolve('');
@@ -1020,9 +1067,20 @@ function renderSaleItemsAdmin(){
     var photo=it.photo_url?'<img class="lf-admin-photo" src="'+ea(it.photo_url)+'" alt="'+ea(it.title||'')+'"/>':'';
     var actions='<button class="btn-small '+(it.active?'red':'green')+' sale-act" data-act="'+(it.active?'archive':'activate')+'" data-id="'+ea(it.id)+'">'+(it.active?'Archive':'Reactivate')+'</button>'+
       '<button class="btn-small red sale-act" data-act="delete" data-id="'+ea(it.id)+'">Delete</button>';
+    var variantHtml='';
+    if(Array.isArray(it.variants)&&it.variants.length){
+      variantHtml='<div class="lf-admin-variants" style="margin-top:6px;font-size:.82rem;color:var(--muted);">'+
+        it.variants.map(function(v){
+          var vAvail=(v.quantity||0)-(v.reserved||0);
+          var label=[v.size,v.color].filter(Boolean).join(' / ')||'One size';
+          return '<div>'+eh(label)+': '+vAvail+' of '+(v.quantity||0)+' available'+((v.reserved||0)>0?' ('+v.reserved+' reserved)':'')+'</div>';
+        }).join('')+
+      '</div>';
+    }
     div.innerHTML=photo+
-      '<div class="lf-admin-top"><div><div class="lf-admin-title">'+eh(it.title||'Item')+'</div>'+
+      '<div class="lf-admin-top"><div><div class="lf-admin-title">'+eh(it.title||'Item')+(it.category?' <span style="font-weight:400;color:var(--muted);font-size:.78rem;">— '+eh(it.category)+'</span>':'')+'</div>'+
       '<div class="lf-admin-meta">$'+Number(it.price).toFixed(2)+' · '+available+' of '+it.quantity+' available'+(it.reserved>0?' ('+it.reserved+' reserved)':'')+'</div>'+
+      variantHtml+
       '</div><span class="lf-admin-status '+statusClass+'">'+eh(statusLabel)+'</span></div>'+
       (it.description?'<div class="lf-admin-notes">'+eh(it.description)+'</div>':'')+
       '<div class="lf-admin-actions">'+actions+'</div>';
@@ -1056,15 +1114,17 @@ var saleItemPostBtn=document.getElementById('saleItemPostBtn');
 if(saleItemPostBtn){
   saleItemPostBtn.addEventListener('click',function(){
     var title=document.getElementById('sale-item-title').value.trim();
+    var category=document.getElementById('sale-item-category').value;
     var desc=document.getElementById('sale-item-desc').value.trim();
     var price=parseFloat(document.getElementById('sale-item-price').value);
-    var qty=parseInt(document.getElementById('sale-item-qty').value,10);
+    var variants=collectSaleVariants();
     var file=(document.getElementById('sale-item-photo').files||[])[0];
     var err=document.getElementById('saleItemErr');
     function showE(m){ err.textContent=m; err.style.display='block'; }
     if(!title){ showE('Please enter a title.'); return; }
     if(isNaN(price)||price<0){ showE('Please enter a valid price.'); return; }
-    if(isNaN(qty)||qty<1){ showE('Please enter a quantity of at least 1.'); return; }
+    if(!variants.length){ showE('Please add at least one size/color row with a quantity of at least 1.'); return; }
+    var totalQty=variants.reduce(function(a,v){return a+v.quantity;},0);
     err.style.display='none';
     saleItemPostBtn.disabled=true; saleItemPostBtn.textContent=file?'Uploading photo…':'Posting…';
     uploadSaleItemPhoto(file).then(function(photoUrl){
@@ -1072,7 +1132,7 @@ if(saleItemPostBtn){
       return fetch(SB_URL+'/rest/v1/'+SALE_TABLE,{
         method:'POST',
         headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body:JSON.stringify({ title:title, description:desc, photo_url:photoUrl, price:price, quantity:qty, reserved:0, active:true })
+        body:JSON.stringify({ title:title, description:desc, photo_url:photoUrl, price:price, category:category, quantity:totalQty, reserved:0, active:true, variants:variants })
       }).catch(function(networkErr){
         throw new Error('Post request never reached the server ('+(networkErr&&networkErr.message?networkErr.message:'network error')+').');
       }).then(function(r){
@@ -1083,8 +1143,8 @@ if(saleItemPostBtn){
       document.getElementById('sale-item-title').value='';
       document.getElementById('sale-item-desc').value='';
       document.getElementById('sale-item-price').value='';
-      document.getElementById('sale-item-qty').value='';
       document.getElementById('sale-item-photo').value='';
+      resetSaleVariantRows();
       showToast('Item posted','ok'); loadSaleItems();
     }).catch(function(e){ showE('Could not post item: '+(e&&e.message?e.message:'unknown error')+'. Check Supabase setup and try again.'); })
     .finally(function(){ saleItemPostBtn.disabled=false; saleItemPostBtn.textContent='Post Item'; });
