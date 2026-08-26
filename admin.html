@@ -978,6 +978,8 @@ function uploadSaleItemPhoto(file){
     method:'POST',
     headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true'},
     body:file
+  }).catch(function(networkErr){
+    throw new Error('Photo upload request never reached the server ('+(networkErr&&networkErr.message?networkErr.message:'network error')+'). This usually means the storage bucket is missing, private, or blocking this request.');
   }).then(function(r){
     return r.text().then(function(t){
       var res=null; try{ res=t?JSON.parse(t):null; }catch(e){}
@@ -1071,6 +1073,8 @@ if(saleItemPostBtn){
         method:'POST',
         headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body:JSON.stringify({ title:title, description:desc, photo_url:photoUrl, price:price, quantity:qty, reserved:0, active:true })
+      }).catch(function(networkErr){
+        throw new Error('Post request never reached the server ('+(networkErr&&networkErr.message?networkErr.message:'network error')+').');
       }).then(function(r){
         if(r.ok)return r;
         return r.text().then(function(t){ throw new Error('HTTP '+r.status+(t?': '+t:'')); });
