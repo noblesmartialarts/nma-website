@@ -105,6 +105,13 @@ footer a{color:inherit}
   .emblem-frame{width:150px;height:150px}
   .hero h1.disp{font-size:2.1rem}
 }
+
+/* ── DESKTOP ── (placed last so it wins over base rules of equal specificity) */
+@media(min-width:860px){
+  .wrap{max-width:760px;padding:36px 32px 100px}
+  .hero h1.disp{font-size:3rem}
+  .emblem-frame{width:210px;height:210px}
+}
 </style>
 <script>
 try{

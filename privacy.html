@@ -74,6 +74,12 @@ td{color:var(--text)}
 
 footer{padding:32px 18px 56px;text-align:center;color:var(--muted);font-size:.8rem}
 footer a{color:inherit}
+
+/* ── DESKTOP ── (placed last so it wins over base rules of equal specificity) */
+@media(min-width:860px){
+  .wrap{max-width:760px;padding:36px 32px 90px}
+  h1.disp{font-size:2.5rem}
+}
 </style>
 <script>
 try{
