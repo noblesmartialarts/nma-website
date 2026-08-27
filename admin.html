@@ -210,6 +210,19 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
       </div>
     </div>
 
+    <!-- WORKSHOPS -->
+    <div class="section">
+      <div class="sec-head" data-s="ws">
+        <h2 class="disp">Workshops / Adult Programs <span class="badge">Hides when empty</span></h2>
+        <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="sec-body" id="sb-ws">
+        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Shows on the homepage, right below the announcement banner. A workshop needs a <b>Title</b> to appear — the Register button only shows if a Link is entered, so you can post one as "coming soon" before registration opens.</p>
+        <div id="wsList"></div>
+        <button class="add-btn" id="addWs">+ Add Workshop</button>
+      </div>
+    </div>
+
     <!-- CHALLENGE -->
     <div class="section">
       <div class="sec-head" data-s="chal">
@@ -480,6 +493,7 @@ var ADMIN_PW = 'Noble2026';
 
 var data = {};        // current content from Supabase
 var testimonials = [];
+var workshops = [];
 var photos = [];
 var lostFoundItems = [];
 
@@ -608,6 +622,10 @@ function populateForm(){
   testimonials=(data.testimonials||[]).map(function(t){return Object.assign({},t);});
   renderTestList();
 
+  // workshops
+  workshops=(data.workshops||[]).map(function(w){return Object.assign({},w);});
+  renderWsList();
+
   // photos
   photos=(data.photos||[]).map(function(p){return Object.assign({},p);});
   renderPhotoList();
@@ -633,6 +651,35 @@ document.getElementById('addTest').addEventListener('click',function(){
   testimonials.push({name:'',sub:'NMA Parent',quote:''});
   renderTestList();
   var items=document.querySelectorAll('#testList .list-item');
+  if(items.length) items[items.length-1].scrollIntoView({behavior:'smooth'});
+});
+
+/* ── workshops ── */
+function renderWsList(){
+  var c=document.getElementById('wsList'); c.innerHTML='';
+  workshops.forEach(function(w,i){
+    var div=document.createElement('div'); div.className='list-item';
+    div.innerHTML='<button class="rm" data-i="'+i+'">Remove</button>'+
+      '<div class="field"><label>Title</label><input class="w-title" data-i="'+i+'" value="'+ea(w.title||'')+'" placeholder="e.g. Women\'s Self-Defense Workshop"/></div>'+
+      '<div class="field"><label>Date / Time (optional)</label><input class="w-date" data-i="'+i+'" value="'+ea(w.date||'')+'" placeholder="e.g. Sat, Sept 20 · 10am–12pm"/></div>'+
+      '<div class="field"><label>Description (optional)</label><textarea class="w-desc" data-i="'+i+'">'+eh(w.description||'')+'</textarea></div>'+
+      '<div class="field-row">'+
+      '<div class="field"><label>Registration Link (optional — button hides without it)</label><input class="w-link" data-i="'+i+'" value="'+ea(w.linkUrl||'')+'" placeholder="https://…"/></div>'+
+      '<div class="field"><label>Button Text</label><input class="w-linklabel" data-i="'+i+'" value="'+ea(w.linkLabel||'')+'" placeholder="Register"/></div>'+
+      '</div>';
+    c.appendChild(div);
+  });
+  c.querySelectorAll('.rm').forEach(function(b){b.addEventListener('click',function(){workshops.splice(+b.dataset.i,1);renderWsList();});});
+  c.querySelectorAll('.w-title').forEach(function(e){e.addEventListener('input',function(){workshops[+e.dataset.i].title=e.value;});});
+  c.querySelectorAll('.w-date').forEach(function(e){e.addEventListener('input',function(){workshops[+e.dataset.i].date=e.value;});});
+  c.querySelectorAll('.w-desc').forEach(function(e){e.addEventListener('input',function(){workshops[+e.dataset.i].description=e.value;});});
+  c.querySelectorAll('.w-link').forEach(function(e){e.addEventListener('input',function(){workshops[+e.dataset.i].linkUrl=e.value;});});
+  c.querySelectorAll('.w-linklabel').forEach(function(e){e.addEventListener('input',function(){workshops[+e.dataset.i].linkLabel=e.value;});});
+}
+document.getElementById('addWs').addEventListener('click',function(){
+  workshops.push({title:'',date:'',description:'',linkUrl:'',linkLabel:'Register'});
+  renderWsList();
+  var items=document.querySelectorAll('#wsList .list-item');
   if(items.length) items[items.length-1].scrollIntoView({behavior:'smooth'});
 });
 
@@ -783,6 +830,7 @@ function collectData(){
       body: document.getElementById('chal-body').value.trim()
     },
     testimonials: testimonials.filter(function(t){return t.quote.trim();}),
+    workshops:    workshops.filter(function(w){return w.title.trim();}),
     photos:       photos.filter(function(p){return p.src||p.url;}),
     videos:       vids,
     regUrls:      regUrls,
