@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Group & Corporate Workshops — Noble's Martial Arts</title>
+<meta name="description" content="Team-building self-defense and kickboxing workshops for companies, schools, and any size group in Wake Forest, Raleigh, Durham, and the surrounding NC area."/>
+<link rel="canonical" href="https://noblesmartialarts.com/group-workshops"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#08080f;--surf:#13131f;--surf2:#1a1a28;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.18);
+  --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
+  --glow:rgba(15,0,247,.4);--text:#f4f4fa;--muted:#9a9ab4;
+  --green:#22c55e;--r:14px;--menu-bg:rgba(19,19,31,.92);
+}
+html[data-theme="light"]{
+  --bg:#f6f5fb;--surf:#ffffff;--surf2:#f0eefc;
+  --border:rgba(15,0,247,.09);--border2:rgba(15,0,247,.18);
+  --brand:#0f00f7;--bright:#372be0;--soft:rgba(15,0,247,.08);
+  --glow:rgba(15,0,247,.14);--text:#14121f;--muted:#4f4c6b;
+  --green:#15803d;--menu-bg:rgba(255,255,255,.92);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;
+  transition:background-color .25s ease,color .25s ease}
+.disp{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;line-height:.95}
+.wrap{max-width:680px;margin:0 auto;padding:24px 18px 90px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.back-link{color:var(--muted);font-size:.85rem;text-decoration:none;font-weight:600}
+.back-link:hover{color:var(--text)}
+
+.theme-toggle{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:1300;
+  display:inline-flex;align-items:center;justify-content:center;background:var(--menu-bg);color:var(--text);
+  border:1px solid var(--border2);border-radius:50%;width:44px;height:44px;padding:0;
+  cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.35);backdrop-filter:blur(10px);
+  transition:transform .15s,background .15s,border-color .15s}
+.theme-toggle:hover{transform:translateY(-1px);background:var(--surf2);border-color:var(--bright)}
+.theme-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.theme-toggle .ic-moon{display:block}
+.theme-toggle .ic-sun{display:none}
+html[data-theme="light"] .theme-toggle .ic-moon{display:none}
+html[data-theme="light"] .theme-toggle .ic-sun{display:block}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:8px 0 8px}
+.eye{color:var(--bright);font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+.hero h1.disp{font-size:2.5rem;line-height:.98}
+.hero .lede{color:var(--muted);font-size:.94rem;line-height:1.6;max-width:34rem;margin:14px auto 0}
+
+.travel-badge{display:inline-flex;align-items:center;gap:8px;margin:20px auto 0;background:var(--surf2);
+  border:1px solid var(--border2);border-radius:99px;padding:9px 18px;font-size:.83rem;font-weight:700;color:var(--text)}
+.travel-badge .ic{font-size:1rem}
+
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--brand);color:#fff;
+  border:none;font-weight:700;font-size:.98rem;padding:15px 26px;border-radius:13px;
+  text-decoration:none;box-shadow:0 10px 26px var(--glow);margin-top:22px;transition:transform .15s,filter .15s}
+.btn-primary:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.cta-wrap{text-align:center}
+.cta-note{color:var(--muted);font-size:.78rem;margin-top:10px}
+
+/* ── SECTIONS ── */
+section{margin-top:44px}
+.section-head{margin-bottom:16px}
+.section-head h2{font-size:1.6rem}
+.section-head .sub{color:var(--muted);font-size:.85rem;margin-top:4px}
+
+.check-list{display:grid;gap:11px}
+.check-item{display:flex;gap:11px;background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.check-item .ic{flex:0 0 auto;font-size:1.2rem;line-height:1.3}
+.check-item .txt b{display:block;font-size:.92rem;margin-bottom:2px}
+.check-item .txt span{color:var(--muted);font-size:.82rem;line-height:1.4}
+
+.who-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:420px){.who-grid{grid-template-columns:1fr}}
+.who-item{display:flex;align-items:center;gap:10px;background:var(--surf2);border:1px solid var(--border);
+  border-radius:11px;padding:12px 14px;font-size:.86rem;font-weight:600}
+.who-item .ic{font-size:1.15rem;flex:0 0 auto}
+
+.price-grid{display:grid;gap:10px}
+.price-card{background:var(--surf);border:1px solid var(--border);border-radius:13px;padding:16px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px}
+.price-card.featured{border-color:var(--bright);box-shadow:0 8px 22px var(--glow)}
+.price-card .pc-info{flex:1 1 auto;min-width:0}
+.price-card .pc-name{font-weight:700;font-size:.98rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.price-card .pc-badge{background:var(--soft);color:var(--bright);font-size:.62rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:99px}
+.price-card .pc-detail{color:var(--muted);font-size:.8rem;margin-top:3px;line-height:1.4}
+.price-card .pc-price{font-family:'Bebas Neue';font-size:1.7rem;color:var(--bright);white-space:nowrap;letter-spacing:.02em;flex:0 0 auto}
+
+.notes{margin-top:16px;display:grid;gap:8px}
+.note-row{display:flex;gap:9px;color:var(--muted);font-size:.82rem;line-height:1.5}
+.note-row .ic{flex:0 0 auto}
+
+.closing{margin-top:48px;padding-top:28px;border-top:1px solid var(--border);text-align:center}
+.closing h2.disp{font-size:1.8rem;margin-bottom:8px}
+.closing p{color:var(--muted);font-size:.88rem;max-width:32rem;margin:0 auto}
+.contact-row{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:18px;font-size:.86rem}
+.contact-row a{color:var(--bright);font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.contact-row a:hover{text-decoration:underline}
+.flyer-link{display:block;margin-top:20px;color:var(--muted);font-size:.8rem;text-decoration:underline}
+.flyer-link:hover{color:var(--text)}
+
+footer{padding:32px 18px 48px;text-align:center;color:var(--muted);font-size:.8rem}
+footer a{color:inherit}
+</style>
+<script>
+try{
+  if(localStorage.getItem('nma-theme')==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+  }
+}catch(e){}
+</script>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="false">
+  <svg class="ic-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="ic-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+</button>
+
+<div class="wrap">
+  <div class="top">
+    <a class="back-link" href="/">&larr; noblesmartialarts.com</a>
+  </div>
+
+  <div class="hero">
+    <p class="eye">For Teams, Companies & Community Groups</p>
+    <h1 class="disp">Self-Defense &amp; Kickboxing Workshops</h1>
+    <p class="lede">Beginner-friendly workshops that blend team building, practical self-defense, entry-level striking, and personal safety awareness. No martial arts experience required — just a group ready to move, laugh, and learn together.</p>
+    <div class="travel-badge"><span class="ic">📍</span> Serving Wake Forest, Raleigh, Durham &amp; surrounding areas</div>
+    <div class="cta-wrap">
+      <a class="btn-primary" id="ctaTop" href="#" target="_blank" rel="noopener">
+        Request a Workshop
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+      </a>
+      <p class="cta-note">One email gets you pricing, dates, and details — no forms to fill out.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <h2 class="disp">What the Workshop Covers</h2>
+    </div>
+    <div class="check-list">
+      <div class="check-item"><span class="ic">🛡️</span><div class="txt"><b>Situational Awareness</b><span>Recognizing risk, setting boundaries, and making safer choices</span></div></div>
+      <div class="check-item"><span class="ic">🥊</span><div class="txt"><b>Entry-Level Striking &amp; Kickboxing</b><span>Stance, footwork, punches, palm strikes, and basic kicks</span></div></div>
+      <div class="check-item"><span class="ic">🥋</span><div class="txt"><b>Krav-Style Self-Defense Basics</b><span>Simple reflex-based defenses, escapes, and partner drills</span></div></div>
+      <div class="check-item"><span class="ic">🤝</span><div class="txt"><b>Team-Building Drills</b><span>Confidence, communication, and fitness — no experience required</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2 class="disp">Who It's For</h2>
+      <p class="sub">Any group looking to move, laugh, and learn together — formal or not.</p>
+    </div>
+    <div class="who-grid">
+      <div class="who-item"><span class="ic">🏢</span>Corporate teams &amp; wellness programs</div>
+      <div class="who-item"><span class="ic">⛪</span>Churches, PTAs &amp; community orgs</div>
+      <div class="who-item"><span class="ic">🏥</span>Healthcare &amp; home health staff</div>
+      <div class="who-item"><span class="ic">🏠</span>Real estate &amp; client-facing pros</div>
+      <div class="who-item"><span class="ic">🏫</span>Schools — staff dev or parent nights</div>
+      <div class="who-item"><span class="ic">👯</span>Friend groups &amp; girls' nights</div>
+      <div class="who-item"><span class="ic">🎉</span>Birthdays &amp; celebrations</div>
+      <div class="who-item"><span class="ic">🏘️</span>Neighborhood &amp; family groups</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2 class="disp">Format &amp; Pricing</h2>
+      <p class="sub">Exact pricing depends on group size and format — these are starting points.</p>
+    </div>
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="pc-info"><div class="pc-name">Starter Workshop</div><div class="pc-detail">60 minutes · up to 10–12 participants</div></div>
+        <div class="pc-price">$300</div>
+      </div>
+      <div class="price-card featured">
+        <div class="pc-info"><div class="pc-name">Standard Workshop <span class="pc-badge">Popular</span></div><div class="pc-detail">75 minutes · up to 20 participants</div></div>
+        <div class="pc-price">$450</div>
+      </div>
+      <div class="price-card">
+        <div class="pc-info"><div class="pc-name">Expanded Workshop</div><div class="pc-detail">90 minutes · up to 25 participants · more hands-on drilling &amp; customization</div></div>
+        <div class="pc-price">$600</div>
+      </div>
+      <div class="price-card">
+        <div class="pc-info"><div class="pc-name">Custom / Larger Groups</div><div class="pc-detail">Tailored length &amp; format for your group</div></div>
+        <div class="pc-price">From $700</div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="note-row"><span class="ic">💳</span>Discounted rates available for quarterly or annual bookings.</div>
+      <div class="note-row"><span class="ic">💬</span>Don't see a format that fits your group? Reach out and let's build something together.</div>
+    </div>
+  </section>
+
+  <div class="closing">
+    <h2 class="disp">Let's Build Something Together</h2>
+    <p>Tell me your group size, organization, and rough timeframe — I'll follow up with exact pricing and available dates.</p>
+    <div class="cta-wrap">
+      <a class="btn-primary" id="ctaBottom" href="#" target="_blank" rel="noopener">
+        Request a Workshop
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+      </a>
+    </div>
+    <div class="contact-row">
+      <a href="tel:9167681347">📞 916-768-1347</a>
+      <a href="mailto:noblesmartialarts@gmail.com">✉️ noblesmartialarts@gmail.com</a>
+    </div>
+    <a class="flyer-link" href="/group-workshops-flyer.jpg" target="_blank" rel="noopener">Download the printable flyer →</a>
+  </div>
+</div>
+
+<footer>
+  <p><b style="color:var(--text)">Noble's Martial Arts</b> · Wake Forest, NC</p>
+  <p style="margin-top:5px">Confidence · Integrity · Respect</p>
+  <p style="margin-top:11px"><a href="/">&larr; Back to home</a> · <a href="/privacy">Privacy Policy</a></p>
+</footer>
+
+<script>
+(function(){
+  var subject = "Team Workshop Inquiry";
+  var body = "Hi Brandon,\n\nI'm interested in booking a team workshop. Here are some details:\n\n"+
+    "Organization/Group name: \n"+
+    "Approximate group size: \n"+
+    "Preferred date(s) or timeframe: \n"+
+    "Location (city/area): \n\n"+
+    "Thanks!";
+  var mailtoUrl = "mailto:noblesmartialarts@gmail.com?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+  var top = document.getElementById('ctaTop');
+  var bottom = document.getElementById('ctaBottom');
+  if (top) top.href = mailtoUrl;
+  if (bottom) bottom.href = mailtoUrl;
+})();
+
+/* ── theme toggle (dark default, light optional, remembered) ── */
+(function(){
+  function applyTheme(theme){
+    var btn=document.getElementById('themeToggle');
+    if(theme==='light'){
+      document.documentElement.setAttribute('data-theme','light');
+      if(btn){ btn.setAttribute('aria-pressed','true'); btn.setAttribute('aria-label','Switch to dark mode'); }
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if(btn){ btn.setAttribute('aria-pressed','false'); btn.setAttribute('aria-label','Switch to light mode'); }
+    }
+  }
+  var themeToggle=document.getElementById('themeToggle');
+  if(themeToggle){
+    applyTheme(document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark');
+    themeToggle.addEventListener('click',function(){
+      var isLight=document.documentElement.getAttribute('data-theme')==='light';
+      var next=isLight?'dark':'light';
+      applyTheme(next);
+      try{ localStorage.setItem('nma-theme',next); }catch(e){}
+    });
+  }
+})();
+</script>
+</body>
+</html>
