@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Thanks! — Noble's Martial Arts</title>
+<meta name="description" content="Thanks for your workshop inquiry — Noble's Martial Arts will follow up soon."/>
+<meta name="robots" content="noindex"/>
+<link rel="canonical" href="https://noblesmartialarts.com/thank-you"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#08080f;--surf:#13131f;--surf2:#1a1a28;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.18);
+  --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
+  --glow:rgba(15,0,247,.4);--text:#f4f4fa;--muted:#9a9ab4;
+  --green:#22c55e;--r:14px;--menu-bg:rgba(19,19,31,.92);
+}
+html[data-theme="light"]{
+  --bg:#f6f5fb;--surf:#ffffff;--surf2:#f0eefc;
+  --border:rgba(15,0,247,.09);--border2:rgba(15,0,247,.18);
+  --brand:#0f00f7;--bright:#372be0;--soft:rgba(15,0,247,.08);
+  --glow:rgba(15,0,247,.14);--text:#14121f;--muted:#4f4c6b;
+  --green:#15803d;--menu-bg:rgba(255,255,255,.92);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;
+  transition:background-color .25s ease,color .25s ease;
+  display:flex;flex-direction:column}
+.disp{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;line-height:.95}
+.wrap{max-width:520px;margin:0 auto;padding:24px 18px;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.back-link{color:var(--muted);font-size:.85rem;text-decoration:none;font-weight:600;position:fixed;top:calc(10px + env(safe-area-inset-top));left:12px}
+.back-link:hover{color:var(--text)}
+
+.theme-toggle{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:1300;
+  display:inline-flex;align-items:center;justify-content:center;background:var(--menu-bg);color:var(--text);
+  border:1px solid var(--border2);border-radius:50%;width:44px;height:44px;padding:0;
+  cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.35);backdrop-filter:blur(10px);
+  transition:transform .15s,background .15s,border-color .15s}
+.theme-toggle:hover{transform:translateY(-1px);background:var(--surf2);border-color:var(--bright)}
+.theme-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.theme-toggle .ic-moon{display:block}
+.theme-toggle .ic-sun{display:none}
+html[data-theme="light"] .theme-toggle .ic-moon{display:none}
+html[data-theme="light"] .theme-toggle .ic-sun{display:block}
+
+.check-badge{width:72px;height:72px;border-radius:50%;background:var(--soft);border:2px solid var(--bright);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 22px}
+.check-badge svg{width:34px;height:34px;stroke:var(--bright);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+h1.disp{font-size:2.3rem}
+.wrap p{color:var(--muted);font-size:.96rem;line-height:1.6;margin-top:14px}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--brand);color:#fff;
+  border:none;font-weight:700;font-size:.95rem;padding:13px 24px;border-radius:12px;
+  text-decoration:none;box-shadow:0 8px 20px var(--glow);margin-top:24px;cursor:pointer;font-family:inherit}
+.contact-row{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:20px;font-size:.86rem}
+.contact-row a{color:var(--bright);font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.contact-row a:hover{text-decoration:underline}
+
+footer{padding:32px 18px 48px;text-align:center;color:var(--muted);font-size:.8rem}
+footer a{color:inherit}
+</style>
+<script>
+try{
+  if(localStorage.getItem('nma-theme')==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+  }
+}catch(e){}
+</script>
+</head>
+<body>
+
+<a class="back-link" href="/">&larr; noblesmartialarts.com</a>
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="false">
+  <svg class="ic-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="ic-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+</button>
+
+<div class="wrap">
+  <div class="check-badge">
+    <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+  </div>
+  <h1 class="disp">Request Received!</h1>
+  <p>Thanks for reaching out about a group workshop. I'll follow up soon with pricing, availability, and next steps.</p>
+  <p>Need to reach me sooner? Call or email directly:</p>
+  <div class="contact-row">
+    <a href="tel:9167681347">📞 916-768-1347</a>
+    <a href="mailto:noblesmartialarts@gmail.com">✉️ noblesmartialarts@gmail.com</a>
+  </div>
+  <a class="btn-primary" href="/">Back to Home</a>
+</div>
+
+<footer>
+  <p><b style="color:var(--text)">Noble's Martial Arts</b> · Wake Forest, NC</p>
+  <p style="margin-top:5px">Confidence · Integrity · Respect</p>
+</footer>
+
+<script>
+(function(){
+  function applyTheme(theme){
+    var btn=document.getElementById('themeToggle');
+    if(theme==='light'){
+      document.documentElement.setAttribute('data-theme','light');
+      if(btn){ btn.setAttribute('aria-pressed','true'); btn.setAttribute('aria-label','Switch to dark mode'); }
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if(btn){ btn.setAttribute('aria-pressed','false'); btn.setAttribute('aria-label','Switch to light mode'); }
+    }
+  }
+  var themeToggle=document.getElementById('themeToggle');
+  if(themeToggle){
+    applyTheme(document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark');
+    themeToggle.addEventListener('click',function(){
+      var isLight=document.documentElement.getAttribute('data-theme')==='light';
+      var next=isLight?'dark':'light';
+      applyTheme(next);
+      try{ localStorage.setItem('nma-theme',next); }catch(e){}
+    });
+  }
+})();
+</script>
+</body>
+</html>

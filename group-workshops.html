@@ -107,6 +107,19 @@ section{margin-top:44px}
 .flyer-link{display:block;margin-top:20px;color:var(--muted);font-size:.8rem;text-decoration:underline}
 .flyer-link:hover{color:var(--text)}
 
+.request-form{margin-top:26px;text-align:left;display:grid;gap:14px;max-width:480px;margin-left:auto;margin-right:auto}
+.field-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:480px){.field-row-2{grid-template-columns:1fr}}
+.field label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.field label .opt{text-transform:none;font-weight:500;letter-spacing:0}
+.field input,.field textarea{width:100%;background:var(--surf);border:1px solid var(--border2);border-radius:10px;
+  padding:11px 13px;color:var(--text);font-family:inherit;font-size:.92rem;transition:border-color .15s}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--bright)}
+.field textarea{resize:vertical;min-height:90px;line-height:1.5}
+.hp-field{position:absolute;left:-9999px;top:-9999px}
+.form-submit{margin-top:2px}
+.btn-primary{cursor:pointer;font-family:inherit}
+
 footer{padding:32px 18px 48px;text-align:center;color:var(--muted);font-size:.8rem}
 footer a{color:inherit}
 
@@ -146,11 +159,11 @@ try{
     <p class="lede">Beginner-friendly workshops that blend team building, practical self-defense, entry-level striking, and personal safety awareness. No martial arts experience required — just a group ready to move, laugh, and learn together.</p>
     <div class="travel-badge"><span class="ic">📍</span> Serving Wake Forest, Raleigh, Durham &amp; surrounding areas</div>
     <div class="cta-wrap">
-      <a class="btn-primary" id="ctaTop" href="#" target="_blank" rel="noopener">
+      <a class="btn-primary" href="#request-form">
         Request a Workshop
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
       </a>
-      <p class="cta-note">One email gets you pricing, dates, and details — no forms to fill out.</p>
+      <p class="cta-note">Tell me your group size, timeframe, and details — I'll follow up with pricing and dates.</p>
     </div>
   </div>
 
@@ -215,12 +228,53 @@ try{
   <div class="closing">
     <h2 class="disp">Let's Build Something Together</h2>
     <p>Tell me your group size, organization, and rough timeframe — I'll follow up with exact pricing and available dates.</p>
-    <div class="cta-wrap">
-      <a class="btn-primary" id="ctaBottom" href="#" target="_blank" rel="noopener">
-        Request a Workshop
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
-      </a>
-    </div>
+
+    <form id="request-form" class="request-form" name="workshop-inquiry" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thank-you">
+      <input type="hidden" name="form-name" value="workshop-inquiry"/>
+      <p class="hp-field" aria-hidden="true">
+        <label>Don't fill this out if you're human: <input name="bot-field" tabindex="-1" autocomplete="off"/></label>
+      </p>
+
+      <div class="field-row-2">
+        <div class="field">
+          <label for="wf-name">Name</label>
+          <input type="text" id="wf-name" name="name" required/>
+        </div>
+        <div class="field">
+          <label for="wf-email">Email</label>
+          <input type="email" id="wf-email" name="email" required/>
+        </div>
+      </div>
+
+      <div class="field-row-2">
+        <div class="field">
+          <label for="wf-phone">Phone <span class="opt">(optional)</span></label>
+          <input type="tel" id="wf-phone" name="phone"/>
+        </div>
+        <div class="field">
+          <label for="wf-group">Group Size / Organization</label>
+          <input type="text" id="wf-group" name="group_size_organization" placeholder="e.g. 15 people, ABC Realty"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="wf-timeframe">Rough Timeframe</label>
+        <input type="text" id="wf-timeframe" name="timeframe" placeholder="e.g. early October, flexible"/>
+      </div>
+
+      <div class="field">
+        <label for="wf-message">Message / Notes</label>
+        <textarea id="wf-message" name="message" rows="4" placeholder="Anything else that'd help — location, goals, questions"></textarea>
+      </div>
+
+      <div class="cta-wrap form-submit">
+        <button type="submit" class="btn-primary">
+          Request a Workshop
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+        </button>
+      </div>
+    </form>
+
     <div class="contact-row">
       <a href="tel:9167681347">📞 916-768-1347</a>
       <a href="mailto:noblesmartialarts@gmail.com">✉️ noblesmartialarts@gmail.com</a>
@@ -236,21 +290,6 @@ try{
 </footer>
 
 <script>
-(function(){
-  var subject = "Team Workshop Inquiry";
-  var body = "Hi Brandon,\n\nI'm interested in booking a team workshop. Here are some details:\n\n"+
-    "Organization/Group name: \n"+
-    "Approximate group size: \n"+
-    "Preferred date(s) or timeframe: \n"+
-    "Location (city/area): \n\n"+
-    "Thanks!";
-  var mailtoUrl = "mailto:noblesmartialarts@gmail.com?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
-  var top = document.getElementById('ctaTop');
-  var bottom = document.getElementById('ctaBottom');
-  if (top) top.href = mailtoUrl;
-  if (bottom) bottom.href = mailtoUrl;
-})();
-
 /* ── theme toggle (dark default, light optional, remembered) ── */
 (function(){
   function applyTheme(theme){
