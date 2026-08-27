@@ -83,6 +83,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
 .list-item{background:var(--surf2);border:1px solid var(--border);border-radius:11px;padding:12px;margin-top:10px;position:relative}
 .list-item .rm{position:absolute;top:9px;right:9px;background:rgba(255,90,90,.13);border:1px solid rgba(255,90,90,.28);color:var(--red);border-radius:6px;padding:3px 8px;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit}
 .add-btn{margin-top:10px;width:100%;padding:9px;background:var(--soft);color:var(--bright);border:1px solid var(--bright);border-radius:10px;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
+.ws-actions{position:absolute;top:9px;right:9px;display:flex;gap:5px;align-items:center}
+.ws-actions .rm{position:static}
+.ws-move{background:var(--surf);border:1px solid var(--border2);color:var(--muted);border-radius:6px;width:26px;height:26px;font-size:.85rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;padding:0}
+.ws-move:hover:not(:disabled){color:var(--text);border-color:var(--bright)}
+.ws-move:disabled{opacity:.3;cursor:not-allowed}
 .add-btn:hover{background:rgba(81,96,255,.26)}
 .photo-row{display:flex;align-items:center;gap:8px;background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-top:8px}
 .photo-row img{width:44px;height:44px;object-fit:cover;border-radius:7px;flex:0 0 auto;background:var(--bg)}
@@ -217,7 +222,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
         <svg class="chev" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="sec-body" id="sb-ws">
-        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Shows on the homepage, right below the announcement banner. A workshop needs a <b>Title</b> to appear — the Register button only shows if a Link is entered, so you can post one as "coming soon" before registration opens.</p>
+        <p style="color:var(--muted);font-size:.83rem;margin-top:4px">Shows on the homepage, right below the announcement banner, in the order listed here — use the ↑ ↓ buttons to reorder. A workshop needs a <b>Title</b> to appear — the Register button only shows if a Link is entered, so you can post one as "coming soon" before registration opens.</p>
         <div id="wsList"></div>
         <button class="add-btn" id="addWs">+ Add Workshop</button>
       </div>
@@ -659,7 +664,11 @@ function renderWsList(){
   var c=document.getElementById('wsList'); c.innerHTML='';
   workshops.forEach(function(w,i){
     var div=document.createElement('div'); div.className='list-item';
-    div.innerHTML='<button class="rm" data-i="'+i+'">Remove</button>'+
+    div.innerHTML='<div class="ws-actions">'+
+      '<button type="button" class="ws-move" data-i="'+i+'" data-dir="up" title="Move up"'+(i===0?' disabled':'')+'>&#8593;</button>'+
+      '<button type="button" class="ws-move" data-i="'+i+'" data-dir="down" title="Move down"'+(i===workshops.length-1?' disabled':'')+'>&#8595;</button>'+
+      '<button class="rm" data-i="'+i+'">Remove</button>'+
+      '</div>'+
       '<div class="field"><label>Title</label><input class="w-title" data-i="'+i+'" value="'+ea(w.title||'')+'" placeholder="e.g. Women\'s Self-Defense Workshop"/></div>'+
       '<div class="field"><label>Date / Time (optional)</label><input class="w-date" data-i="'+i+'" value="'+ea(w.date||'')+'" placeholder="e.g. Sat, Sept 20 · 10am–12pm"/></div>'+
       '<div class="field"><label>Description (optional)</label><textarea class="w-desc" data-i="'+i+'">'+eh(w.description||'')+'</textarea></div>'+
@@ -669,6 +678,12 @@ function renderWsList(){
       '</div>';
     c.appendChild(div);
   });
+  c.querySelectorAll('.ws-move').forEach(function(b){b.addEventListener('click',function(){
+    var i=+b.dataset.i, j=b.dataset.dir==='up'?i-1:i+1;
+    if(j<0||j>=workshops.length) return;
+    var tmp=workshops[i]; workshops[i]=workshops[j]; workshops[j]=tmp;
+    renderWsList();
+  });});
   c.querySelectorAll('.rm').forEach(function(b){b.addEventListener('click',function(){workshops.splice(+b.dataset.i,1);renderWsList();});});
   c.querySelectorAll('.w-title').forEach(function(e){e.addEventListener('input',function(){workshops[+e.dataset.i].title=e.value;});});
   c.querySelectorAll('.w-date').forEach(function(e){e.addEventListener('input',function(){workshops[+e.dataset.i].date=e.value;});});
