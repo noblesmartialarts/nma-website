@@ -2,6 +2,10 @@
   publish = "."
   functions = "netlify/functions"
 
+# Netlify Forms enabled site-wide for the "workshop-inquiry" form
+# on /group-workshops (submits to /thank-you). Set up email
+# notifications for new submissions under Site settings > Forms.
+
 # --- Legacy pages from the old site, still showing up in Google search ---
 # 301s so search engines update their index to point at current content
 # instead of a dead page.
