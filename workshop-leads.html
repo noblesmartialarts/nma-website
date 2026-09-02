@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Workshop Leads — Noble's Martial Arts</title>
+<meta name="robots" content="noindex,nofollow"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#08080f;--surf:#13131f;--surf2:#1a1a28;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.18);
+  --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);
+  --glow:rgba(15,0,247,.4);--text:#f4f4fa;--muted:#9a9ab4;
+  --green:#22c55e;--amber:#f59e0b;--red:#ff5a5a;--purple:#a855f7;--r:14px;--menu-bg:rgba(19,19,31,.92);
+}
+html[data-theme="light"]{
+  --bg:#f6f5fb;--surf:#ffffff;--surf2:#f0eefc;
+  --border:rgba(15,0,247,.09);--border2:rgba(15,0,247,.18);
+  --brand:#0f00f7;--bright:#372be0;--soft:rgba(15,0,247,.08);
+  --glow:rgba(15,0,247,.14);--text:#14121f;--muted:#4f4c6b;
+  --green:#15803d;--amber:#b45309;--red:#d92d20;--purple:#7e22ce;--menu-bg:rgba(255,255,255,.92);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;
+  transition:background-color .25s ease,color .25s ease}
+.disp{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;line-height:.95}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 80px}
+
+/* ── LOCK SCREEN ── */
+#lockScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.lock-card{background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:36px 32px;text-align:center;max-width:340px;width:100%}
+.lock-logo{font-family:'Bebas Neue';font-size:1.7rem;margin-bottom:4px}
+.lock-sub{font-size:.82rem;color:var(--muted);margin-bottom:24px}
+.lock-input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;
+  padding:12px 14px;color:var(--text);font-family:inherit;font-size:.95rem;margin-bottom:12px;text-align:center}
+.lock-input:focus{outline:none;border-color:var(--bright)}
+.lock-btn{width:100%;background:var(--brand);color:#fff;border:none;border-radius:10px;padding:12px;
+  font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer}
+.lock-err{color:var(--red);font-size:.78rem;margin-top:10px;min-height:16px}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.shake{animation:shake .3s}
+
+/* ── APP CHROME ── */
+#app{display:none}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:18px}
+.topbar h1{font-size:1.5rem}
+.topbar .sub{color:var(--muted);font-size:.78rem}
+.icon-btn{background:var(--surf);border:1px solid var(--border2);border-radius:10px;width:38px;height:38px;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text)}
+.icon-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.top-actions{display:flex;gap:8px}
+
+.add-btn{width:100%;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:14px;
+  font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;margin-bottom:20px;box-shadow:0 8px 20px var(--glow)}
+
+.pipeline{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.pipe-chip{cursor:pointer;border-radius:10px;padding:9px 13px;min-width:76px;text-align:center;border:1px solid var(--border2);background:var(--surf)}
+.pipe-chip .n{font-family:'Bebas Neue';font-size:1.3rem;line-height:1}
+.pipe-chip .l{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-top:2px}
+.pipe-chip.active{border-color:var(--bright);background:var(--soft)}
+
+.lead-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
+.lead-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.lead-org{font-weight:700;font-size:.98rem}
+.lead-contact{color:var(--muted);font-size:.82rem;margin-top:2px}
+.lead-status{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 9px;border-radius:99px;white-space:nowrap;flex:0 0 auto}
+.lead-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:.78rem;color:var(--muted)}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);font-size:.88rem}
+
+/* ── MODAL ── */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--surf);border:1px solid var(--border2);border-radius:16px;max-width:520px;width:100%;margin-top:20px}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border)}
+.modal-head h2{font-size:1.2rem}
+.modal-body{padding:18px 20px;display:grid;gap:14px}
+.field-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.field-row-2{grid-template-columns:1fr}}
+.field label{display:block;font-size:.74rem;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:9px;
+  padding:10px 12px;color:var(--text);font-family:inherit;font-size:.9rem}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--bright)}
+.field textarea{resize:vertical;min-height:70px}
+.checks{display:flex;gap:18px;font-size:.85rem}
+.checks label{display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--text)}
+.modal-foot{display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--border)}
+.btn{flex:1;border-radius:10px;padding:12px;font-family:inherit;font-size:.88rem;font-weight:700;cursor:pointer;border:1px solid var(--border2);background:var(--surf2);color:var(--text)}
+.btn.primary{background:var(--brand);color:#fff;border:none}
+.btn.danger{background:transparent;color:var(--red);border:1px solid var(--red)}
+
+.status-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surf);border:1px solid var(--border2);
+  border-radius:10px;padding:10px 18px;font-size:.85rem;box-shadow:0 8px 24px rgba(0,0,0,.3);display:none;z-index:600}
+</style>
+<script>
+try{ if(localStorage.getItem('nma-theme')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){}
+</script>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-logo">Noble's Martial Arts</div>
+    <div class="lock-sub">Workshop Leads — Enter PIN to continue</div>
+    <input type="password" id="lockInput" class="lock-input" placeholder="PIN" autocomplete="off"/>
+    <button class="lock-btn" id="lockBtn">Enter</button>
+    <div class="lock-err" id="lockErr"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1 class="disp">Workshop Leads</h1>
+        <div class="sub">Noble's Martial Arts</div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeToggle" title="Toggle theme">
+          <svg class="ic-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="icon-btn" id="logoutBtn" title="Log out">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <button class="add-btn" id="addLeadBtn">+ Add Workshop Lead</button>
+
+    <div class="pipeline" id="pipeline"></div>
+    <div id="leadList"></div>
+  </div>
+</div>
+
+<!-- LEAD MODAL -->
+<div class="modal-backdrop" id="modal-lead">
+  <div class="modal">
+    <div class="modal-head"><h2 id="modal-title">Add Workshop Lead</h2><button class="icon-btn" onclick="closeLeadModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button></div>
+    <div class="modal-body">
+      <div class="field"><label>Organization Name</label><input type="text" id="f-organization" placeholder="e.g. Grace Community Church"/></div>
+      <div class="field-row-2">
+        <div class="field"><label>Contact Name</label><input type="text" id="f-contact_name" placeholder="Jane Smith"/></div>
+        <div class="field"><label>Type</label>
+          <select id="f-type">
+            <option>Church</option><option>Corporate</option><option>Community/Neighborhood</option>
+            <option>Healthcare</option><option>Real Estate</option><option>School</option>
+            <option>Friend Group/Celebration</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row-2">
+        <div class="field"><label>Contact Email</label><input type="email" id="f-contact_email" placeholder="jane@email.com"/></div>
+        <div class="field"><label>Contact Phone</label><input type="tel" id="f-contact_phone" placeholder="(919) 555-0100"/></div>
+      </div>
+      <div class="field-row-2">
+        <div class="field"><label>Status</label>
+          <select id="f-status">
+            <option>Not Contacted</option><option>Contacted</option><option>Scheduled</option>
+            <option>Completed</option><option>Recurring/Follow-up</option><option>Declined</option>
+          </select>
+        </div>
+        <div class="field"><label>Source</label>
+          <select id="f-source">
+            <option>Referral</option><option>Cold Email</option><option>Facebook Post</option>
+            <option>Networking Event</option><option>Website Inquiry</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row-2">
+        <div class="field"><label>Date Contacted</label><input type="date" id="f-date_contacted"/></div>
+        <div class="field"><label>Session Date <span style="text-transform:none;font-weight:400">(once scheduled)</span></label><input type="date" id="f-session_date"/></div>
+      </div>
+      <div class="field-row-2">
+        <div class="field"><label>Tier</label>
+          <select id="f-tier" onchange="applyTierDefault()">
+            <option>Starter $300</option><option>Standard $450</option><option>Expanded $600</option>
+            <option>Custom $700+</option><option>Free/Comp</option>
+          </select>
+        </div>
+        <div class="field"><label>Amount Charged ($)</label><input type="number" step="0.01" min="0" id="f-amount_charged" placeholder="450.00"/></div>
+      </div>
+      <div class="field-row-2">
+        <div class="field"><label>Assistant Instructor</label><input type="text" id="f-assistant_name" placeholder="e.g. Luther — leave blank if solo"/></div>
+        <div class="field"><label>Assistant Pay ($)</label><input type="number" step="0.01" min="0" id="f-assistant_pay" placeholder="0.00"/></div>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="f-testimonial_obtained"/> Testimonial obtained</label>
+        <label><input type="checkbox" id="f-photo_obtained"/> Photo/Video obtained</label>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="f-notes" placeholder="Booking details, special requests, follow-up plans…"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger" id="deleteLeadBtn" style="display:none;flex:0 0 auto;padding:12px 16px;" onclick="deleteLead()">Delete</button>
+      <button class="btn" onclick="closeLeadModal()">Cancel</button>
+      <button class="btn primary" onclick="saveLead()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="status-toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   AUTH — shared PIN, separate from the admin panel's password.
+   Change LUTHER_PW below any time to rotate the PIN.
+   ══════════════════════════════════════════════════════ */
+var LUTHER_PW = 'Workshops2026';
+
+function tryLogin(){
+  if (document.getElementById('lockInput').value === LUTHER_PW){
+    sessionStorage.setItem('nma_workshop_leads','1');
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    loadLeads();
+  } else {
+    document.getElementById('lockErr').textContent='Incorrect PIN.';
+    var i=document.getElementById('lockInput');
+    i.value=''; i.classList.remove('shake'); void i.offsetWidth; i.classList.add('shake');
+  }
+}
+document.getElementById('lockBtn').addEventListener('click', tryLogin);
+document.getElementById('lockInput').addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
+document.getElementById('logoutBtn').addEventListener('click', function(){
+  sessionStorage.removeItem('nma_workshop_leads');
+  location.reload();
+});
+if (sessionStorage.getItem('nma_workshop_leads')==='1'){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+
+/* ══════════════════════════════════════════════════════
+   SUPABASE — dedicated workshop_leads table, separate from
+   the main CRM's shared data blob.
+   ══════════════════════════════════════════════════════ */
+var SUPABASE_URL = 'https://erqblpewozxkpornohvq.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycWJscGV3b3p4a3Bvcm5vaHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzUzMDMsImV4cCI6MjA5NTA1MTMwM30.Ot3sd3X3Fo9rtpAXUfTjrUlB_6Y-QcMuwotUIvdcr5o';
+var supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+var STATUS_META = {
+  'Not Contacted':      {color:'var(--muted)',  bg:'var(--surf2)'},
+  'Contacted':          {color:'var(--bright)', bg:'var(--soft)'},
+  'Scheduled':          {color:'var(--amber)',  bg:'rgba(245,158,11,.14)'},
+  'Completed':          {color:'var(--green)',  bg:'rgba(34,197,94,.14)'},
+  'Recurring/Follow-up':{color:'var(--purple)', bg:'rgba(168,85,247,.14)'},
+  'Declined':           {color:'var(--red)',    bg:'rgba(255,90,90,.14)'}
+};
+var TIER_DEFAULTS = {'Starter $300':300,'Standard $450':450,'Expanded $600':600,'Custom $700+':700,'Free/Comp':0};
+
+var leads = [];
+var activeFilter = null;
+var editingId = null;
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+}); }
+
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.style.display='none'; }, 2200);
+}
+
+async function loadLeads(){
+  try{
+    var res = await supa.from('workshop_leads').select('*').order('created_at', {ascending:false});
+    if (res.error) { showToast('Error loading leads: ' + res.error.message); return; }
+    leads = res.data || [];
+    renderPipeline();
+    renderLeadList();
+  } catch(e){
+    showToast('Connection error — check your internet and try again.');
+  }
+}
+
+function renderPipeline(){
+  var el = document.getElementById('pipeline');
+  var counts = {};
+  Object.keys(STATUS_META).forEach(function(k){ counts[k]=0; });
+  leads.forEach(function(l){ if(counts[l.status]!==undefined) counts[l.status]++; });
+  var allActive = activeFilter===null;
+  var html = '<div class="pipe-chip'+(allActive?' active':'')+'" onclick="setFilter(null)"><div class="n">'+leads.length+'</div><div class="l">All</div></div>';
+  Object.keys(STATUS_META).forEach(function(status){
+    var active = activeFilter===status;
+    html += '<div class="pipe-chip'+(active?' active':'')+'" onclick="setFilter(\''+status.replace(/'/g,"\\'")+'\')" style="'+(active?'border-color:'+STATUS_META[status].color:'')+'"><div class="n" style="color:'+STATUS_META[status].color+'">'+counts[status]+'</div><div class="l">'+esc(status)+'</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function setFilter(status){ activeFilter = status; renderPipeline(); renderLeadList(); }
+
+function renderLeadList(){
+  var el = document.getElementById('leadList');
+  var rows = activeFilter ? leads.filter(function(l){ return l.status===activeFilter; }) : leads;
+  if (!rows.length){
+    el.innerHTML = '<div class="empty-state">No leads yet'+(activeFilter?' in this stage':'')+'. Tap "+ Add Workshop Lead" to get started.</div>';
+    return;
+  }
+  el.innerHTML = rows.map(function(l){
+    var meta = STATUS_META[l.status] || STATUS_META['Not Contacted'];
+    var metaLine = [];
+    if (l.session_date) metaLine.push('📅 '+l.session_date);
+    if (l.tier) metaLine.push('💰 '+esc(l.tier));
+    if (l.assistant_name) metaLine.push('🤝 '+esc(l.assistant_name));
+    return '<div class="lead-card" onclick="openEditLead(\''+l.id+'\')">'+
+      '<div class="lead-top">'+
+        '<div><div class="lead-org">'+esc(l.organization||'(no org name)')+'</div>'+
+        '<div class="lead-contact">'+esc(l.contact_name||'')+(l.type?' · '+esc(l.type):'')+'</div></div>'+
+        '<span class="lead-status" style="color:'+meta.color+';background:'+meta.bg+'">'+esc(l.status)+'</span>'+
+      '</div>'+
+      (metaLine.length?'<div class="lead-meta">'+metaLine.map(function(m){return '<span>'+m+'</span>';}).join('')+'</div>':'')+
+    '</div>';
+  }).join('');
+}
+
+function applyTierDefault(){
+  var tier = document.getElementById('f-tier').value;
+  var amtField = document.getElementById('f-amount_charged');
+  if (amtField.value==='' || amtField.dataset.autoFilled==='1'){
+    amtField.value = TIER_DEFAULTS[tier]!=null ? TIER_DEFAULTS[tier] : '';
+    amtField.dataset.autoFilled='1';
+  }
+}
+
+var FIELDS = ['organization','contact_name','contact_email','contact_phone','type','status','source',
+  'date_contacted','session_date','tier','amount_charged','assistant_name','assistant_pay','notes'];
+
+function openAddLead(){
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Add Workshop Lead';
+  document.getElementById('deleteLeadBtn').style.display = 'none';
+  FIELDS.forEach(function(f){ var el=document.getElementById('f-'+f); if(el) el.value=''; });
+  document.getElementById('f-testimonial_obtained').checked = false;
+  document.getElementById('f-photo_obtained').checked = false;
+  document.getElementById('f-status').value = 'Not Contacted';
+  document.getElementById('modal-lead').classList.add('open');
+}
+
+function openEditLead(id){
+  var lead = leads.find(function(l){ return l.id===id; });
+  if (!lead) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Edit Workshop Lead';
+  document.getElementById('deleteLeadBtn').style.display = 'block';
+  FIELDS.forEach(function(f){ var el=document.getElementById('f-'+f); if(el) el.value = lead[f]!=null ? lead[f] : ''; });
+  document.getElementById('f-testimonial_obtained').checked = !!lead.testimonial_obtained;
+  document.getElementById('f-photo_obtained').checked = !!lead.photo_obtained;
+  document.getElementById('modal-lead').classList.add('open');
+}
+
+function closeLeadModal(){ document.getElementById('modal-lead').classList.remove('open'); }
+document.getElementById('addLeadBtn').addEventListener('click', openAddLead);
+
+async function saveLead(){
+  var payload = {};
+  FIELDS.forEach(function(f){
+    var el = document.getElementById('f-'+f);
+    var v = el.value;
+    if (f==='amount_charged' || f==='assistant_pay'){
+      payload[f] = v==='' ? null : parseFloat(v);
+    } else if (f==='date_contacted' || f==='session_date'){
+      payload[f] = v===''? null : v;
+    } else {
+      payload[f] = v;
+    }
+  });
+  payload.notes = document.getElementById('f-notes').value;
+  payload.testimonial_obtained = document.getElementById('f-testimonial_obtained').checked;
+  payload.photo_obtained = document.getElementById('f-photo_obtained').checked;
+
+  try{
+    var res;
+    if (editingId){
+      payload.updated_at = new Date().toISOString();
+      res = await supa.from('workshop_leads').update(payload).eq('id', editingId);
+    } else {
+      res = await supa.from('workshop_leads').insert(payload);
+    }
+    if (res.error){ showToast('Save failed: ' + res.error.message); return; }
+    closeLeadModal();
+    showToast(editingId ? 'Lead updated' : 'Lead added');
+    await loadLeads();
+  } catch(e){
+    showToast('Connection error — check your internet and try again.');
+  }
+}
+
+async function deleteLead(){
+  if (!editingId) return;
+  if (!confirm('Delete this lead? This can\'t be undone.')) return;
+  try{
+    var res = await supa.from('workshop_leads').delete().eq('id', editingId);
+    if (res.error){ showToast('Delete failed: ' + res.error.message); return; }
+    closeLeadModal();
+    showToast('Lead deleted');
+    await loadLeads();
+  } catch(e){
+    showToast('Connection error — check your internet and try again.');
+  }
+}
+
+/* ── theme toggle ── */
+(function(){
+  function applyTheme(theme){
+    if (theme==='light') document.documentElement.setAttribute('data-theme','light');
+    else document.documentElement.removeAttribute('data-theme');
+  }
+  applyTheme(document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark');
+  document.getElementById('themeToggle').addEventListener('click', function(){
+    var isLight = document.documentElement.getAttribute('data-theme')==='light';
+    var next = isLight ? 'dark' : 'light';
+    applyTheme(next);
+    try{ localStorage.setItem('nma-theme', next); }catch(e){}
+  });
+})();
+
+/* Load immediately if already unlocked this session */
+if (sessionStorage.getItem('nma_workshop_leads')==='1') loadLeads();
+</script>
+</body>
+</html>
