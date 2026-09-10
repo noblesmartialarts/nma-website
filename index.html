@@ -2006,7 +2006,7 @@ fetchSiteContent(function() {
     photos.forEach(function(p){
       var imgSrc = p.url || p.src;
       var div = document.createElement('div'); div.className = 'gallery-item';
-      var img = document.createElement('img'); img.src = imgSrc; img.alt = p.alt||'';
+      var img = document.createElement('img'); img.src = imgSrc; img.alt = p.alt||''; img.loading = 'lazy';
       div.appendChild(img); gg.appendChild(div);
     });
   }
@@ -2285,7 +2285,7 @@ fetchSiteContent(function() {
     var fname=lfSafeFileName(file);
     return fetch(LF_STORAGE_UPLOAD_URL+fname,{
       method:'POST',
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':file.type,'x-upsert':'true'},
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':file.type,'x-upsert':'true','cache-control':'max-age=31536000'},
       body:file
     }).then(function(r){ return r.json(); }).then(function(res){
       if(res && res.error) throw new Error(res.error.message||'Photo upload failed');
@@ -2431,7 +2431,7 @@ fetchSiteContent(function() {
       var card=document.createElement('div');
       card.className='sale-card'+(soldOut?' soldout':'');
       var photo = it.photo_url
-        ? '<img class="sale-photo" src="'+esc(it.photo_url)+'" alt="'+esc(it.title||'')+'" onclick="openSalePhotoLightbox(this)"/>'
+        ? '<img class="sale-photo" src="'+esc(it.photo_url)+'" alt="'+esc(it.title||'')+'" loading="lazy" onclick="openSalePhotoLightbox(this)"/>'
         : '<div class="sale-photo-placeholder">🥋</div>';
       var badge = soldOut
         ? '<span class="sale-badge soldout">Sold Out</span>'

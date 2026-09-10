@@ -759,7 +759,8 @@ function uploadFiles(files) {
         'apikey': SB_KEY,
         'Authorization': 'Bearer ' + SB_KEY,
         'Content-Type': file.type,
-        'x-upsert': 'true'
+        'x-upsert': 'true',
+        'cache-control': 'max-age=31536000'
       },
       body: file
     })
@@ -927,7 +928,7 @@ function uploadLostFoundAdminPhoto(file){
   var fname=lfAdminSafeFileName(file);
   return fetch(LF_STORAGE_UPLOAD_URL+fname,{
     method:'POST',
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true'},
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true','cache-control':'max-age=31536000'},
     body:file
   }).then(function(r){ return r.json(); }).then(function(res){
     if(res && res.error) throw new Error(res.error.message||'Photo upload failed');
@@ -1086,7 +1087,7 @@ function uploadSaleItemPhoto(file){
   var fname='sale-'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
   return fetch(STORAGE_UPLOAD_URL+fname,{
     method:'POST',
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true'},
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true','cache-control':'max-age=31536000'},
     body:file
   }).catch(function(networkErr){
     throw new Error('Photo upload request never reached the server ('+(networkErr&&networkErr.message?networkErr.message:'network error')+'). This usually means the storage bucket is missing, private, or blocking this request.');
