@@ -210,26 +210,35 @@ try{ if(localStorage.getItem('nma-theme')==='light') document.documentElement.se
    AUTH — shared PIN, separate from the admin panel's password.
    Change LUTHER_PW below any time to rotate the PIN.
    ══════════════════════════════════════════════════════ */
-var LUTHER_PW = 'Workshops2026';
-
+// The PIN is checked by the leads-db function (WORKSHOP_PIN in Netlify), not in this page.
+function leadsPin(){ return sessionStorage.getItem('nma_workshop_pin') || ''; }
 function tryLogin(){
-  if (document.getElementById('lockInput').value === LUTHER_PW){
+  var pin = document.getElementById('lockInput').value;
+  document.getElementById('lockErr').textContent='Checking…';
+  fetch('/.netlify/functions/leads-db',{method:'POST',headers:{'Content-Type':'application/json','X-Leads-Pin':pin},body:JSON.stringify({check:true})})
+  .then(function(r){
+    if (!r.ok) throw new Error(r.status===401?'Incorrect PIN.':'Could not sign in ('+r.status+').');
+    sessionStorage.setItem('nma_workshop_pin', pin);
     sessionStorage.setItem('nma_workshop_leads','1');
+    document.getElementById('lockErr').textContent='';
     document.getElementById('lockScreen').style.display='none';
     document.getElementById('app').style.display='block';
     loadLeads();
-  } else {
-    document.getElementById('lockErr').textContent='Incorrect PIN.';
+  })
+  .catch(function(e){
+    document.getElementById('lockErr').textContent=e.message;
     var i=document.getElementById('lockInput');
     i.value=''; i.classList.remove('shake'); void i.offsetWidth; i.classList.add('shake');
-  }
+  });
 }
 document.getElementById('lockBtn').addEventListener('click', tryLogin);
 document.getElementById('lockInput').addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
 document.getElementById('logoutBtn').addEventListener('click', function(){
   sessionStorage.removeItem('nma_workshop_leads');
+  sessionStorage.removeItem('nma_workshop_pin');
   location.reload();
 });
+if (sessionStorage.getItem('nma_workshop_leads')==='1' && !leadsPin()) sessionStorage.removeItem('nma_workshop_leads');
 if (sessionStorage.getItem('nma_workshop_leads')==='1'){
   document.getElementById('lockScreen').style.display='none';
   document.getElementById('app').style.display='block';
@@ -241,7 +250,22 @@ if (sessionStorage.getItem('nma_workshop_leads')==='1'){
    ══════════════════════════════════════════════════════ */
 var SUPABASE_URL = 'https://erqblpewozxkpornohvq.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycWJscGV3b3p4a3Bvcm5vaHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzUzMDMsImV4cCI6MjA5NTA1MTMwM30.Ot3sd3X3Fo9rtpAXUfTjrUlB_6Y-QcMuwotUIvdcr5o';
-var supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Calls keep the supabase-js style but run through the leads-db function (PIN-checked).
+function LeadsQuery(table){ this.steps=[{m:'from',a:[table]}]; this._p=null; }
+['select','insert','update','upsert','delete','eq','neq','gt','gte','lt','lte','in','is','order','limit','single','maybeSingle'].forEach(function(m){
+  LeadsQuery.prototype[m]=function(){ this.steps.push({m:m,a:Array.prototype.slice.call(arguments)}); return this; };
+});
+LeadsQuery.prototype.then=function(a,b){
+  if(!this._p){
+    var steps=this.steps;
+    this._p=fetch('/.netlify/functions/leads-db',{method:'POST',headers:{'Content-Type':'application/json','X-Leads-Pin':leadsPin()},body:JSON.stringify({steps:steps})})
+      .then(function(r){ return r.json().then(function(j){
+        if(r.status===401){ sessionStorage.removeItem('nma_workshop_leads'); sessionStorage.removeItem('nma_workshop_pin'); setTimeout(function(){location.reload();},1500); return {data:null,error:{message:'PIN changed — please sign in again'}}; }
+        return j; }); });
+  }
+  return this._p.then(a,b);
+};
+var supa = { from: function(t){ return new LeadsQuery(t); } };
 
 var STATUS_META = {
   'Not Contacted':      {color:'var(--muted)',  bg:'var(--surf2)'},

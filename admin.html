@@ -496,6 +496,38 @@ var SB_URL = 'https://erqblpewozxkpornohvq.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycWJscGV3b3p4a3Bvcm5vaHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzUzMDMsImV4cCI6MjA5NTA1MTMwM30.Ot3sd3X3Fo9rtpAXUfTjrUlB_6Y-QcMuwotUIvdcr5o';
 // The admin password is checked by the admin-absences function (ADMIN_PASSWORD in Netlify), not in this page.
 function adminPw(){ return sessionStorage.getItem('nma_admin_pw') || ''; }
+// Database/photo requests go through the admin-proxy function (password-checked there)
+// instead of straight to Supabase. Returns a normal Response so existing code is unchanged.
+function adminBlobToB64(blob){
+  function read(b){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ res({b64:String(fr.result).split(',')[1], type:b.type}); }; fr.onerror=rej; fr.readAsDataURL(b); }); }
+  if (!/^image\//.test(blob.type) || blob.size <= 3.5*1024*1024 || /gif/.test(blob.type)) return read(blob);
+  // Large phone photos: shrink so the upload stays under the server limit.
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(blob), img=new Image();
+    img.onload=function(){ var sc=Math.min(1,2400/Math.max(img.naturalWidth,img.naturalHeight)); var c=document.createElement('canvas'); c.width=Math.round(img.naturalWidth*sc); c.height=Math.round(img.naturalHeight*sc); c.getContext('2d').drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(url); c.toBlob(function(b){ read(b).then(res,rej); },'image/jpeg',0.85); };
+    img.onerror=function(){ URL.revokeObjectURL(url); read(blob).then(res,rej); };
+    img.src=url;
+  });
+}
+function adminFetch(url, init){
+  init = init || {};
+  var path = String(url).replace(SB_URL,'');
+  var h = init.headers || {}, keep = {};
+  ['Prefer','Content-Type','x-upsert','cache-control','Range','Accept'].forEach(function(k){ if (h[k]) keep[k]=h[k]; });
+  var bodyP = (init.body && typeof init.body !== 'string') ? adminBlobToB64(init.body).then(function(x){ keep['Content-Type']=x.type||keep['Content-Type']; return {bodyBase64:x.b64}; })
+    : Promise.resolve(init.body!=null ? {body:init.body} : {});
+  return bodyP.then(function(b){
+    return fetch('/.netlify/functions/admin-proxy',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Password':adminPw()},
+      body: JSON.stringify(Object.assign({path:path, method:init.method||'GET', headers:keep}, b))});
+  }).then(function(r){
+    return r.json().then(function(j){
+      if (r.status===401){ sessionStorage.removeItem('nma_admin'); sessionStorage.removeItem('nma_admin_pw'); }
+      var status = r.ok ? j.status : r.status;
+      var noBody = status===204||status===205||status===304;
+      return new Response(noBody ? null : (r.ok ? (j.body||'') : JSON.stringify({message:j.error||('HTTP '+r.status)})), {status:status, headers:{'Content-Type':'application/json','Content-Range':j.contentRange||''}});
+    });
+  });
+}
 function adminApi(op, extra){
   return fetch('/.netlify/functions/admin-absences', { method:'POST', headers:{'Content-Type':'application/json','X-Admin-Password':adminPw()}, body: JSON.stringify(Object.assign({op:op}, extra||{})) })
     .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error||('HTTP '+r.status)); return j; }); });
@@ -548,7 +580,7 @@ function setStatus(type,msg,ts){
 /* ── load from Supabase ── */
 function loadData(){
   setStatus('spin','Loading content from database…');
-  fetch(SB_URL+'/rest/v1/nma_site_content?id=eq.main&select=data,updated_at',{
+  adminFetch(SB_URL+'/rest/v1/nma_site_content?id=eq.main&select=data,updated_at',{
     headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
   })
   .then(function(r){return r.json();})
@@ -764,7 +796,7 @@ function uploadFiles(files) {
     var fill = item.querySelector('.upload-bar-fill');
     var status = item.querySelector('.up-status');
 
-    return fetch(STORAGE_UPLOAD_URL + fname, {
+    return adminFetch(STORAGE_UPLOAD_URL + fname, {
       method: 'POST',
       headers: {
         'apikey': SB_KEY,
@@ -875,7 +907,7 @@ document.getElementById('saveBtn').addEventListener('click',function(){
 
   var payload=collectData();
 
-  fetch(SB_URL+'/rest/v1/nma_site_content?id=eq.main',{
+  adminFetch(SB_URL+'/rest/v1/nma_site_content?id=eq.main',{
     method:'PATCH',
     headers:{
       'apikey':SB_KEY,
@@ -937,7 +969,7 @@ function lfAdminSafeFileName(file){ return Date.now()+'-'+file.name.replace(/[^a
 function uploadLostFoundAdminPhoto(file){
   if(!file) return Promise.resolve('');
   var fname=lfAdminSafeFileName(file);
-  return fetch(LF_STORAGE_UPLOAD_URL+fname,{
+  return adminFetch(LF_STORAGE_UPLOAD_URL+fname,{
     method:'POST',
     headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true','cache-control':'max-age=31536000'},
     body:file
@@ -950,7 +982,7 @@ function loadLostFoundAdmin(){
   var list=document.getElementById('lfAdminList');
   if(!list) return;
   list.innerHTML='<div class="lf-admin-empty">Loading Lost &amp; Found…</div>';
-  fetch(SB_URL+'/rest/v1/'+LF_TABLE+'?select=id,type,item,notes,photo_url,parent_name,contact,status,created_at,updated_at,resolution_requested_at,resolved_at&order=created_at.desc',{
+  adminFetch(SB_URL+'/rest/v1/'+LF_TABLE+'?select=id,type,item,notes,photo_url,parent_name,contact,status,created_at,updated_at,resolution_requested_at,resolved_at&order=created_at.desc',{
     headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
   })
   .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
@@ -1004,7 +1036,7 @@ function handleLostFoundAdminAction(id,act){
   if(!id||!act) return;
   if(act==='delete'){
     if(!confirm('Delete this Lost & Found post?')) return;
-    fetch(SB_URL+'/rest/v1/'+LF_TABLE+'?id=eq.'+encodeURIComponent(id),{
+    adminFetch(SB_URL+'/rest/v1/'+LF_TABLE+'?id=eq.'+encodeURIComponent(id),{
       method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'}
     }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); showToast('Deleted','ok'); loadLostFoundAdmin(); })
     .catch(function(){ showToast('Delete failed','err'); });
@@ -1013,7 +1045,7 @@ function handleLostFoundAdminAction(id,act){
   var payload={updated_at:new Date().toISOString()};
   if(act==='resolve') { payload.status='resolved'; payload.resolved_at=new Date().toISOString(); }
   if(act==='reopen')  { payload.status='open'; payload.resolved_at=null; payload.resolution_requested_at=null; }
-  fetch(SB_URL+'/rest/v1/'+LF_TABLE+'?id=eq.'+encodeURIComponent(id),{
+  adminFetch(SB_URL+'/rest/v1/'+LF_TABLE+'?id=eq.'+encodeURIComponent(id),{
     method:'PATCH',
     headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
     body:JSON.stringify(payload)
@@ -1033,7 +1065,7 @@ if(lfAdminPostBtn){
     lfAdminPostBtn.disabled=true; lfAdminPostBtn.textContent=file?'Uploading photo…':'Posting…';
     uploadLostFoundAdminPhoto(file).then(function(photoUrl){
       lfAdminPostBtn.textContent='Posting…';
-      return fetch(SB_URL+'/rest/v1/'+LF_TABLE,{
+      return adminFetch(SB_URL+'/rest/v1/'+LF_TABLE,{
         method:'POST',
         headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body:JSON.stringify({type:'found_at_class',item:item,notes:notes,photo_url:photoUrl,parent_name:'Sensei Brandon',contact:'',status:'open'})
@@ -1096,7 +1128,7 @@ if(saleVariantAddBtn)saleVariantAddBtn.addEventListener('click',function(){ addS
 function uploadSaleItemPhoto(file){
   if(!file) return Promise.resolve('');
   var fname='sale-'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-  return fetch(STORAGE_UPLOAD_URL+fname,{
+  return adminFetch(STORAGE_UPLOAD_URL+fname,{
     method:'POST',
     headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true','cache-control':'max-age=31536000'},
     body:file
@@ -1116,7 +1148,7 @@ function loadSaleItems(){
   var list=document.getElementById('saleItemList');
   if(!list) return;
   list.innerHTML='<div class="lf-admin-empty">Loading Sale Items…</div>';
-  fetch(SB_URL+'/rest/v1/'+SALE_TABLE+'?select=*&order=created_at.desc',{
+  adminFetch(SB_URL+'/rest/v1/'+SALE_TABLE+'?select=*&order=created_at.desc',{
     headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
   })
   .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
@@ -1170,14 +1202,14 @@ function handleSaleItemAction(id,act){
   if(!id||!act) return;
   if(act==='delete'){
     if(!confirm('Delete this sale item? This cannot be undone.')) return;
-    fetch(SB_URL+'/rest/v1/'+SALE_TABLE+'?id=eq.'+encodeURIComponent(id),{
+    adminFetch(SB_URL+'/rest/v1/'+SALE_TABLE+'?id=eq.'+encodeURIComponent(id),{
       method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'}
     }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); showToast('Deleted','ok'); loadSaleItems(); })
     .catch(function(){ showToast('Delete failed','err'); });
     return;
   }
   var payload={ updated_at:new Date().toISOString(), active: act==='activate' };
-  fetch(SB_URL+'/rest/v1/'+SALE_TABLE+'?id=eq.'+encodeURIComponent(id),{
+  adminFetch(SB_URL+'/rest/v1/'+SALE_TABLE+'?id=eq.'+encodeURIComponent(id),{
     method:'PATCH',
     headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
     body:JSON.stringify(payload)
@@ -1204,7 +1236,7 @@ if(saleItemPostBtn){
     saleItemPostBtn.disabled=true; saleItemPostBtn.textContent=file?'Uploading photo…':'Posting…';
     uploadSaleItemPhoto(file).then(function(photoUrl){
       saleItemPostBtn.textContent='Posting…';
-      return fetch(SB_URL+'/rest/v1/'+SALE_TABLE,{
+      return adminFetch(SB_URL+'/rest/v1/'+SALE_TABLE,{
         method:'POST',
         headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body:JSON.stringify({ title:title, description:desc, photo_url:photoUrl, price:price, category:category, quantity:totalQty, reserved:0, active:true, variants:variants })
@@ -1399,7 +1431,7 @@ var _availFilter = 'upcoming';
 function loadAvailability() {
   document.getElementById('availAdminList').innerHTML = '<div class="avail-empty">Loading…</div>';
   var today = new Date().toISOString().slice(0,10);
-  fetch(PL_URL + '?date=gte.' + today + '&order=date.asc,start_time.asc', {
+  adminFetch(PL_URL + '?date=gte.' + today + '&order=date.asc,start_time.asc', {
     headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
   })
   .then(function(r){ return r.json(); })
@@ -1494,7 +1526,7 @@ function addAvailabilitySlot() {
     });
   }
 
-  fetch(PL_URL, {
+  adminFetch(PL_URL, {
     method:'POST',
     headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
     body: JSON.stringify(rows)
@@ -1512,7 +1544,7 @@ function addAvailabilitySlot() {
 
 function deleteAvailabilitySlot(id) {
   if (!confirm('Remove this slot?')) return;
-  fetch(PL_URL + '?id=eq.' + id, {
+  adminFetch(PL_URL + '?id=eq.' + id, {
     method:'DELETE',
     headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Prefer':'return=minimal' }
   })

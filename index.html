@@ -2281,16 +2281,23 @@ fetchSiteContent(function() {
     return 'Lost & Found';
   }
   function lfSafeFileName(file){ return Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); }
+  // Photos upload through the public-api function (images only, shrunk to fit).
+  function lfFileToB64(file){
+    function read(b){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ res({data:String(fr.result).split(',')[1],type:b.type}); }; fr.onerror=rej; fr.readAsDataURL(b); }); }
+    return new Promise(function(res){
+      var url=URL.createObjectURL(file), img=new Image();
+      img.onload=function(){ var sc=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)); var c=document.createElement('canvas'); c.width=Math.round(img.naturalWidth*sc); c.height=Math.round(img.naturalHeight*sc); c.getContext('2d').drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(url); c.toBlob(function(b){ read(b).then(res); },'image/jpeg',0.85); };
+      img.onerror=function(){ URL.revokeObjectURL(url); read(file).then(res); };
+      img.src=url;
+    });
+  }
   function uploadLostFoundPhoto(file){
     if(!file) return Promise.resolve('');
-    var fname=lfSafeFileName(file);
-    return fetch(LF_STORAGE_UPLOAD_URL+fname,{
-      method:'POST',
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':file.type,'x-upsert':'true','cache-control':'max-age=31536000'},
-      body:file
+    return lfFileToB64(file).then(function(x){
+      return fetch('/.netlify/functions/public-api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:'lf-upload',filename:file.name.replace(/\.[^.]+$/,'')+'.jpg',contentType:x.type||'image/jpeg',data:x.data})});
     }).then(function(r){ return r.json(); }).then(function(res){
-      if(res && res.error) throw new Error(res.error.message||'Photo upload failed');
-      return LF_STORAGE_URL+fname;
+      if(!res || !res.url) throw new Error((res&&res.error)||'Photo upload failed');
+      return res.url;
     });
   }
   function setLfLoading(msg){
@@ -2301,9 +2308,7 @@ fetchSiteContent(function() {
   }
   function loadLostFound(){
     if(!document.getElementById('tab-lostfound')) return;
-    fetch(SUPABASE_URL+'/rest/v1/'+LF_TABLE+'?select=id,type,item,notes,photo_url,parent_name,status,created_at&status=neq.resolved&order=created_at.desc',{
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-    })
+    fetch('/.netlify/functions/public-api?op=lf-list')
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
     .then(renderLostFound)
     .catch(function(){ setLfLoading('Could not load Lost & Found items right now.'); });
@@ -2340,11 +2345,7 @@ fetchSiteContent(function() {
   function flagLostFoundResolved(id,btn){
     if(!id) return;
     btn.disabled=true; btn.textContent='Sending to Sensei Brandon…';
-    fetch(SUPABASE_URL+'/rest/v1/'+LF_TABLE+'?id=eq.'+encodeURIComponent(id),{
-      method:'PATCH',
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({status:'pending_resolution',resolution_requested_at:new Date().toISOString(),updated_at:new Date().toISOString()})
-    }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); loadLostFound(); })
+    fetch('/.netlify/functions/public-api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:'lf-flag',id:id})}).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); loadLostFound(); })
     .catch(function(){ btn.disabled=false; btn.textContent='This has been resolved'; alert('Could not flag this item. Please try again or text Sensei Brandon.'); });
   }
   var lfSubmitBtn=document.getElementById('lfSubmitBtn');
