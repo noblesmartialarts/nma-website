@@ -543,9 +543,7 @@ function renderTimeList() {
 /* ── STEP 5: booking details form (dynamic based on relationship + service) ── */
 var _roster = [];
 function loadRosterForBooking() {
-  fetch(SB_URL + '/rest/v1/crm_data?id=eq.main&select=data', {
-    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
-  })
+  fetch('/.netlify/functions/roster')
   .then(function(r){ return r.json(); })
   .then(function(rows){
     if (rows && rows[0] && rows[0].data && rows[0].data.students) {

@@ -2534,9 +2534,7 @@ fetchSiteContent(function() {
   var _saleRoster = [];
   var _saleSelectedStudent = null;
 
-  fetch(SUPABASE_URL + '/rest/v1/crm_data?id=eq.main&select=data', {
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-  })
+  fetch('/.netlify/functions/roster')
   .then(function(r){ return r.json(); })
   .then(function(rows) {
     if (rows && rows[0] && rows[0].data && rows[0].data.students) {
@@ -2742,9 +2740,7 @@ fetchSiteContent(function() {
 
   /* ── Load roster from Supabase crm_data once ── */
   function loadRoster() {
-    fetch(SUPABASE_URL + '/rest/v1/crm_data?id=eq.main&select=data', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    })
+    fetch('/.netlify/functions/roster')
     .then(function(r){ return r.json(); })
     .then(function(rows) {
       if (rows && rows[0] && rows[0].data && rows[0].data.students) {

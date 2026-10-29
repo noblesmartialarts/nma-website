@@ -51,13 +51,6 @@ async function handleAbsence(body, KEY) {
     return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing required fields' }) };
   }
 
-  const fetchRes = await supaFetch('GET', '/rest/v1/crm_data?id=eq.main&select=data', null, KEY);
-  const rows = await fetchRes.json();
-  if (!rows || !rows[0]) throw new Error('CRM data not found');
-
-  const DB = rows[0].data;
-  if (!DB.pendingAbsences) DB.pendingAbsences = [];
-
   const now = new Date().toISOString();
   const newRequests = dates.map(function(d) {
     return {
@@ -67,10 +60,22 @@ async function handleAbsence(body, KEY) {
       reason: reason || '', submittedAt: now, status: 'pending'
     };
   });
-  DB.pendingAbsences = DB.pendingAbsences.concat(newRequests);
-
-  const writeRes = await supaFetch('PATCH', '/rest/v1/crm_data?id=eq.main', { data: DB }, KEY, 'return=minimal');
-  if (!writeRes.ok) throw new Error('Write failed: ' + writeRes.status);
+  // Read → append → write with an optimistic lock so a CRM save in between isn't overwritten.
+  let written = false;
+  for (let attempt = 0; attempt < 4 && !written; attempt++) {
+    const fetchRes = await supaFetch('GET', '/rest/v1/crm_data?id=eq.main&select=data,updated_at', null, KEY);
+    const rows = await fetchRes.json();
+    if (!rows || !rows[0]) throw new Error('CRM data not found');
+    const DB = rows[0].data;
+    if (!DB.pendingAbsences) DB.pendingAbsences = [];
+    DB.pendingAbsences = DB.pendingAbsences.concat(newRequests);
+    DB._writer = 'website-absence';
+    const writeRes = await supaFetch('PATCH', '/rest/v1/crm_data?id=eq.main&updated_at=eq.' + encodeURIComponent(rows[0].updated_at), { data: DB }, KEY, 'return=representation');
+    if (!writeRes.ok) throw new Error('Write failed: ' + writeRes.status);
+    const out = await writeRes.json();
+    written = Array.isArray(out) && out.length > 0;
+  }
+  if (!written) throw new Error('CRM was busy saving — please try again');
 
   return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ success: true }) };
 }

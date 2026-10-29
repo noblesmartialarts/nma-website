@@ -494,7 +494,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webk
 <script>
 var SB_URL = 'https://erqblpewozxkpornohvq.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycWJscGV3b3p4a3Bvcm5vaHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzUzMDMsImV4cCI6MjA5NTA1MTMwM30.Ot3sd3X3Fo9rtpAXUfTjrUlB_6Y-QcMuwotUIvdcr5o';
-var ADMIN_PW = 'Noble2026';
+// The admin password is checked by the admin-absences function (ADMIN_PASSWORD in Netlify), not in this page.
+function adminPw(){ return sessionStorage.getItem('nma_admin_pw') || ''; }
+function adminApi(op, extra){
+  return fetch('/.netlify/functions/admin-absences', { method:'POST', headers:{'Content-Type':'application/json','X-Admin-Password':adminPw()}, body: JSON.stringify(Object.assign({op:op}, extra||{})) })
+    .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error||('HTTP '+r.status)); return j; }); });
+}
 
 var data = {};        // current content from Supabase
 var testimonials = [];
@@ -504,21 +509,27 @@ var lostFoundItems = [];
 
 /* ── lock ── */
 function tryLogin() {
-  if (document.getElementById('lockInput').value === ADMIN_PW) {
+  var pw = document.getElementById('lockInput').value;
+  document.getElementById('lockErr').textContent='Checking…';
+  sessionStorage.setItem('nma_admin_pw', pw);
+  adminApi('check').then(function(){
     sessionStorage.setItem('nma_admin','1');
+    document.getElementById('lockErr').textContent='';
     document.getElementById('lockScreen').style.display='none';
     document.getElementById('app').style.display='block';
     document.getElementById('saveBar').style.display='flex';
     loadData();
-  } else {
-    document.getElementById('lockErr').textContent='Incorrect password.';
+  }).catch(function(e){
+    sessionStorage.removeItem('nma_admin_pw');
+    document.getElementById('lockErr').textContent = /password/i.test(e.message) ? 'Incorrect password.' : ('Could not sign in: '+e.message);
     var i=document.getElementById('lockInput');
     i.value=''; i.classList.remove('shake'); void i.offsetWidth; i.classList.add('shake');
-  }
+  });
 }
 document.getElementById('lockBtn').addEventListener('click',tryLogin);
 document.getElementById('lockInput').addEventListener('keydown',function(e){if(e.key==='Enter')tryLogin();});
-document.getElementById('logoutBtn').addEventListener('click',function(){sessionStorage.removeItem('nma_admin');location.reload();});
+document.getElementById('logoutBtn').addEventListener('click',function(){sessionStorage.removeItem('nma_admin');sessionStorage.removeItem('nma_admin_pw');location.reload();});
+if(sessionStorage.getItem('nma_admin')==='1'&&!adminPw()){sessionStorage.removeItem('nma_admin');} // signed in before the password moved server-side
 if(sessionStorage.getItem('nma_admin')==='1'){
   document.getElementById('lockScreen').style.display='none';
   document.getElementById('app').style.display='block';
@@ -1239,14 +1250,9 @@ var _absFilter = 'pending';
 
 function loadAbsenceRequests() {
   document.getElementById('absAdminList').innerHTML = '<div class="abs-empty">Loading…</div>';
-  fetch(CRM_URL + '&select=data', {
-    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY }
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(rows){
-    if (!rows || !rows[0]) throw new Error('No CRM data found');
-    _crmDB = rows[0].data;
-    if (!_crmDB.pendingAbsences) _crmDB.pendingAbsences = [];
+  adminApi('list')
+  .then(function(res){
+    _crmDB = { pendingAbsences: res.pendingAbsences || [], students: res.students || [], attendance: res.attendance || {} };
     renderAbsenceList();
   })
   .catch(function(e){
@@ -1254,17 +1260,11 @@ function loadAbsenceRequests() {
   });
 }
 
-function saveCrmDB(onDone) {
-  fetch(SB_URL+'/rest/v1/crm_data?id=eq.main', {
-    method:'PATCH',
-    headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
-    body: JSON.stringify({ data: _crmDB })
-  })
-  .then(function(r){
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    if (onDone) onDone();
-  })
-  .catch(function(e){ showToast('Save failed: '+e.message,'err'); });
+// Changes are applied server-side (admin-absences) so CRM saves in between are never overwritten.
+function absAction(op, id, onDone) {
+  adminApi(op, { id: id })
+  .then(function(res){ if (onDone) onDone(res); loadAbsenceRequests(); })
+  .catch(function(e){ showToast((op==='confirm'?'⚠ ':'')+'Save failed: '+e.message,'err'); });
 }
 
 function normName(n){ return (n||'').toLowerCase().replace(/[^a-z]/g,''); }
@@ -1358,25 +1358,8 @@ function adminConfirmAbsence(reqId) {
   if (!req) return;
   var student = findStudentMatch(req.studentName);
   if (!student) { showToast('⚠ No roster match — cannot confirm','err'); return; }
-
-  // Mark absent in attendance
-  if (!_crmDB.attendance) _crmDB.attendance = {};
-  if (!_crmDB.attendance[req.date]) _crmDB.attendance[req.date] = {};
-  _crmDB.attendance[req.date][student.id] = 'absent';
-
-  // Log to student history
-  if (!student.history) student.history = [];
-  student.history.push({
-    type:'note',
-    date: new Date().toISOString().slice(0,10),
-    note: 'Parent-reported absence for '+req.date+(req.reason?': "'+req.reason+'"':'')+'. Confirmed via admin panel.'
-  });
-
-  req.status = 'confirmed';
-
-  saveCrmDB(function(){
+  absAction('confirm', reqId, function(){
     showToast('✓ '+student.first+' '+student.last+' marked absent on '+req.date,'ok');
-    renderAbsenceList();
   });
 }
 
@@ -1384,27 +1367,15 @@ function adminDismissAbsence(reqId) {
   if (!_crmDB) return;
   var req = _crmDB.pendingAbsences.find(function(r){ return r.id===reqId; });
   if (!req) return;
-  req.status = 'dismissed';
-  saveCrmDB(function(){
-    showToast('Absence request dismissed','ok');
-    renderAbsenceList();
-  });
+  absAction('dismiss', reqId, function(){ showToast('Absence request dismissed','ok'); });
 }
 
 // Clean up confirmed/dismissed older than 30 days
 document.getElementById('absCleanBtn').addEventListener('click', function(){
   if (!_crmDB || !_crmDB.pendingAbsences) return;
-  var cutoff = new Date(Date.now() - 30*24*60*60*1000).toISOString();
-  var before = _crmDB.pendingAbsences.length;
-  _crmDB.pendingAbsences = _crmDB.pendingAbsences.filter(function(r){
-    if (r.status === 'pending') return true;
-    return (r.submittedAt||'') > cutoff;
-  });
-  var removed = before - _crmDB.pendingAbsences.length;
-  if (!removed) { showToast('Nothing to clean up yet','ok'); return; }
-  saveCrmDB(function(){
-    showToast('Removed '+removed+' resolved request'+(removed!==1?'s':'')+' older than 30 days','ok');
-    renderAbsenceList();
+  absAction('cleanup', null, function(res){
+    var removed = (res && res.removed) || 0;
+    showToast(removed ? 'Removed '+removed+' resolved request'+(removed!==1?'s':'')+' older than 30 days' : 'Nothing to clean up yet','ok');
   });
 });
 
