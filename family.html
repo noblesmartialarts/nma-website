@@ -190,12 +190,12 @@ function load(){
 }
 var sessWasSet=false;
 function render(){
-  var v=state.view;$('h-out').style.display='';
+  var v=state.view;$('h-out').style.display=state.preview?'none':'';
   if(!v.families.length){$('app').innerHTML='<div class="card" style="margin-top:24px"><h2>Almost there</h2><p class="muted">Your access is set up, but your family’s page isn’t ready yet. Please check back soon or contact Sensei Brandon.</p></div>';return;}
   var f=v.families[0];
   $('h-title').textContent=(f.family&&f.family.name?f.family.name+' Family':'Family Portal');
-  $('h-sub').textContent='Signed in as '+v.email;
-  var h='';
+  $('h-sub').textContent=state.preview?'Preview from the CRM':'Signed in as '+v.email;
+  var h=state.preview?'<div class="note" style="margin-top:14px;border:1px dashed var(--bright)"><b>👁 Preview</b> — this is exactly what this family sees. Buttons won’t send anything.</div>':'';
   v.families.forEach(function(fam){
     var sc=fam.school||{};
     if(v.families.length>1)h+='<div class="hero" style="padding:20px 0 0"><h1 style="font-size:2rem">'+esc(fam.family.name)+' Family</h1></div>';
@@ -250,7 +250,8 @@ function kidCard(s,fam){
     h+='<details style="margin-top:6px"><summary>See dates</summary><div class="att">'+a.days.map(function(x){return '<span class="'+(x.status==='present'?'p':'a')+'">'+(x.status==='present'?'✓ ':'✗ ')+fmt(x.date,{month:'short',day:'numeric'})+'</span>';}).join('')+'</div></details>';
   }
   h+='</div></div>';
-  if(s.regLink)h+='<div class="row"><div class="ic">📝</div><div class="bd"><b>Registration</b><a class="small" href="'+esc(s.regLink)+'" target="_blank" rel="noopener">Register for '+esc(s.group)+' on RecDesk →</a></div></div>';
+  (s.orders||[]).forEach(function(o){h+='<div class="row"><div class="ic">\ud83d\uded2</div><div class="bd"><b>'+esc(o.label)+'</b><span class="muted small">'+esc(o.why||'')+'</span><a class="small" style="display:block;margin-top:4px;font-weight:700" href="'+esc(o.url)+'" target="_blank" rel="noopener">Order now \u2192</a></div></div>';});
+  if(s.regLink)h+='<div class="row"><div class="ic">\ud83d\udcdd</div><div class="bd"><b>Register for next month</b><span class="muted small">Keep '+esc(s.first)+'\u2019s spot in '+esc(s.group)+'.</span><a class="small" style="display:block;margin-top:4px;font-weight:700" href="'+esc(s.regLink)+'" target="_blank" rel="noopener">Register on RecDesk \u2192</a></div></div>';
   return h+'</section>';
 }
 function balanceCard(fam){
@@ -263,21 +264,73 @@ function balanceCard(fam){
   return h+'</section>';
 }
 function scheduleCard(fam){
-  var sc=fam.school||{};var h='';
-  if((sc.schedule||[]).length||(sc.events||[]).length||sc.challenge){
-    h+='<section class="card"><h2>Schedule</h2>';
-    (sc.schedule||[]).forEach(function(c){h+='<div class="money"><span>'+esc(c.group)+'</span><span class="muted">'+esc(c.day)+'s '+time12(c.time)+'</span></div>';});
-    if((sc.events||[]).length){h+='<div class="small muted" style="margin-top:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Coming up</div>';
-      sc.events.forEach(function(e){h+='<div class="money"><span>'+esc(e.name)+'</span><span class="muted">'+fmt(e.date)+'</span></div>';});}
-    if(sc.challenge)h+='<div class="note" style="margin-top:12px"><b>🏆 Challenge of the month:</b> '+esc(sc.challenge)+'</div>';
-    h+='</section>';
-  }
-  return h;
+  var sc=fam.school||{};var h='<section class="card" id="sched"><h2>Classes</h2>';
+  (sc.schedule||[]).forEach(function(c){h+='<div class="money"><span>'+esc(c.group)+'</span><span class="muted">'+time12(c.time)+(c.dur?' · '+c.dur+' min':'')+'</span></div>';});
+  var next=(sc.classDates||[]).slice(0,6);
+  if(next.length){h+='<div class="small muted" style="margin-top:14px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Upcoming class days</div>';
+    next.forEach(function(c){var out=(fam.absences||[]).filter(function(a){return a.date===c.date;}).map(function(a){return a.first;});
+      h+='<div class="money"><span>'+fmt(c.date,{weekday:'long',month:'short',day:'numeric'})+(c.note?' <span class="muted small">· '+esc(c.note)+'</span>':'')+'</span>'+(out.length?'<span class="pill a">'+esc(out.join(', '))+' out</span>':'')+'</div>';});}
+  if((sc.events||[]).length){h+='<div class="small muted" style="margin-top:14px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Tests &amp; events</div>';
+    sc.events.forEach(function(e){h+='<div class="money"><span>'+esc(e.name)+'</span><span class="muted">'+fmt(e.date)+'</span></div>';});}
+  if(fam.students.length&&(sc.classDates||[]).length)h+='<button class="btn sec" style="margin-top:14px" onclick="openAbsence(\''+esc(fam.familyId)+'\')">📅 Let us know about an absence</button>';
+  if(sc.challenge)h+='<div class="note" style="margin-top:12px"><b>🏆 Challenge of the month:</b> '+esc(sc.challenge)+'</div>';
+  return h+'</section>';
 }
 function contactCard(fam){
-  var g=(fam.guardians||[])[0];if(!g)return'';
+  var g=(fam.guardians||[])[0];if(!g&&!state.preview)return'';g=g||{name:'',email:'',phone:''};
+  var p=fam.contactPending;
   return '<section class="card"><h2>Your contact info</h2><div class="small"><div>'+esc(g.name||'—')+'</div><div>'+esc(g.email)+'</div><div>'+esc(g.phone||'No phone on file')+'</div></div>'+
-    '<p class="muted small" style="margin-top:8px">Something out of date? <a href="mailto:noblesmartialarts@gmail.com?subject='+encodeURIComponent('Contact update — '+(fam.family&&fam.family.name||'')+' family')+'">Email Sensei Brandon</a>.</p></section>';
+    (p?'<div class="note" style="margin-top:10px"><b>Update sent</b> — waiting for Sensei Brandon to approve:<div class="small" style="margin-top:4px">'+esc(p.name)+' · '+esc(p.email)+' · '+esc(p.phone||'no phone')+'</div></div>':'')+
+    '<button class="btn sec" style="margin-top:12px" onclick="openContact(\''+esc(fam.familyId)+'\')">'+(p?'Change my update':'Update my info')+'</button></section>';
+}
+function famById(id){var out=null;(state.view.families||[]).forEach(function(f){if(String(f.familyId)===String(id))out=f;});return out||state.view.families[0];}
+function previewBlock(){if(state.preview){alert('This is a preview — parents can send this from their own portal.');return true;}return false;}
+
+// ── Absence notice ──
+function openAbsence(fid){
+  var fam=famById(fid);state.form={kind:'absence',kids:fam.students.length===1?[String(fam.students[0].id)]:[],dates:[]};
+  var h='<div style="padding-top:14px"><button class="ghost" onclick="render()">← Back</button></div><section class="card"><h2>Absence notice</h2><p class="small muted">Let Sensei Brandon know ahead of time. Thank you!</p>';
+  h+='<label class="f">Who will be out?</label><div class="chips">'+fam.students.map(function(s){return '<button type="button" id="ak-'+esc(s.id)+'" class="'+(state.form.kids.indexOf(String(s.id))>=0?'on':'')+'" onclick="absKid(\''+esc(s.id)+'\')">'+esc(s.first)+'</button>';}).join('')+'</div>';
+  h+='<label class="f">Which class days?</label><div class="chips">'+((fam.school||{}).classDates||[]).slice(0,12).map(function(c,i){return '<button type="button" id="ad-'+i+'" onclick="absDate('+i+',\''+c.date+'\')">'+fmt(c.date,{weekday:'short',month:'short',day:'numeric'})+'</button>';}).join('')+'</div>';
+  h+='<label class="f" for="ar">Reason <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="ar" maxlength="500" style="min-height:64px" placeholder="Vacation, sick, appointment…"></textarea>';
+  h+='<div id="f-err"></div><button class="btn" id="f-btn" style="margin-top:16px" onclick="submitAbsence()">Send absence notice</button></section>';
+  $('app').innerHTML=h;window.scrollTo(0,0);
+}
+function absKid(id){var a=state.form.kids;var i=a.indexOf(String(id));if(i>=0)a.splice(i,1);else a.push(String(id));$('ak-'+id).className=i>=0?'':'on';}
+function absDate(i,d){var a=state.form.dates;var j=a.indexOf(d);if(j>=0)a.splice(j,1);else a.push(d);$('ad-'+i).className=j>=0?'':'on';}
+function submitAbsence(){
+  var f=state.form;var err=function(m){$('f-err').innerHTML='<div class="err">'+esc(m)+'</div>';};
+  if(!f.kids.length)return err('Choose who will be out.');if(!f.dates.length)return err('Choose at least one class day.');
+  if(previewBlock())return;
+  $('f-btn').disabled=true;$('f-btn').textContent='Sending…';
+  api('submit-absence',{studentIds:f.kids,dates:f.dates,reason:$('ar').value}).then(function(j){
+    if(j.ok){return load().then(function(){var el=$('sched');if(el){el.scrollIntoView({block:'start'});el.insertAdjacentHTML('afterbegin','<div class="ok" style="margin:0 0 12px">Thanks — Sensei Brandon has your absence notice.</div>');}});}
+    if(j._status===401)return signOut();
+    $('f-btn').disabled=false;$('f-btn').textContent='Send absence notice';err(j.error||'Couldn’t send. Please try again.');
+  });
+}
+
+// ── Contact update ──
+function openContact(fid){
+  var fam=famById(fid);var g=fam.contactPending||(fam.guardians||[])[0]||{};
+  var h='<div style="padding-top:14px"><button class="ghost" onclick="render()">← Back</button></div><section class="card"><h2>Update my info</h2><p class="small muted">Sensei Brandon will review the change before it’s saved. If you change your email, you’ll use the new one to sign in.</p>';
+  h+='<label class="f" for="cn">Name</label><input id="cn" autocomplete="name" value="'+esc(g.name||'')+'"/>';
+  h+='<label class="f" for="ce">Email</label><input id="ce" type="email" autocomplete="email" value="'+esc(g.email||'')+'"/>';
+  h+='<label class="f" for="cp">Mobile phone</label><input id="cp" type="tel" autocomplete="tel" value="'+esc(g.phone||'')+'"/>';
+  h+='<div id="f-err"></div><button class="btn" id="f-btn" style="margin-top:16px" onclick="submitContact()">Send for approval</button></section>';
+  $('app').innerHTML=h;window.scrollTo(0,0);
+}
+function submitContact(){
+  var err=function(m){$('f-err').innerHTML='<div class="err">'+esc(m)+'</div>';};
+  var b={name:$('cn').value.trim(),email:$('ce').value.trim(),phone:$('cp').value.trim()};
+  if(!b.name)return err('Please enter your name.');if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email))return err('Please enter a valid email.');
+  if(previewBlock())return;
+  $('f-btn').disabled=true;$('f-btn').textContent='Sending…';
+  api('submit-contact',b).then(function(j){
+    if(j.ok)return load();
+    if(j._status===401)return signOut();
+    $('f-btn').disabled=false;$('f-btn').textContent='Send for approval';err(j.error||'Couldn’t send. Please try again.');
+  });
 }
 
 // ── Intent to Promote letter ──
@@ -318,6 +371,7 @@ function submitIntent(){
     if(!body.affirm)return err('Please check the affirmation box.');if(!body.studentSigned)return err('Please have your student type their name.');}
   else{var missing=ITEMS.filter(function(x){return !f.answers[x[0]];});if(missing.length)return err('Please answer all 10 questions ('+missing.length+' left).');}
   if(!body.signedBy)return err('Please type your name to sign.');
+  if(previewBlock())return;
   $('f-btn').disabled=true;$('f-btn').textContent='Sending…';
   api('submit-intent',body).then(function(j){
     if(j.ok){
@@ -332,6 +386,17 @@ function submitIntent(){
 
 // ── Start ──
 (function(){
+  if(location.hash==='#preview'&&window.opener){
+    state.preview=true;$('app').innerHTML='<div class="spin"></div><p class="center muted small">Loading preview…</p>';
+    window.addEventListener('message',function(e){
+      if(e.source!==window.opener||!e.data||e.data.type!=='nma-portal-preview')return;
+      var d=e.data.data||{};
+      if(d.error||!d.families){$('app').innerHTML='<div class="card"><div class="err">'+esc(d.error||'No preview data.')+'</div></div>';return;}
+      state.view=d;render();
+    });
+    window.opener.postMessage({type:'nma-portal-preview-ready'},'*');
+    return;
+  }
   var m=(location.hash||'').match(/link=([A-Za-z0-9_-]+)/);
   if(m){
     history.replaceState(null,'',location.pathname);
