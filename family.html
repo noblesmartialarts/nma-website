@@ -88,6 +88,16 @@ details summary::-webkit-details-marker{display:none}
 .check input{width:22px;height:22px;flex:0 0 auto;margin-top:1px}
 .code{letter-spacing:.5em;text-align:center;font-size:1.5rem;font-weight:800}
 .center{text-align:center}
+.pay{display:flex;align-items:center;gap:12px;width:100%;border-radius:12px;padding:12px 14px;margin-top:8px;border:1px solid var(--border2);background:var(--surf2);color:var(--text);text-decoration:none;font:600 .95rem 'Inter',sans-serif;cursor:pointer;text-align:left}
+.pay .lg{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:.95rem;flex:0 0 auto}
+.pay small{display:block;color:var(--muted);font-weight:500;font-size:.78rem}
+.pay .go{margin-left:auto;color:var(--muted)}
+.gj{border-left:3px solid var(--bright);background:var(--soft);border-radius:0 10px 10px 0;padding:10px 12px;margin-top:8px;font-size:.9rem}
+.gj .by{color:var(--muted);font-size:.78rem;margin-top:4px}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.res a{display:flex;flex-direction:column;gap:2px;border:1px solid var(--border2);background:var(--surf2);border-radius:12px;padding:12px;text-decoration:none;color:var(--text);font-weight:700;font-size:.88rem}
+.res a span{font-size:1.3rem}
+.res a small{color:var(--muted);font-weight:500;font-size:.75rem}
 .spin{width:28px;height:28px;border:3px solid var(--border2);border-top-color:var(--bright);border-radius:50%;animation:s 0.8s linear infinite;margin:60px auto}
 @keyframes s{to{transform:rotate(360deg)}}
 a{color:var(--bright)}
@@ -204,6 +214,7 @@ function render(){
     fam.students.forEach(function(s){h+=kidCard(s,fam);});
     h+=balanceCard(fam);
     h+=scheduleCard(fam);
+    h+=resourcesCard(fam);
     h+=contactCard(fam);
     h+='<p class="muted small center" style="margin-top:6px">Updated '+new Date(fam.updatedAt||fam.generatedAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</p>';
   });
@@ -241,6 +252,14 @@ function kidCard(s,fam){
     c.items.forEach(function(x){h+='<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>';});
     h+='</dl>'+(c.videos?'<a class="small" style="display:inline-block;margin-top:8px;font-weight:700" href="'+esc(c.videos)+'" target="_blank" rel="noopener">▶ Practice videos</a>':'')+'</div></div>';
   }
+  // Notes from Sensei (Good Job notes)
+  if((s.notes||[]).length){
+    var n0=s.notes[0];
+    h+='<div class="row"><div class="ic">⭐</div><div class="bd"><b>Notes from Sensei</b>'+
+      '<div class="gj">“'+esc(n0.message)+'”<div class="by">— '+esc(n0.from)+' · '+fmt(n0.date,{month:'short',day:'numeric',year:'numeric'})+'</div></div>'+
+      (s.notes.length>1?'<details style="margin-top:6px"><summary>'+(s.notes.length-1)+' more</summary>'+s.notes.slice(1).map(function(n){return '<div class="gj">“'+esc(n.message)+'”<div class="by">— '+esc(n.from)+' · '+fmt(n.date,{month:'short',day:'numeric',year:'numeric'})+'</div></div>';}).join('')+'</details>':'')+
+      '</div></div>';
+  }
   // Attendance
   var a=s.attendance||{days:[]};
   h+='<div class="row"><div class="ic">📅</div><div class="bd"><b>Attendance</b>';
@@ -255,13 +274,33 @@ function kidCard(s,fam){
   return h+'</section>';
 }
 function balanceCard(fam){
-  var b=fam.balance||{items:[],total:0};var pay=(fam.school||{}).payInfo||'';
-  var h='<section class="card"><h2>Balance</h2>';
+  var b=fam.balance||{items:[],total:0};var sc=fam.school||{};var pay=sc.pay||{};
+  var h='<section class="card" id="balance"><h2>Balance</h2>';
   if(!b.items.length)return h+'<p class="muted">You’re all paid up. Thank you!</p></section>';
   b.items.forEach(function(i){h+='<div class="money"><span>'+esc(i.label)+(i.date?' <span class="muted small">· '+fmt(i.date,{month:'short',day:'numeric'})+'</span>':'')+'</span><b>'+money(i.amount)+'</b></div>';});
   h+='<div class="money" style="font-size:1.05rem"><b>Total due</b><b>'+money(b.total)+'</b></div>';
-  if(pay)h+='<div class="note" style="margin-top:10px"><b>How to pay:</b> '+esc(pay)+'<div class="small muted" style="margin-top:4px">Please include your student’s name. Payments can take a day or two to show here.</div></div>';
+  var amt=(+b.total||0).toFixed(2);
+  var fs=(fam.students||[]).map(function(s){return s.first;});var who=(fs.length>1?fs.slice(0,-1).join(', ')+' & '+fs[fs.length-1]:(fs[0]||''))+' '+((fam.students[0]||{}).last||'');
+  var memo=('NMA - '+who.trim()+' - '+b.items.map(function(i){return i.label.split(' — ')[0];}).join(', ')).slice(0,140);
+  if(pay.venmo)h+='<a class="pay" target="_blank" rel="noopener" href="https://account.venmo.com/payment-link?audience=private&amount='+amt+'&note='+encodeURIComponent(memo)+'&recipients=%2C'+encodeURIComponent(pay.venmo)+'&txn=pay"><span class="lg" style="background:#008cff">V</span><span>Pay '+money(b.total)+' with Venmo<small>@'+esc(pay.venmo)+' · amount and note filled in</small></span><span class="go">→</span></a>';
+  if(pay.zelle)h+='<button type="button" class="pay" onclick="copyZelle(this,\''+esc(pay.zelle)+'\')"><span class="lg" style="background:#6d1ed4">Z</span><span>Pay with Zelle<small>Send '+money(b.total)+' to <b>'+esc(pay.zelle)+'</b> from your bank app · tap to copy</small></span></button>';
+  if(pay.paypal)h+='<a class="pay" target="_blank" rel="noopener" href="https://paypal.me/'+encodeURIComponent(pay.paypal)+'/'+amt+'USD"><span class="lg" style="background:#003087">P</span><span>Pay '+money(b.total)+' with PayPal<small>paypal.me/'+esc(pay.paypal)+'</small></span><span class="go">→</span></a>';
+  h+='<div class="small muted" style="margin-top:10px">Please include <b>'+esc(who.trim())+'</b> in the note. '+(sc.payInfo?esc(sc.payInfo)+' ':'')+'Payments can take a day or two to show here.</div>';
   return h+'</section>';
+}
+function copyZelle(btn,email){
+  var done=function(){var sm=btn.querySelector('small');var t=sm.innerHTML;sm.textContent='Copied '+email+' — paste it in your bank’s Zelle screen';setTimeout(function(){sm.innerHTML=t;},3500);};
+  if(navigator.clipboard)navigator.clipboard.writeText(email).then(done,function(){prompt('Zelle email:',email);});else prompt('Zelle email:',email);
+}
+function resourcesCard(fam){
+  var sc=fam.school||{};
+  var l=[['📘','Family Handbook','PDF','/handbook.pdf']];
+  if(sc.bbGuide)l.push(['🏆','Black Belt Test Guide','Training workbook','/black-belt-test-training-guide.pdf']);
+  l.push(['👕','Order Apparel','Shirts & uniforms','https://form.jotform.com/noblesmartialarts/nma-t-shirt-order']);
+  l.push(['📸','Share Photos','Class & test pics','/photos']);
+  l.push(['📦','Lost & Found','Missing items','/lost-and-found']);
+  l.push(['🏠','Parent Hub','Everything else','/parent-hub']);
+  return '<section class="card"><h2>Parent resources</h2><div class="res">'+l.map(function(x){return '<a href="'+esc(x[3])+'" target="_blank" rel="noopener"><span>'+x[0]+'</span>'+esc(x[1])+'<small>'+esc(x[2])+'</small></a>';}).join('')+'</div></section>';
 }
 function scheduleCard(fam){
   var sc=fam.school||{};var h='<section class="card" id="sched"><h2>Classes</h2>';
