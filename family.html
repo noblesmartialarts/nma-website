@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<script>try{if(localStorage.getItem('nma-theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Family Portal — Noble's Martial Arts</title>
+<meta name="robots" content="noindex"/>
+<meta name="description" content="Noble's Martial Arts family portal — belt progress, tests, attendance and more."/>
+<meta name="theme-color" content="#08080f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="NMA Family"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#08080f;--surf:#13131f;--surf2:#1a1a28;--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);
+  --brand:#0f00f7;--bright:#5160ff;--soft:rgba(81,96,255,.16);--text:#f4f4fa;--muted:#9a9ab4;
+  --green:#22c55e;--green-soft:rgba(34,197,94,.14);--red:#f87171;--red-soft:rgba(248,113,113,.14);--amber:#fbbf24;--amber-soft:rgba(251,191,36,.14);--r:16px;
+}
+html[data-theme="light"]{
+  --bg:#f6f5fb;--surf:#ffffff;--surf2:#f0eefc;--border:rgba(15,0,247,.09);--border2:rgba(15,0,247,.18);
+  --bright:#372be0;--soft:rgba(15,0,247,.08);--text:#14121f;--muted:#4f4c6b;
+  --green:#15803d;--green-soft:rgba(21,128,61,.1);--red:#b91c1c;--red-soft:rgba(185,28,28,.08);--amber:#a16207;--amber-soft:rgba(161,98,7,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.5;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+.disp{font-family:'Bebas Neue',sans-serif;font-weight:400;letter-spacing:.04em;line-height:1}
+header{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+header .wrap{display:flex;align-items:center;gap:12px;height:58px}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;font-family:'Bebas Neue';font-size:1.05rem;letter-spacing:.04em;flex:0 0 auto}
+header .t{flex:1;min-width:0}
+header .t b{display:block;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .t small{color:var(--muted);font-size:.75rem}
+.ghost{background:none;border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:7px 11px;font:600 .8rem 'Inter',sans-serif;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:13px 18px;font:700 .95rem 'Inter',sans-serif;cursor:pointer;width:100%}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.sec{background:var(--surf2);color:var(--text);border:1px solid var(--border2)}
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin:14px 0}
+.card h2{font-family:'Bebas Neue';font-weight:400;font-size:1.45rem;letter-spacing:.04em;margin-bottom:8px}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+input,textarea{width:100%;background:var(--surf2);border:1px solid var(--border2);color:var(--text);border-radius:12px;padding:13px 14px;font:500 1rem 'Inter',sans-serif;outline:none}
+input:focus,textarea:focus{border-color:var(--bright)}
+textarea{min-height:84px;resize:vertical}
+label.f{display:block;font-weight:600;font-size:.85rem;margin:14px 0 6px}
+.err{background:var(--red-soft);color:var(--red);border-radius:10px;padding:10px 12px;font-size:.88rem;margin-top:12px}
+.ok{background:var(--green-soft);color:var(--green);border-radius:10px;padding:10px 12px;font-size:.88rem;margin-top:12px}
+.note{background:var(--soft);border-radius:12px;padding:12px 14px;font-size:.9rem}
+.kid-top{display:flex;gap:12px;align-items:center}
+.avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:1rem;flex:0 0 auto;border:3px solid var(--border2)}
+.kid-name{font-family:'Bebas Neue';font-size:1.7rem;letter-spacing:.04em;line-height:1}
+.belt{display:inline-flex;align-items:center;gap:8px;margin-top:4px;font-size:.85rem;font-weight:600}
+.belt i{display:inline-block;width:34px;height:10px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.stripes{display:flex;gap:6px;margin:14px 0 4px}
+.stripes span{flex:1;height:10px;border-radius:5px;background:var(--surf2);border:1px solid var(--border2)}
+.stripes span.on{background:var(--bright);border-color:var(--bright)}
+.row{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--border)}
+.row .ic{width:28px;flex:0 0 auto;font-size:1.15rem;line-height:1.3}
+.row .bd{flex:1;min-width:0}
+.row .bd b{display:block;font-size:.92rem}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;border-radius:999px;padding:3px 9px;background:var(--soft);color:var(--bright)}
+.pill.g{background:var(--green-soft);color:var(--green)}.pill.a{background:var(--amber-soft);color:var(--amber)}
+.cta{border:1px solid var(--amber);background:var(--amber-soft);border-radius:14px;padding:14px;margin-top:12px}
+.cta b{color:var(--text)}
+details summary{cursor:pointer;list-style:none;font-weight:600;font-size:.88rem;color:var(--bright)}
+details summary::-webkit-details-marker{display:none}
+.att{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.att span{font-size:.75rem;border-radius:8px;padding:4px 8px;background:var(--surf2)}
+.att span.p{background:var(--green-soft);color:var(--green)}.att span.a{background:var(--red-soft);color:var(--red)}
+.cur{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.88rem;margin-top:6px}
+.cur dt{color:var(--muted)}
+.money{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--border);font-size:.92rem}
+.q{padding:12px 0;border-top:1px solid var(--border)}
+.q p{font-size:.93rem;margin-bottom:8px}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:11px;border-radius:10px;border:1px solid var(--border2);background:var(--surf2);color:var(--text);font:700 .92rem 'Inter',sans-serif;cursor:pointer}
+.seg button.y{background:var(--green);border-color:var(--green);color:#fff}
+.seg button.n{background:var(--red);border-color:var(--red);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{border:1px solid var(--border2);background:var(--surf2);color:var(--text);border-radius:999px;padding:8px 12px;font:600 .82rem 'Inter',sans-serif;cursor:pointer}
+.chips button.on{background:var(--bright);border-color:var(--bright);color:#fff}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;margin-top:12px}
+.check input{width:22px;height:22px;flex:0 0 auto;margin-top:1px}
+.code{letter-spacing:.5em;text-align:center;font-size:1.5rem;font-weight:800}
+.center{text-align:center}
+.spin{width:28px;height:28px;border:3px solid var(--border2);border-top-color:var(--bright);border-radius:50%;animation:s 0.8s linear infinite;margin:60px auto}
+@keyframes s{to{transform:rotate(360deg)}}
+a{color:var(--bright)}
+footer{padding:26px 0 40px;text-align:center;font-size:.8rem;color:var(--muted)}
+.hero{padding:40px 0 10px}
+.hero h1{font-family:'Bebas Neue';font-weight:400;font-size:2.6rem;letter-spacing:.04em;line-height:1}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a href="/" class="logo" aria-label="Noble's Martial Arts home" style="text-decoration:none;">NMA</a>
+  <div class="t"><b id="h-title">Family Portal</b><small id="h-sub">Noble's Martial Arts</small></div>
+  <button class="ghost" id="h-out" style="display:none" onclick="signOut()">Sign out</button>
+</div></header>
+<main class="wrap" id="app"><div class="spin"></div></main>
+<footer class="wrap">Questions? Email <a href="mailto:noblesmartialarts@gmail.com">noblesmartialarts@gmail.com</a> or text 916-768-1347.<br/>Noble's Martial Arts · Wake Forest, NC</footer>
+
+<script>
+var API='/api/portal';
+var KEY='nma_portal';
+var ITEMS=[
+  ['practices_home','Practices martial arts at home'],
+  ['listens','Listens to parents "the first time"'],
+  ['no_talk_back','Does not "talk back" or interrupt parents'],
+  ['bedtime','Goes to bed when they are supposed to'],
+  ['shares','Shares with friends, siblings and family members'],
+  ['honest','Is honest with parents, family members and friends'],
+  ['chores','Completes chores and duties'],
+  ['respectful','Demonstrates respectful behavior'],
+  ['attention_school','Pays attention during school activities'],
+  ['academics','Meets or exceeds academic expectations']
+];
+var THEMES=['Respect & manners','Listening','Interrupting / talking back','Self-control & calm','Frustration / perseverance','Focus & attention','Practice at home','Chores & responsibility','Bedtime & routines','Honesty','Sharing & kindness','Schoolwork','Confidence'];
+var state={view:null,email:'',form:null};
+
+function $(id){return document.getElementById(id);}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function sess(){try{var s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.token&&s.exp>Date.now()/1000+60)return s;}catch(e){}return null;}
+function setSess(s){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
+function api(op,body){
+  var b=Object.assign({op:op},body||{});var s=sess();if(s&&!b.token)b.token=s.token;
+  return fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){
+    return r.json().catch(function(){return {};}).then(function(j){j._status=r.status;return j;});
+  }).catch(function(){return {_status:0,error:'You seem to be offline. Check your connection and try again.'};});
+}
+function d(iso){return new Date(iso+'T12:00:00');}
+function fmt(iso,opt){return iso?d(iso).toLocaleDateString('en-US',opt||{weekday:'short',month:'short',day:'numeric'}):'';}
+function fmtLong(iso){return fmt(iso,{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+function todayISO(){var t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
+function daysUntil(iso){return Math.round((d(iso)-d(todayISO()))/86400000);}
+function rel(iso){var n=daysUntil(iso);return n===0?'today':n===1?'tomorrow':n>1?'in '+n+' days':n===-1?'yesterday':Math.abs(n)+' days ago';}
+function money(n){return '$'+(+n||0).toFixed(2);}
+function time12(t){if(!t)return'';var p=t.split(':');var h=+p[0];return (h%12||12)+':'+p[1]+(h<12?' AM':' PM');}
+function textColor(hex){hex=String(hex||'#888').replace('#','');if(hex.length===3)hex=hex.split('').map(function(c){return c+c;}).join('');var r=parseInt(hex.substr(0,2),16),g=parseInt(hex.substr(2,2),16),b=parseInt(hex.substr(4,2),16);return (r*299+g*587+b*114)/1000>150?'#222':'#fff';}
+
+// ── Sign in ──
+function showSignIn(msg,isErr){
+  $('h-out').style.display='none';$('h-title').textContent='Family Portal';$('h-sub').textContent="Noble's Martial Arts";
+  $('app').innerHTML='<div class="hero"><h1>Family Portal</h1><p class="muted" style="margin-top:8px">Belt progress, upcoming tests, attendance and more for your Noble’s Martial Arts student.</p></div>'+
+  '<div class="card"><form onsubmit="reqCode(event)"><label class="f" for="em" style="margin-top:0">Your email</label>'+
+  '<input id="em" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required value="'+esc(state.email)+'"/>'+
+  '<button class="btn" id="em-btn" style="margin-top:14px">Email me a sign-in code</button></form>'+
+  '<p class="muted small" style="margin-top:12px">Use the email Sensei Brandon has on file for your family. No password needed.</p>'+
+  (msg?'<div class="'+(isErr?'err':'ok')+'">'+esc(msg)+'</div>':'')+'</div>';
+}
+function reqCode(e){
+  e.preventDefault();var em=$('em').value.trim();if(!em)return;state.email=em;
+  $('em-btn').disabled=true;$('em-btn').textContent='Sending…';
+  api('request-code',{email:em}).then(function(j){
+    if(j._status===200)return showCode();
+    showSignIn(j.message||j.error||'Something went wrong. Please try again.',true);
+  });
+}
+function showCode(msg){
+  $('app').innerHTML='<div class="hero"><h1>Check your email</h1><p class="muted" style="margin-top:8px">If <b>'+esc(state.email)+'</b> has portal access, we just sent it a 6-digit code. It can take a minute — check spam too.</p></div>'+
+  '<div class="card"><form onsubmit="verify(event)"><label class="f" for="cd" style="margin-top:0">Sign-in code</label>'+
+  '<input id="cd" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required/>'+
+  '<button class="btn" id="cd-btn" style="margin-top:14px">Sign in</button></form>'+
+  '<button class="btn sec" style="margin-top:10px" onclick="showSignIn()">Use a different email</button>'+
+  (msg?'<div class="err">'+esc(msg)+'</div>':'')+'</div>';
+  setTimeout(function(){var c=$('cd');if(c)c.focus();},50);
+}
+function verify(e){
+  e.preventDefault();$('cd-btn').disabled=true;
+  api('verify-code',{email:state.email,code:$('cd').value}).then(function(j){
+    if(j.token){setSess({token:j.token,exp:j.exp,email:state.email});return load();}
+    showCode(j.error||'That code didn’t work.');
+  });
+}
+function signOut(){try{localStorage.removeItem(KEY);}catch(e){}state.view=null;showSignIn('You’re signed out.');}
+
+// ── Portal ──
+function load(){
+  $('app').innerHTML='<div class="spin"></div>';
+  return api('me').then(function(j){
+    if(j._status===401){try{localStorage.removeItem(KEY);}catch(e){}return showSignIn(sessWasSet?'Your sign-in ended. Enter your email to get a new code.':'',!!sessWasSet);}
+    if(!j.families){$('app').innerHTML='<div class="card"><div class="err">'+esc(j.error||'Couldn’t load your portal.')+'</div><button class="btn sec" style="margin-top:12px" onclick="load()">Try again</button></div>';return;}
+    state.view=j;render();
+  });
+}
+var sessWasSet=false;
+function render(){
+  var v=state.view;$('h-out').style.display='';
+  if(!v.families.length){$('app').innerHTML='<div class="card" style="margin-top:24px"><h2>Almost there</h2><p class="muted">Your access is set up, but your family’s page isn’t ready yet. Please check back soon or contact Sensei Brandon.</p></div>';return;}
+  var f=v.families[0];
+  $('h-title').textContent=(f.family&&f.family.name?f.family.name+' Family':'Family Portal');
+  $('h-sub').textContent='Signed in as '+v.email;
+  var h='';
+  v.families.forEach(function(fam){
+    var sc=fam.school||{};
+    if(v.families.length>1)h+='<div class="hero" style="padding:20px 0 0"><h1 style="font-size:2rem">'+esc(fam.family.name)+' Family</h1></div>';
+    if(sc.announcement)h+='<div class="card" style="border-color:var(--bright)"><div class="small muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em">📣 From Sensei Brandon</div><div style="margin-top:6px;white-space:pre-line">'+esc(sc.announcement)+'</div></div>';
+    if(!fam.students.length)h+='<div class="card"><p class="muted">No active students on your account right now.</p></div>';
+    fam.students.forEach(function(s){h+=kidCard(s,fam);});
+    h+=balanceCard(fam);
+    h+=scheduleCard(fam);
+    h+=contactCard(fam);
+    h+='<p class="muted small center" style="margin-top:6px">Updated '+new Date(fam.updatedAt||fam.generatedAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</p>';
+  });
+  $('app').innerHTML=h;
+}
+function kidCard(s,fam){
+  var col=s.beltColor||'#888';
+  var h='<section class="card" id="kid-'+esc(s.id)+'"><div class="kid-top"><div class="avatar" style="background:'+esc(col)+';color:'+textColor(col)+'">'+esc((s.first||'?')[0])+'</div><div style="min-width:0">'+
+    '<div class="kid-name">'+esc(s.first)+'</div><div class="belt"><i style="background:'+esc(col)+'"></i>'+esc(s.belt)+' · <span class="muted" style="font-weight:500">'+esc(s.group)+'</span></div></div></div>';
+  // Progress
+  if(s.nextBelt){
+    h+='<div class="stripes">';for(var i=0;i<s.maxStripes;i++)h+='<span class="'+(i<s.stripes?'on':'')+'"></span>';h+='</div>';
+    h+='<div class="small">'+(s.ready?'<span class="pill g">Ready to test</span> for <b>'+esc(s.nextBelt)+'</b>'+(s.nextGroup?' and moving up to '+esc(s.nextGroup):''):'<b>'+s.stripes+' of '+s.maxStripes+'</b> stripes toward <b>'+esc(s.nextBelt)+'</b>')+'</div>';
+  }
+  // Next test
+  if(s.nextTest){
+    var t=s.nextTest;
+    h+='<div class="row" style="margin-top:12px"><div class="ic">🎖️</div><div class="bd"><b>'+esc(t.name)+' — '+fmt(t.date)+'</b><span class="muted small">'+rel(t.date)+(t.testingFor?' · testing for '+esc(t.testingFor):t.type==='Stripe Test'||!s.ready?' · a chance to earn the next stripe':'')+'</span></div></div>';
+  }
+  // Intent letter
+  if(s.intent){
+    var it=s.intent;
+    if(it.status==='open')h+='<div class="cta"><b>✍️ Intent to Promote letter</b><div class="small muted" style="margin:4px 0 10px">'+esc(s.first)+' is testing for <b style="color:var(--text)">'+esc(it.promotingTo)+'</b> on '+fmtLong(it.eventDate)+'. Please fill this out before the test.</div><button class="btn" onclick="openIntent(\''+esc(s.id)+'\')">Fill out the letter</button></div>';
+    else h+='<div class="row"><div class="ic">✅</div><div class="bd"><b>Intent letter '+(it.status==='submitted'?'sent':'received')+'</b><span class="muted small">'+(it.status==='submitted'?'Thanks! Sensei Brandon will review it before the test.':'Thank you — you’re all set for '+fmt(it.eventDate)+'.')+'</span></div></div>';
+  }
+  // Black belt timeline
+  if(s.bb){
+    var b=s.bb;
+    h+='<div class="row"><div class="ic">🥋</div><div class="bd"><b>'+esc(b.title)+(b.test?' — '+(b.test.scheduled?fmt(b.test.date,{month:'long',day:'numeric',year:'numeric'}):esc(b.test.label)+' (estimated)'):'')+'</b><span class="muted small">'+(b.eligible==='now'?'Eligible now. Black Belt Tests run in February and August.':'Projected eligible around '+fmt(b.eligible,{month:'long',year:'numeric'})+'. Black Belt Tests run in February and August.')+'</span></div></div>';
+  }
+  // Curriculum
+  if(s.curriculum){
+    var c=s.curriculum;
+    h+='<div class="row"><div class="ic">📘</div><div class="bd"><b>This cycle: '+esc(c.label)+'</b><dl class="cur">';
+    c.items.forEach(function(x){h+='<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>';});
+    h+='</dl>'+(c.videos?'<a class="small" style="display:inline-block;margin-top:8px;font-weight:700" href="'+esc(c.videos)+'" target="_blank" rel="noopener">▶ Practice videos</a>':'')+'</div></div>';
+  }
+  // Attendance
+  var a=s.attendance||{days:[]};
+  h+='<div class="row"><div class="ic">📅</div><div class="bd"><b>Attendance</b>';
+  if(!a.days.length)h+='<span class="muted small">Classes from '+fmt(a.since,{month:'long',day:'numeric'})+' on will show here.</span>';
+  else{
+    h+='<span class="muted small">'+a.present+' of '+a.days.length+' class'+(a.days.length!==1?'es':'')+' since '+fmt(a.since,{month:'long',day:'numeric'})+'</span>';
+    h+='<details style="margin-top:6px"><summary>See dates</summary><div class="att">'+a.days.map(function(x){return '<span class="'+(x.status==='present'?'p':'a')+'">'+(x.status==='present'?'✓ ':'✗ ')+fmt(x.date,{month:'short',day:'numeric'})+'</span>';}).join('')+'</div></details>';
+  }
+  h+='</div></div>';
+  if(s.regLink)h+='<div class="row"><div class="ic">📝</div><div class="bd"><b>Registration</b><a class="small" href="'+esc(s.regLink)+'" target="_blank" rel="noopener">Register for '+esc(s.group)+' on RecDesk →</a></div></div>';
+  return h+'</section>';
+}
+function balanceCard(fam){
+  var b=fam.balance||{items:[],total:0};var pay=(fam.school||{}).payInfo||'';
+  var h='<section class="card"><h2>Balance</h2>';
+  if(!b.items.length)return h+'<p class="muted">You’re all paid up. Thank you!</p></section>';
+  b.items.forEach(function(i){h+='<div class="money"><span>'+esc(i.label)+(i.date?' <span class="muted small">· '+fmt(i.date,{month:'short',day:'numeric'})+'</span>':'')+'</span><b>'+money(i.amount)+'</b></div>';});
+  h+='<div class="money" style="font-size:1.05rem"><b>Total due</b><b>'+money(b.total)+'</b></div>';
+  if(pay)h+='<div class="note" style="margin-top:10px"><b>How to pay:</b> '+esc(pay)+'<div class="small muted" style="margin-top:4px">Please include your student’s name. Payments can take a day or two to show here.</div></div>';
+  return h+'</section>';
+}
+function scheduleCard(fam){
+  var sc=fam.school||{};var h='';
+  if((sc.schedule||[]).length||(sc.events||[]).length||sc.challenge){
+    h+='<section class="card"><h2>Schedule</h2>';
+    (sc.schedule||[]).forEach(function(c){h+='<div class="money"><span>'+esc(c.group)+'</span><span class="muted">'+esc(c.day)+'s '+time12(c.time)+'</span></div>';});
+    if((sc.events||[]).length){h+='<div class="small muted" style="margin-top:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Coming up</div>';
+      sc.events.forEach(function(e){h+='<div class="money"><span>'+esc(e.name)+'</span><span class="muted">'+fmt(e.date)+'</span></div>';});}
+    if(sc.challenge)h+='<div class="note" style="margin-top:12px"><b>🏆 Challenge of the month:</b> '+esc(sc.challenge)+'</div>';
+    h+='</section>';
+  }
+  return h;
+}
+function contactCard(fam){
+  var g=(fam.guardians||[])[0];if(!g)return'';
+  return '<section class="card"><h2>Your contact info</h2><div class="small"><div>'+esc(g.name||'—')+'</div><div>'+esc(g.email)+'</div><div>'+esc(g.phone||'No phone on file')+'</div></div>'+
+    '<p class="muted small" style="margin-top:8px">Something out of date? <a href="mailto:noblesmartialarts@gmail.com?subject='+encodeURIComponent('Contact update — '+(fam.family&&fam.family.name||'')+' family')+'">Email Sensei Brandon</a>.</p></section>';
+}
+
+// ── Intent to Promote letter ──
+function findKid(id){var out=null;(state.view.families||[]).forEach(function(f){f.students.forEach(function(s){if(String(s.id)===String(id))out=s;});});return out;}
+function openIntent(id){
+  var s=findKid(id);if(!s||!s.intent)return;
+  state.form={sid:s.id,eventId:s.intent.eventId,kind:s.intent.kind,answers:{},focus:[]};
+  var it=s.intent;var h='<div style="padding-top:14px"><button class="ghost" onclick="render()">← Back</button></div>';
+  h+='<section class="card"><div class="small muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em">Intent to Promote'+(it.kind==='bb'?' — Black Belt Candidate':'')+'</div>'+
+    '<h2 style="font-size:2rem;margin-top:4px">Congratulations!</h2><p><b>'+fmtLong(it.eventDate)+'</b> is <b>'+esc(s.first)+'</b>’s '+(it.kind==='bb'?'Black Belt Test':'belt test/promotion')+' — promoting to <b>'+esc(it.promotingTo)+'</b>.</p>'+
+    (it.fee?'<p class="small muted" style="margin-top:6px">Belt testing fee: '+money(it.fee)+' (it’s in your balance).</p>':'')+'</section>';
+  if(it.kind==='bb'){
+    h+='<section class="card"><h2>Statement of intent</h2><p class="small">The rank of Black Belt is not simply a new belt color. It is a symbol of perseverance, discipline, courage, leadership, humility, and unwavering commitment. It represents years of training, countless repetitions, physical endurance, mental resilience, and the decision to rise after every challenge.</p></section>'+
+    '<section class="card"><h2>Parent / guardian affirmation</h2><p class="small">I affirm that my child has consistently demonstrated the character of a Black Belt within our home and community. I recognize that Black Belt excellence extends beyond the dojo — it is reflected in responsibility, integrity, self-discipline, respect, and perseverance. I believe my child has shown growth not only in physical skill, but in mindset, maturity, and leadership. I give my full permission and support for my child to undertake the Noble’s Martial Arts Black Belt Test, understanding the physical and mental demands it requires.</p>'+
+    '<label class="check"><input type="checkbox" id="bb-aff"/> <span>I agree with this affirmation.</span></label>'+
+    '<label class="f" for="sig">Parent / guardian name (your typed signature)</label><input id="sig" autocomplete="name"/></section>'+
+    '<section class="card"><h2>Student commitment</h2><p class="small">I declare that I am ready to face the challenge of the Black Belt Test. I understand that this test will push me physically, mentally, and emotionally. I believe that I have prepared to the best of my ability. I am willing to give my full effort, to demonstrate courage under pressure, and to uphold the standards of Noble’s Martial Arts.</p>'+
+    '<label class="f" for="ssig">'+esc(s.first)+'’s name (typed by '+esc(s.first)+')</label><input id="ssig"/></section>';
+  }else{
+    h+='<section class="card"><h2>Parent / teacher evaluation</h2><p class="small muted">One objective of Noble’s Martial Arts is to develop well-rounded students who thrive at home and at school. Please answer honestly — a “No” helps us know what to work on in class.</p>';
+    ITEMS.forEach(function(x){h+='<div class="q"><p>'+esc(x[1])+'</p><div class="seg" id="seg-'+x[0]+'"><button type="button" onclick="ans(\''+x[0]+'\',\'yes\')">Yes</button><button type="button" onclick="ans(\''+x[0]+'\',\'no\')">No</button></div></div>';});
+    h+='</section>';
+  }
+  h+='<section class="card"><h2>Anything to work on?</h2><p class="small muted" style="margin-bottom:10px">Optional — tap anything you’d like us to reinforce in class this cycle.</p><div class="chips">'+
+    THEMES.map(function(t,i){return '<button type="button" id="ch-'+i+'" onclick="chip('+i+')">'+esc(t)+'</button>';}).join('')+'</div>'+
+    '<label class="f" for="nt">Anything noteworthy? <span class="muted" style="font-weight:400">(exceptionally good behavior, challenges, improvements)</span></label><textarea id="nt" maxlength="2000"></textarea>'+
+    '<label class="f" for="pfb">Feedback for Sensei Brandon <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="pfb" maxlength="1000" style="min-height:64px"></textarea>'+
+    (it.kind==='bb'?'':'<label class="f" for="sig">Your name (typed signature)</label><input id="sig" autocomplete="name"/>')+
+    '<div id="f-err"></div><button class="btn" id="f-btn" style="margin-top:16px" onclick="submitIntent()">Send to Sensei Brandon</button></section>';
+  $('app').innerHTML=h;window.scrollTo(0,0);
+}
+function ans(k,v){state.form.answers[k]=v;var seg=$('seg-'+k).children;seg[0].className=v==='yes'?'y':'';seg[1].className=v==='no'?'n':'';}
+function chip(i){var t=THEMES[i];var a=state.form.focus;var j=a.indexOf(t);if(j>=0)a.splice(j,1);else a.push(t);$('ch-'+i).className=j>=0?'':'on';}
+function submitIntent(){
+  var f=state.form;var err=function(m){$('f-err').innerHTML='<div class="err">'+esc(m)+'</div>';};
+  var body={studentId:f.sid,eventId:f.eventId,answers:f.answers,focus:f.focus,note:$('nt').value,programFeedback:$('pfb').value,signedBy:($('sig').value||'').trim()};
+  if(f.kind==='bb'){body.affirm=$('bb-aff').checked;body.studentSigned=($('ssig').value||'').trim();
+    if(!body.affirm)return err('Please check the affirmation box.');if(!body.studentSigned)return err('Please have your student type their name.');}
+  else{var missing=ITEMS.filter(function(x){return !f.answers[x[0]];});if(missing.length)return err('Please answer all 10 questions ('+missing.length+' left).');}
+  if(!body.signedBy)return err('Please type your name to sign.');
+  $('f-btn').disabled=true;$('f-btn').textContent='Sending…';
+  api('submit-intent',body).then(function(j){
+    if(j.ok){
+      var s=findKid(f.sid);if(s&&s.intent)s.intent.status='submitted';
+      render();var el=$('kid-'+f.sid);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.insertAdjacentHTML('afterbegin','<div class="ok" style="margin:0 0 12px">Thank you! Your letter was sent to Sensei Brandon.</div>');}
+      return;
+    }
+    if(j._status===401)return signOut();
+    $('f-btn').disabled=false;$('f-btn').textContent='Send to Sensei Brandon';err(j.error||'Couldn’t send. Please try again.');
+  });
+}
+
+// ── Start ──
+(function(){
+  var m=(location.hash||'').match(/link=([A-Za-z0-9_-]+)/);
+  if(m){
+    history.replaceState(null,'',location.pathname);
+    $('app').innerHTML='<div class="spin"></div>';
+    api('redeem-link',{link:m[1]}).then(function(j){
+      if(j.token){setSess({token:j.token,exp:j.exp,email:j.email||''});sessWasSet=true;return load();}
+      if(sess()){sessWasSet=true;return load();}
+      showSignIn(j.message||j.error||'That link didn’t work.',true);
+    });
+    return;
+  }
+  if(sess()){sessWasSet=true;load();}else showSignIn();
+})();
+</script>
+</body>
+</html>

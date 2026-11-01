@@ -81,6 +81,19 @@
   to = "/index.html"
   status = 200
 
+# --- Family portal ---
+# The page lives here; its API runs on the CRM site (where the family data is).
+[[redirects]]
+  from = "/family"
+  to = "/family.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/portal"
+  to = "https://crm.noblesmartialarts.com/.netlify/functions/portal"
+  status = 200
+  force = true
+
 # --- Branded short link for the parent photo-sharing Jotform ---
 [[redirects]]
   from = "/photos"
