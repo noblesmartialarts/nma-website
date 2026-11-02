@@ -136,6 +136,7 @@ var state={view:null,email:'',form:null};
 function $(id){return document.getElementById(id);}
 function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function sess(){try{var s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.token&&s.exp>Date.now()/1000+60)return s;}catch(e){}return null;}
+function deviceId(){try{var d=localStorage.getItem('nma_portal_device');if(!d){d=Array.from(crypto.getRandomValues(new Uint8Array(12))).map(function(b){return ('0'+b.toString(16)).slice(-2);}).join('');localStorage.setItem('nma_portal_device',d);}return d;}catch(e){return '';}}
 function setSess(s){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
 function api(op,body){
   var b=Object.assign({op:op},body||{});var s=sess();if(s&&!b.token)b.token=s.token;
@@ -161,6 +162,7 @@ function showSignIn(msg,isErr){
   '<input id="em" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required value="'+esc(state.email)+'"/>'+
   '<button class="btn" id="em-btn" style="margin-top:14px">Email me a sign-in code</button></form>'+
   '<p class="muted small" style="margin-top:12px">Use the email Sensei Brandon has on file for your family. No password needed.</p>'+
+  '<p class="small" style="margin-top:10px"><a href="#" onclick="state.pairing=true;showCode();return false;">Have a code from your other device?</a></p>'+
   (msg?'<div class="'+(isErr?'err':'ok')+'">'+esc(msg)+'</div>':'')+'</div>';
 }
 function reqCode(e){
@@ -172,18 +174,22 @@ function reqCode(e){
   });
 }
 function showCode(msg){
-  $('app').innerHTML='<div class="hero"><h1>Check your email</h1><p class="muted" style="margin-top:8px">If <b>'+esc(state.email)+'</b> has portal access, we just sent it a 6-digit code. It can take a minute — check spam too.</p></div>'+
-  '<div class="card"><form onsubmit="verify(event)"><label class="f" for="cd" style="margin-top:0">Sign-in code</label>'+
+  var pair=!!state.pairing;
+  $('app').innerHTML='<div class="hero"><h1>'+(pair?'Sign in with a code':'Check your email')+'</h1><p class="muted" style="margin-top:8px">'+
+  (pair?'On a phone or computer where you’re already signed in, open the portal, tap <b>Sign in on another device</b>, and enter the code it shows here.':'If <b>'+esc(state.email)+'</b> has portal access, we just sent it a 6-digit code. It can take a minute — check spam too.')+'</p></div>'+
+  '<div class="card"><form onsubmit="verify(event)">'+
+  (pair?'<label class="f" for="em2" style="margin-top:0">Your email</label><input id="em2" type="email" autocomplete="email" inputmode="email" required value="'+esc(state.email)+'"/>':'')+
+  '<label class="f" for="cd"'+(pair?'':' style="margin-top:0"')+'>Sign-in code</label>'+
   '<input id="cd" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required/>'+
   '<button class="btn" id="cd-btn" style="margin-top:14px">Sign in</button></form>'+
-  '<button class="btn sec" style="margin-top:10px" onclick="showSignIn()">Use a different email</button>'+
+  '<button class="btn sec" style="margin-top:10px" onclick="state.pairing=false;showSignIn()">'+(pair?'Back':'Use a different email')+'</button>'+
   (msg?'<div class="err">'+esc(msg)+'</div>':'')+'</div>';
-  setTimeout(function(){var c=$('cd');if(c)c.focus();},50);
+  setTimeout(function(){var c=$(pair&&!state.email?'em2':'cd');if(c)c.focus();},50);
 }
 function verify(e){
-  e.preventDefault();$('cd-btn').disabled=true;
-  api('verify-code',{email:state.email,code:$('cd').value}).then(function(j){
-    if(j.token){setSess({token:j.token,exp:j.exp,email:state.email});return load();}
+  e.preventDefault();if($('em2'))state.email=$('em2').value.trim();$('cd-btn').disabled=true;
+  api('verify-code',{email:state.email,code:$('cd').value,device:deviceId()}).then(function(j){
+    if(j.token){state.pairing=false;setSess({token:j.token,exp:j.exp,email:state.email});return load();}
     showCode(j.error||'That code didn’t work.');
   });
 }
@@ -320,7 +326,10 @@ function contactCard(fam){
   var p=fam.contactPending;
   return '<section class="card"><h2>Your contact info</h2><div class="small"><div>'+esc(g.name||'—')+'</div><div>'+esc(g.email)+'</div><div>'+esc(g.phone||'No phone on file')+'</div></div>'+
     (p?'<div class="note" style="margin-top:10px"><b>Update sent</b> — waiting for Sensei Brandon to approve:<div class="small" style="margin-top:4px">'+esc(p.name)+' · '+esc(p.email)+' · '+esc(p.phone||'no phone')+'</div></div>':'')+
-    '<button class="btn sec" style="margin-top:12px" onclick="openContact(\''+esc(fam.familyId)+'\')">'+(p?'Change my update':'Update my info')+'</button></section>';
+    '<button class="btn sec" style="margin-top:12px" onclick="openContact(\''+esc(fam.familyId)+'\')">'+(p?'Change my update':'Update my info')+'</button>'+
+    '<button class="btn sec" style="margin-top:8px" onclick="showDeviceCode()">📱 Sign in on another device</button>'+
+    ((fam.guardianPending||[]).length?'<div class="note" style="margin-top:10px">Waiting for Sensei Brandon to approve: <b>'+esc(fam.guardianPending.map(function(x){return x.name;}).join(', '))+'</b></div>':'')+
+    '<button class="btn sec" style="margin-top:8px" onclick="openGuardian(\''+esc(fam.familyId)+'\')">➕ Add another parent or guardian</button></section>';
 }
 function famById(id){var out=null;(state.view.families||[]).forEach(function(f){if(String(f.familyId)===String(id))out=f;});return out||state.view.families[0];}
 function previewBlock(){if(state.preview){alert('This is a preview — parents can send this from their own portal.');return true;}return false;}
@@ -346,6 +355,49 @@ function submitAbsence(){
     if(j.ok){return load().then(function(){var el=$('sched');if(el){el.scrollIntoView({block:'start'});el.insertAdjacentHTML('afterbegin','<div class="ok" style="margin:0 0 12px">Thanks — Sensei Brandon has your absence notice.</div>');}});}
     if(j._status===401)return signOut();
     $('f-btn').disabled=false;$('f-btn').textContent='Send absence notice';err(j.error||'Couldn’t send. Please try again.');
+  });
+}
+
+// ── Another device ──
+function showDeviceCode(){
+  if(previewBlock())return;
+  $('app').innerHTML='<div class="spin"></div>';
+  api('device-code').then(function(j){
+    if(j._status===401)return signOut();
+    var h='<div style="padding-top:14px"><button class="ghost" onclick="render()">← Back</button></div><section class="card center"><h2>Sign in on another device</h2>';
+    if(!j.code)h+='<div class="err">'+esc(j.error||'Couldn’t make a code. Try again.')+'</div>';
+    else h+='<p class="small muted">On the other phone or computer, go to <b>noblesmartialarts.com/family</b>, tap <b>Have a code from your other device?</b>, and enter:</p>'+
+      '<div class="small" style="margin-top:14px">Email</div><div style="font-weight:700">'+esc(j.email)+'</div>'+
+      '<div class="small" style="margin-top:14px">Code</div><div style="font-size:2.4rem;font-weight:800;letter-spacing:.3em;margin:4px 0 8px">'+esc(j.code)+'</div>'+
+      '<p class="small muted">Works once, for '+j.minutes+' minutes. Only share it with your own devices.</p>';
+    $('app').innerHTML=h+'</section>';window.scrollTo(0,0);
+  });
+}
+
+// ── Add a guardian (Sensei approves) ──
+function openGuardian(fid){
+  var fam=famById(fid);state.form={kind:'guardian',kids:fam.students.map(function(s){return String(s.id);})};
+  var h='<div style="padding-top:14px"><button class="ghost" onclick="render()">← Back</button></div><section class="card"><h2>Add a parent or guardian</h2><p class="small muted">They’ll get their own sign-in once Sensei Brandon approves. For your own second phone or computer, use <b>Sign in on another device</b> instead.</p>';
+  h+='<label class="f" for="gn">Their name</label><input id="gn" autocomplete="off"/>';
+  h+='<label class="f" for="gr">Relationship <span class="muted" style="font-weight:400">(optional)</span></label><input id="gr" placeholder="Dad, grandparent, nanny…"/>';
+  h+='<label class="f" for="ge">Their email</label><input id="ge" type="email" autocomplete="off"/>';
+  h+='<label class="f" for="gp">Their mobile phone <span class="muted" style="font-weight:400">(optional)</span></label><input id="gp" type="tel" autocomplete="off"/>';
+  if(fam.students.length>1)h+='<label class="f">Which kids should they see?</label><div class="chips">'+fam.students.map(function(s){return '<button type="button" class="on" id="gk-'+esc(s.id)+'" onclick="gKid(\''+esc(s.id)+'\')">'+esc(s.first)+'</button>';}).join('')+'</div>';
+  h+='<div id="f-err"></div><button class="btn" id="f-btn" style="margin-top:16px" onclick="submitGuardian()">Send to Sensei Brandon</button></section>';
+  $('app').innerHTML=h;window.scrollTo(0,0);
+}
+function gKid(id){var a=state.form.kids;var i=a.indexOf(String(id));if(i>=0)a.splice(i,1);else a.push(String(id));$('gk-'+id).className=i>=0?'':'on';}
+function submitGuardian(){
+  var err=function(m){$('f-err').innerHTML='<div class="err">'+esc(m)+'</div>';};
+  var b={name:$('gn').value.trim(),relationship:$('gr').value.trim(),email:$('ge').value.trim(),phone:$('gp').value.trim(),studentIds:state.form.kids};
+  if(!b.name)return err('Please enter their name.');if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email))return err('Please enter a valid email for them.');
+  if(!b.studentIds.length)return err('Choose at least one child.');
+  if(previewBlock())return;
+  $('f-btn').disabled=true;$('f-btn').textContent='Sending…';
+  api('request-guardian',b).then(function(j){
+    if(j.ok)return load();
+    if(j._status===401)return signOut();
+    $('f-btn').disabled=false;$('f-btn').textContent='Send to Sensei Brandon';err(j.error||'Couldn’t send. Please try again.');
   });
 }
 
@@ -440,7 +492,7 @@ function submitIntent(){
   if(m){
     history.replaceState(null,'',location.pathname);
     $('app').innerHTML='<div class="spin"></div>';
-    api('redeem-link',{link:m[1]}).then(function(j){
+    api('redeem-link',{link:m[1],device:deviceId()}).then(function(j){
       if(j.token){setSess({token:j.token,exp:j.exp,email:j.email||''});sessWasSet=true;return load();}
       if(sess()){sessWasSet=true;return load();}
       showSignIn(j.message||j.error||'That link didn’t work.',true);
