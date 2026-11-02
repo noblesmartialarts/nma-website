@@ -230,6 +230,15 @@ function kidCard(s,fam){
   var col=s.beltColor||'#888';
   var h='<section class="card" id="kid-'+esc(s.id)+'"><div class="kid-top"><div class="avatar" style="background:'+esc(col)+';color:'+textColor(col)+'">'+esc((s.first||'?')[0])+'</div><div style="min-width:0">'+
     '<div class="kid-name">'+esc(s.first)+'</div><div class="belt"><i style="background:'+esc(col)+'"></i>'+esc(s.belt)+' · <span class="muted" style="font-weight:500">'+esc(s.group)+'</span></div></div></div>';
+  // Not on this month's Town roster
+  if(s.notRegistered){
+    var nr=s.notRegistered;
+    h+='<div class="cta" style="margin-top:14px">'+(nr.pending
+      ?'<b>'+(nr.pending==='skip'?'🏖️ Taking '+esc(nr.month)+' off':'📝 Registration check')+'</b><div class="small muted" style="margin-top:4px">Thanks for letting us know — Sensei Brandon will update '+esc(s.first)+'’s record.</div>'
+      :'<b>⚠️ '+esc(s.first)+' isn’t on the Town’s '+esc(nr.month)+' roster</b><div class="small muted" style="margin:4px 0 10px">If this was an oversight, there’s still time to register.</div>'+
+       (s.regLink?'<a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="'+esc(s.regLink)+'">Register on RecDesk →</a>':'')+
+       '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn sec" style="padding:10px" onclick="regReply(\''+esc(s.id)+'\',\'registered\')">I already registered</button><button class="btn sec" style="padding:10px" onclick="regReply(\''+esc(s.id)+'\',\'skip\')">Taking this month off</button></div>')+'</div>';
+  }
   // Progress
   if(s.nextBelt){
     h+='<div class="stripes">';for(var i=0;i<s.maxStripes;i++)h+='<span class="'+(i<s.stripes?'on':'')+'"></span>';h+='</div>';
@@ -278,7 +287,7 @@ function kidCard(s,fam){
   }
   h+='</div></div>';
   (s.orders||[]).forEach(function(o){h+='<div class="row"><div class="ic">\ud83d\uded2</div><div class="bd"><b>'+esc(o.label)+'</b><span class="muted small">'+esc(o.why||'')+'</span><a class="small" style="display:block;margin-top:4px;font-weight:700" href="'+esc(o.url)+'" target="_blank" rel="noopener">Order now \u2192</a></div></div>';});
-  if(s.regLink)h+='<div class="row"><div class="ic">\ud83d\udcdd</div><div class="bd"><b>Register for next month</b><span class="muted small">Keep '+esc(s.first)+'\u2019s spot in '+esc(s.group)+'.</span><a class="small" style="display:block;margin-top:4px;font-weight:700" href="'+esc(s.regLink)+'" target="_blank" rel="noopener">Register on RecDesk \u2192</a></div></div>';
+  if(s.regLink&&!s.notRegistered)h+='<div class="row"><div class="ic">\ud83d\udcdd</div><div class="bd"><b>Register for next month</b><span class="muted small">Keep '+esc(s.first)+'\u2019s spot in '+esc(s.group)+'.</span><a class="small" style="display:block;margin-top:4px;font-weight:700" href="'+esc(s.regLink)+'" target="_blank" rel="noopener">Register on RecDesk \u2192</a></div></div>';
   return h+'</section>';
 }
 function venmoLink(handle,amount,note){return 'https://account.venmo.com/payment-link?audience=private&amount='+(+amount).toFixed(2)+'&note='+encodeURIComponent(note)+'&recipients=%2C'+encodeURIComponent(handle)+'&txn=pay';}
@@ -366,6 +375,19 @@ function submitAbsence(){
     if(j.ok){return load().then(function(){var el=$('sched');if(el){el.scrollIntoView({block:'start'});el.insertAdjacentHTML('afterbegin','<div class="ok" style="margin:0 0 12px">Thanks — Sensei Brandon has your absence notice.</div>');}});}
     if(j._status===401)return signOut();
     $('f-btn').disabled=false;$('f-btn').textContent='Send absence notice';err(j.error||'Couldn’t send. Please try again.');
+  });
+}
+
+// ── Registration notice replies ──
+function regReply(id,choice){
+  if(previewBlock())return;
+  var s=findKid(id);var note='';
+  if(choice==='skip'){note=prompt('Taking '+(s&&s.notRegistered?s.notRegistered.month:'this month')+' off — anything you’d like Sensei Brandon to know? (optional)','');if(note===null)return;}
+  else if(!confirm('Let Sensei Brandon know '+(s?s.first:'your student')+' is already registered?'))return;
+  api('submit-reg',{studentId:id,choice:choice,note:note||''}).then(function(j){
+    if(j.ok)return load();
+    if(j._status===401)return signOut();
+    alert(j.error||'Couldn’t send. Please try again.');
   });
 }
 
