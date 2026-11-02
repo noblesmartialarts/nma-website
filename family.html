@@ -243,8 +243,10 @@ function kidCard(s,fam){
   // Intent letter
   if(s.intent){
     var it=s.intent;
-    if(it.status==='open')h+='<div class="cta"><b>✍️ Intent to Promote letter</b><div class="small muted" style="margin:4px 0 10px">'+esc(s.first)+' is testing for <b style="color:var(--text)">'+esc(it.promotingTo)+'</b> on '+fmtLong(it.eventDate)+'. Please fill this out before the test.</div><button class="btn" onclick="openIntent(\''+esc(s.id)+'\')">Fill out the letter</button></div>';
-    else h+='<div class="row"><div class="ic">✅</div><div class="bd"><b>Intent letter '+(it.status==='submitted'?'sent':'received')+'</b><span class="muted small">'+(it.status==='submitted'?'Thanks! Sensei Brandon will review it before the test.':'Thank you — you’re all set for '+fmt(it.eventDate)+'.')+'</span></div></div>';
+    var feeLine=it.fee?(it.feePaid?' · the $'+it.fee+' testing fee is paid — thank you!':''):'';
+    if(it.status==='open')h+='<div class="cta"><b>✍️ Intent to Promote letter</b><div class="small muted" style="margin:4px 0 10px">'+esc(s.first)+' is testing for <b style="color:var(--text)">'+esc(it.promotingTo)+'</b> on '+fmtLong(it.eventDate)+'. Two quick steps before the test:<br><b style="color:var(--text)">1.</b> Fill out the letter (about 2 minutes)'+(it.fee&&!it.feePaid?'<br><b style="color:var(--text)">2.</b> Pay the $'+it.fee+' belt testing fee':'')+'</div><button class="btn" onclick="openIntent(\''+esc(s.id)+'\')">Fill out the letter</button>'+(it.fee&&!it.feePaid?feeButtons(s,it,fam,true):'')+'</div>';
+    else{h+='<div class="row"><div class="ic">✅</div><div class="bd"><b>Intent letter '+(it.status==='submitted'?'sent':'received')+'</b><span class="muted small">'+(it.status==='submitted'?'Thanks! Sensei Brandon will review it before the test.':'Thank you — you’re all set for '+fmt(it.eventDate)+'.')+feeLine+'</span></div></div>';
+      if(it.fee&&!it.feePaid)h+='<div class="cta" style="margin-top:4px"><b>💵 Step 2: belt testing fee</b><div class="small muted" style="margin:4px 0 4px">'+esc(s.first)+'’s $'+it.fee+' fee for the '+esc(it.eventName)+'.</div>'+feeButtons(s,it,fam,false)+'</div>';}
   }
   // Black belt timeline
   if(s.bb){
@@ -279,6 +281,15 @@ function kidCard(s,fam){
   if(s.regLink)h+='<div class="row"><div class="ic">\ud83d\udcdd</div><div class="bd"><b>Register for next month</b><span class="muted small">Keep '+esc(s.first)+'\u2019s spot in '+esc(s.group)+'.</span><a class="small" style="display:block;margin-top:4px;font-weight:700" href="'+esc(s.regLink)+'" target="_blank" rel="noopener">Register on RecDesk \u2192</a></div></div>';
   return h+'</section>';
 }
+function venmoLink(handle,amount,note){return 'https://account.venmo.com/payment-link?audience=private&amount='+(+amount).toFixed(2)+'&note='+encodeURIComponent(note)+'&recipients=%2C'+encodeURIComponent(handle)+'&txn=pay';}
+function feeButtons(s,it,fam,compact){
+  var pay=(fam.school||{}).pay||{};var note='NMA belt test fee - '+s.first+' '+(s.last||'')+' - '+(it.eventName||'');
+  var h='';
+  if(pay.venmo)h+='<a class="pay" style="'+(compact?'background:transparent;':'')+'border-color:#008cff" target="_blank" rel="noopener" href="'+esc(venmoLink(pay.venmo,it.fee,note))+'"><span class="lg" style="background:#008cff">V</span><span>Pay $'+it.fee+' with Venmo <span class="pill" style="background:rgba(0,140,255,.15);color:#3aa0ff">Preferred</span><small>@'+esc(pay.venmo)+' · amount and note filled in</small></span><span class="go">→</span></a>';
+  var other=[];if(pay.zelle)other.push('Zelle to '+esc(pay.zelle));if(pay.paypal)other.push('<a href="https://paypal.me/'+encodeURIComponent(pay.paypal)+'/'+(+it.fee).toFixed(2)+'USD" target="_blank" rel="noopener">PayPal</a>');other.push('cash at class');
+  h+='<div class="small muted" style="margin-top:6px">Or '+other.join(', ')+'. It can take a day or two to show as paid.</div>';
+  return h;
+}
 function balanceCard(fam){
   var b=fam.balance||{items:[],total:0};var sc=fam.school||{};var pay=sc.pay||{};
   var h='<section class="card" id="balance"><h2>Balance</h2>';
@@ -288,7 +299,7 @@ function balanceCard(fam){
   var amt=(+b.total||0).toFixed(2);
   var fs=(fam.students||[]).map(function(s){return s.first;});var who=(fs.length>1?fs.slice(0,-1).join(', ')+' & '+fs[fs.length-1]:(fs[0]||''))+' '+((fam.students[0]||{}).last||'');
   var memo=('NMA - '+who.trim()+' - '+b.items.map(function(i){return i.label.split(' — ')[0];}).join(', ')).slice(0,140);
-  if(pay.venmo)h+='<a class="pay" target="_blank" rel="noopener" href="https://account.venmo.com/payment-link?audience=private&amount='+amt+'&note='+encodeURIComponent(memo)+'&recipients=%2C'+encodeURIComponent(pay.venmo)+'&txn=pay"><span class="lg" style="background:#008cff">V</span><span>Pay '+money(b.total)+' with Venmo<small>@'+esc(pay.venmo)+' · amount and note filled in</small></span><span class="go">→</span></a>';
+  if(pay.venmo)h+='<a class="pay" target="_blank" rel="noopener" href="https://account.venmo.com/payment-link?audience=private&amount='+amt+'&note='+encodeURIComponent(memo)+'&recipients=%2C'+encodeURIComponent(pay.venmo)+'&txn=pay"><span class="lg" style="background:#008cff">V</span><span>Pay '+money(b.total)+' with Venmo <span class="pill" style="background:rgba(0,140,255,.15);color:#3aa0ff">Preferred</span><small>@'+esc(pay.venmo)+' · amount and note filled in</small></span><span class="go">→</span></a>';
   if(pay.zelle)h+='<button type="button" class="pay" onclick="copyZelle(this,\''+esc(pay.zelle)+'\')"><span class="lg" style="background:#6d1ed4">Z</span><span>Pay with Zelle<small>Send '+money(b.total)+' to <b>'+esc(pay.zelle)+'</b> from your bank app · tap to copy</small></span></button>';
   if(pay.paypal)h+='<a class="pay" target="_blank" rel="noopener" href="https://paypal.me/'+encodeURIComponent(pay.paypal)+'/'+amt+'USD"><span class="lg" style="background:#003087">P</span><span>Pay '+money(b.total)+' with PayPal<small>paypal.me/'+esc(pay.paypal)+'</small></span><span class="go">→</span></a>';
   h+='<div class="small muted" style="margin-top:10px">Please include <b>'+esc(who.trim())+'</b> in the note. '+(sc.payInfo?esc(sc.payInfo)+' ':'')+'Payments can take a day or two to show here.</div>';
@@ -467,7 +478,7 @@ function submitIntent(){
   api('submit-intent',body).then(function(j){
     if(j.ok){
       var s=findKid(f.sid);if(s&&s.intent)s.intent.status='submitted';
-      render();var el=$('kid-'+f.sid);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.insertAdjacentHTML('afterbegin','<div class="ok" style="margin:0 0 12px">Thank you! Your letter was sent to Sensei Brandon.</div>');}
+      render();var el=$('kid-'+f.sid);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.insertAdjacentHTML('afterbegin','<div class="ok" style="margin:0 0 12px">Thank you! Your letter was sent to Sensei Brandon.'+(s&&s.intent&&s.intent.fee&&!s.intent.feePaid?' Last step: the $'+s.intent.fee+' testing fee below.':'')+'</div>');}
       return;
     }
     if(j._status===401)return signOut();
