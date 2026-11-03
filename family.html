@@ -215,6 +215,7 @@ function render(){
   v.families.forEach(function(fam){
     var sc=fam.school||{};
     if(v.families.length>1)h+='<div class="hero" style="padding:20px 0 0"><h1 style="font-size:2rem">'+esc(fam.family.name)+' Family</h1></div>';
+    h+=regBanner(fam);
     if(sc.announcement)h+='<div class="card" style="border-color:var(--bright)"><div class="small muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em">📣 From Sensei Brandon</div><div style="margin-top:6px;white-space:pre-line">'+esc(sc.announcement)+'</div></div>';
     if(!fam.students.length)h+='<div class="card"><p class="muted">No active students on your account right now.</p></div>';
     fam.students.forEach(function(s){h+=kidCard(s,fam);});
@@ -235,9 +236,9 @@ function kidCard(s,fam){
     var nr=s.notRegistered;
     h+='<div class="cta" style="margin-top:14px">'+(nr.pending
       ?'<b>'+(nr.pending==='skip'?'🏖️ Taking '+esc(nr.month)+' off':'📝 Registration check')+'</b><div class="small muted" style="margin-top:4px">Thanks for letting us know — Sensei Brandon will update '+esc(s.first)+'’s record.</div>'
-      :'<b>⚠️ '+esc(s.first)+' isn’t on the Town’s '+esc(nr.month)+' roster</b><div class="small muted" style="margin:4px 0 10px">If this was an oversight, there’s still time to register.</div>'+
-       (s.regLink?'<a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="'+esc(s.regLink)+'">Register on RecDesk →</a>':'')+
-       '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn sec" style="padding:10px" onclick="regReply(\''+esc(s.id)+'\',\'registered\')">I already registered</button><button class="btn sec" style="padding:10px" onclick="regReply(\''+esc(s.id)+'\',\'skip\')">Taking this month off</button></div>')+'</div>';
+      :'<b>⚠️ '+esc(s.first)+' isn’t on the Town’s '+esc(nr.month)+' roster</b><div class="small muted" style="margin:4px 0 10px">Registration for '+esc(nr.month)+' has closed. If you registered, let us know and Sensei Brandon will check with the Town. Otherwise, reach out and we’ll see what we can do.</div>'+
+       '<div style="display:flex;gap:8px"><button class="btn sec" style="padding:10px" onclick="regReply(\''+esc(s.id)+'\',\'registered\')">I already registered</button><button class="btn sec" style="padding:10px" onclick="regReply(\''+esc(s.id)+'\',\'skip\')">Taking this month off</button></div>'+
+       '<a class="btn sec" style="margin-top:8px;text-decoration:none" href="mailto:noblesmartialarts@gmail.com?subject='+encodeURIComponent(s.first+' — '+nr.month+' registration')+'">Contact Sensei Brandon</a>')+'</div>';
   }
   // Progress
   if(s.nextBelt){
@@ -377,6 +378,25 @@ function submitAbsence(){
     $('f-btn').disabled=false;$('f-btn').textContent='Send absence notice';err(j.error||'Couldn’t send. Please try again.');
   });
 }
+
+// ── Registration deadline banner (the 10 days before RecDesk closes) ──
+function regBanner(fam){
+  var r=(fam.school||{}).regDeadline;if(!r||!r.deadline||state.preview===undefined&&false)return'';
+  var left=daysUntil(r.deadline);if(left<0||left>10)return'';
+  var dk='nma_reg_done_'+r.deadline+'_'+fam.familyId;
+  try{if(!state.preview&&localStorage.getItem(dk))return'';}catch(e){}
+  var seen={},links=[];
+  (fam.students||[]).forEach(function(s){if(s.regLinkAll&&!seen[s.group]){seen[s.group]=1;links.push(s);}});
+  var when=left===0?'tonight at 11:59 PM':fmt(r.deadline,{weekday:'long',month:'short',day:'numeric'})+' at 11:59 PM';
+  var h='<div class="card" style="border-color:'+(left<=2?'var(--red)':'var(--amber)')+';background:'+(left<=2?'var(--red-soft)':'var(--amber-soft)')+'">'+
+    '<b>📝 '+esc(r.month)+' registration closes '+when+'</b>'+
+    '<div class="small muted" style="margin:4px 0 10px">'+(left===0?'Last day to register through the Town’s RecDesk site.':left+' day'+(left!==1?'s':'')+' left · classes start '+fmt(r.firstClass,{weekday:'long',month:'short',day:'numeric'})+'.')+'</div>';
+  if(links.length===1)h+='<a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="'+esc(links[0].regLinkAll)+'">Register on RecDesk →</a>';
+  else links.forEach(function(s){var kids=(fam.students||[]).filter(function(x){return x.group===s.group;}).map(function(x){return x.first;}).join(' & ');h+='<a class="btn" style="text-decoration:none;margin-top:6px" target="_blank" rel="noopener" href="'+esc(s.regLinkAll)+'">Register '+esc(kids)+' ('+esc(s.group)+') →</a>';});
+  h+='<button class="btn sec" style="margin-top:8px" onclick="regDone(\''+esc(dk)+'\')">Done — I’ve registered</button></div>';
+  return h;
+}
+function regDone(k){try{localStorage.setItem(k,'1');}catch(e){}render();}
 
 // ── Registration notice replies ──
 function regReply(id,choice){
