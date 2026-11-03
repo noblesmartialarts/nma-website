@@ -221,6 +221,7 @@ function render(){
     fam.students.forEach(function(s){h+=kidCard(s,fam);});
     h+=balanceCard(fam);
     h+=scheduleCard(fam);
+    h+=talkCard(fam);
     h+=resourcesCard(fam);
     h+=contactCard(fam);
     h+='<p class="muted small center" style="margin-top:6px">Updated '+new Date(fam.updatedAt||fam.generatedAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</p>';
@@ -376,6 +377,63 @@ function submitAbsence(){
     if(j.ok){return load().then(function(){var el=$('sched');if(el){el.scrollIntoView({block:'start'});el.insertAdjacentHTML('afterbegin','<div class="ok" style="margin:0 0 12px">Thanks — Sensei Brandon has your absence notice.</div>');}});}
     if(j._status===401)return signOut();
     $('f-btn').disabled=false;$('f-btn').textContent='Send absence notice';err(j.error||'Couldn’t send. Please try again.');
+  });
+}
+
+// ── Questions & feedback ──
+function talkCard(fam){
+  return '<section class="card" id="talk"><h2>Questions &amp; feedback</h2><p class="small muted">Reach Sensei Brandon directly — replies come to your email.</p>'+
+    '<button class="btn" style="margin-top:12px" onclick="openMessage(\''+esc(fam.familyId)+'\')">💬 Message Sensei Brandon</button>'+
+    '<button class="btn sec" style="margin-top:8px" onclick="openFeedback(\''+esc(fam.familyId)+'\')">⭐ Share feedback</button></section>';
+}
+function goTo(id){render();setTimeout(function(){var el=$(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},50);}
+function openMessage(fid){
+  var fam=famById(fid);state.form={kind:'message',kids:fam.students.length===1?[String(fam.students[0].id)]:[],topic:''};
+  var hasBal=fam.balance&&fam.balance.items&&fam.balance.items.length;
+  var h='<div style="padding-top:14px"><button class="ghost" onclick="render()">← Back</button></div><section class="card"><h2>Message Sensei Brandon</h2>'+
+    '<div class="note" style="margin:8px 0 4px"><b>Quick answers:</b> '+
+      '<a href="#" onclick="goTo(\'sched\');return false;">class times &amp; days</a> · '+
+      (hasBal?'<a href="#" onclick="goTo(\'balance\');return false;">your balance &amp; how to pay</a> · ':'')+
+      '<a href="#" onclick="openAbsence(\''+esc(fid)+'\');return false;">report an absence</a> · '+
+      '<a href="/handbook.pdf" target="_blank" rel="noopener">Family Handbook</a></div>'+
+    '<label class="f">What’s it about?</label><div class="chips">'+[['question','Question'],['scheduling','Scheduling'],['billing','Billing / payments'],['private','Private lessons'],['other','Something else']].map(function(t){return '<button type="button" id="tp-'+t[0]+'" onclick="msgTopic(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>';
+  if(fam.students.length>1)h+='<label class="f">About <span class="muted" style="font-weight:400">(optional)</span></label><div class="chips">'+fam.students.map(function(s){return '<button type="button" id="mk-'+esc(s.id)+'" onclick="msgKid(\''+esc(s.id)+'\')">'+esc(s.first)+'</button>';}).join('')+'</div>';
+  h+='<label class="f" for="mm">Your message</label><textarea id="mm" maxlength="3000" style="min-height:130px"></textarea>'+
+    '<div id="f-err"></div><button class="btn" id="f-btn" style="margin-top:16px" onclick="submitMessage()">Send</button>'+
+    '<p class="small muted" style="margin-top:10px">Sensei Brandon will reply to '+esc((state.view&&state.view.email)||'your email')+'.</p></section>';
+  $('app').innerHTML=h;window.scrollTo(0,0);
+}
+function msgTopic(t){state.form.topic=t;['question','scheduling','billing','private','other'].forEach(function(x){var b=$('tp-'+x);if(b)b.className=x===t?'on':'';});}
+function msgKid(id){var a=state.form.kids;var i=a.indexOf(String(id));if(i>=0)a.splice(i,1);else a.push(String(id));$('mk-'+id).className=i>=0?'':'on';}
+function submitMessage(){
+  var f=state.form;var err=function(m){$('f-err').innerHTML='<div class="err">'+esc(m)+'</div>';};
+  var msg=$('mm').value.trim();if(!f.topic)return err('Choose what it’s about.');if(msg.length<3)return err('Please write a message.');
+  if(previewBlock())return;
+  $('f-btn').disabled=true;$('f-btn').textContent='Sending…';
+  api('send-message',{topic:f.topic,studentIds:f.kids,message:msg}).then(function(j){
+    if(j.ok){render();var el=$('talk');if(el){el.scrollIntoView({block:'start'});el.insertAdjacentHTML('afterbegin','<div class="ok" style="margin:0 0 12px">Sent! Sensei Brandon will reply by email.</div>');}return;}
+    if(j._status===401)return signOut();
+    $('f-btn').disabled=false;$('f-btn').textContent='Send';err(j.error||'Couldn’t send. Please try again.');
+  });
+}
+function openFeedback(fid){
+  var h='<div style="padding-top:14px"><button class="ghost" onclick="render()">← Back</button></div><section class="card"><h2>Share feedback</h2>'+
+    '<p class="small muted">What’s going well, what could be better, ideas for classes or events — all of it helps.</p>'+
+    '<label class="f" for="fbm">Your feedback</label><textarea id="fbm" maxlength="3000" style="min-height:140px"></textarea>'+
+    '<label class="check"><input type="checkbox" id="fba"/> <span>Send without my name</span></label>'+
+    '<div id="f-err"></div><button class="btn" id="f-btn" style="margin-top:16px" onclick="submitFeedback()">Send feedback</button></section>';
+  $('app').innerHTML=h;window.scrollTo(0,0);
+}
+function submitFeedback(){
+  var err=function(m){$('f-err').innerHTML='<div class="err">'+esc(m)+'</div>';};
+  var msg=$('fbm').value.trim();if(msg.length<3)return err('Please write your feedback.');
+  if(previewBlock())return;
+  var anon=$('fba').checked;
+  $('f-btn').disabled=true;$('f-btn').textContent='Sending…';
+  api('send-feedback',{message:msg,anonymous:anon}).then(function(j){
+    if(j.ok){render();var el=$('talk');if(el){el.scrollIntoView({block:'start'});el.insertAdjacentHTML('afterbegin','<div class="ok" style="margin:0 0 12px">Thank you for the feedback'+(anon?' — it was sent without your name':'')+'!</div>');}return;}
+    if(j._status===401)return signOut();
+    $('f-btn').disabled=false;$('f-btn').textContent='Send feedback';err(j.error||'Couldn’t send. Please try again.');
   });
 }
 
