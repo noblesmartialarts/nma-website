@@ -101,6 +101,13 @@
   status = 301
   force = true
 
+# --- Branded short link for the Google review page ---
+[[redirects]]
+  from = "/review"
+  to = "https://g.page/r/CTGHorXHkzb7EBM/review"
+  status = 302
+  force = true
+
 [functions."pl-notify-approved"]
   schedule = "*/5 * * * *"
 

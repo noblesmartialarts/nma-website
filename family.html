@@ -326,6 +326,7 @@ function resourcesCard(fam){
   if(sc.bbGuide)l.push(['🏆','Black Belt Test Guide','Training workbook','/black-belt-test-training-guide.pdf']);
   l.push(['👕','Order Apparel','Shirts & uniforms','https://form.jotform.com/noblesmartialarts/nma-t-shirt-order']);
   l.push(['📸','Share Photos','Class & test pics','/photos']);
+  l.push(['⭐','Leave a Review','Tell others on Google','/review']);
   l.push(['📦','Lost & Found','Missing items','/lost-and-found']);
   l.push(['🏠','Parent Hub','Everything else','/parent-hub']);
   return '<section class="card"><h2>Parent resources</h2><div class="res">'+l.map(function(x){return '<a href="'+esc(x[3])+'" target="_blank" rel="noopener"><span>'+x[0]+'</span>'+esc(x[1])+'<small>'+esc(x[2])+'</small></a>';}).join('')+'</div></section>';
