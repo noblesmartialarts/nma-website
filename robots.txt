@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /waiver
 
 Sitemap: https://noblesmartialarts.com/sitemap.xml
