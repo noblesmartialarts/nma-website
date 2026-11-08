@@ -94,6 +94,22 @@
   status = 200
   force = true
 
+# --- Workshop e-waivers ---
+# The signing page lives on the CRM site; shown here so families see noblesmartialarts.com.
+# The page calls the CRM's waiver API directly so each signer's real IP is recorded.
+[[redirects]]
+  from = "/waiver"
+  to = "https://crm.noblesmartialarts.com/waiver"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/waiver"
+  [headers.values]
+    Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"
+    X-Robots-Tag = "noindex, nofollow"
+
 # --- Branded short link for the parent photo-sharing Jotform ---
 [[redirects]]
   from = "/photos"
