@@ -115,6 +115,10 @@ section{margin-top:44px}
 .field input,.field textarea{width:100%;background:var(--surf);border:1px solid var(--border2);border-radius:10px;
   padding:11px 13px;color:var(--text);font-family:inherit;font-size:.92rem;transition:border-color .15s}
 .field input:focus,.field textarea:focus{outline:none;border-color:var(--bright)}
+.field select{width:100%;background:var(--surf);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;color:var(--text);font-family:inherit;font-size:.92rem;transition:border-color .15s;appearance:none;-webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+.field select:focus{outline:none;border-color:var(--bright)}
+.field select option{color:#111}
 .field textarea{resize:vertical;min-height:90px;line-height:1.5}
 .hp-field{position:absolute;left:-9999px;top:-9999px}
 .form-submit{margin-top:2px}
@@ -257,6 +261,43 @@ try{
         </div>
       </div>
 
+      <div class="field-row-2">
+        <div class="field">
+          <label for="wf-type">Type of Group <span class="opt">(optional)</span></label>
+          <select id="wf-type" name="group_type">
+            <option value="">Choose one…</option>
+            <option value="parent_teen">Parents &amp; teens</option>
+            <option value="women">Mother-daughter / women's group</option>
+            <option value="school">School</option>
+            <option value="church">Church</option>
+            <option value="corporate">Company / workplace</option>
+            <option value="community">Community / neighborhood</option>
+            <option value="friends">Friends / celebration</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="wf-heard">How did you hear about us?</label>
+          <select id="wf-heard" name="heard_about" required>
+            <option value="">Choose one…</option>
+            <option value="google_search">Google search</option>
+            <option value="google_maps">Google Maps / Google Business listing</option>
+            <option value="ai">ChatGPT or another AI assistant</option>
+            <option value="instagram">Instagram</option>
+            <option value="facebook">Facebook</option>
+            <option value="referral">A friend, family member, or colleague</option>
+            <option value="nma_family">I'm a current or past NMA family</option>
+            <option value="event">Flyer or community event</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field" id="wf-heard-detail-wrap" hidden>
+        <label for="wf-heard-detail" id="wf-heard-detail-label">Tell us a little more <span class="opt">(optional)</span></label>
+        <input type="text" id="wf-heard-detail" name="heard_about_detail" maxlength="200"/>
+      </div>
+
       <div class="field">
         <label for="wf-timeframe">Rough Timeframe</label>
         <input type="text" id="wf-timeframe" name="timeframe" placeholder="e.g. early October, flexible"/>
@@ -312,6 +353,44 @@ try{
       try{ localStorage.setItem('nma-theme',next); }catch(e){}
     });
   }
+})();
+</script>
+<script>
+/* ── workshop inquiry: also save to the CRM pipeline, then submit the Netlify form as before ── */
+(function(){
+  var KEY='nma_first_touch';
+  // Remember how the visitor first arrived (link tags + referring site), for this browser session.
+  try{
+    if(!sessionStorage.getItem(KEY)){
+      var q=new URLSearchParams(location.search),t={};
+      ['utm_source','utm_medium','utm_campaign'].forEach(function(k){if(q.get(k))t[k]=q.get(k).slice(0,60);});
+      if(document.referrer&&document.referrer.indexOf(location.host)<0)t.referrer=document.referrer.slice(0,200);
+      sessionStorage.setItem(KEY,JSON.stringify(t));
+    }
+  }catch(e){}
+  var heard=document.getElementById('wf-heard'),wrap=document.getElementById('wf-heard-detail-wrap'),lab=document.getElementById('wf-heard-detail-label');
+  var PROMPTS={referral:'Who referred you?',event:'Which event or where did you see the flyer?',other:'Where did you hear about us?',ai:'Which assistant, and what did you ask?',google_search:'What did you search for?'};
+  if(heard)heard.addEventListener('change',function(){
+    var p=PROMPTS[heard.value];wrap.hidden=!p;
+    if(p)lab.innerHTML=p.replace(/</g,'&lt;')+' <span class="opt">(optional)</span>';
+  });
+  var form=document.getElementById('request-form');
+  if(!form)return;
+  var sent=false;
+  form.addEventListener('submit',function(ev){
+    if(sent)return;
+    ev.preventDefault();
+    if(form.reportValidity&&!form.reportValidity())return;
+    sent=true;
+    var btn=form.querySelector('button[type=submit]');if(btn){btn.disabled=true;btn.style.opacity='.6';}
+    var data={};new FormData(form).forEach(function(v,k){data[k]=v;});
+    try{data.tracking=JSON.parse(sessionStorage.getItem(KEY)||'{}');}catch(e){data.tracking={};}
+    var finished=false;
+    var done=function(){if(finished)return;finished=true;form.submit();}; // native submit → Netlify Forms email + /thank-you
+    var timer=setTimeout(done,4000);                   // never hold the visitor up for long
+    fetch('/.netlify/functions/workshop-inquiry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),keepalive:true})
+      .catch(function(){}).then(function(){clearTimeout(timer);done();});
+  });
 })();
 </script>
 </body>
