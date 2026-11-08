@@ -148,9 +148,9 @@ try{ if(localStorage.getItem('nma-theme')==='light') document.documentElement.se
         <div class="field"><label>Contact Name</label><input type="text" id="f-contact_name" placeholder="Jane Smith"/></div>
         <div class="field"><label>Type</label>
           <select id="f-type">
+            <option>Parent Group</option><option>Mother-Daughter / Women's</option><option>School</option>
             <option>Church</option><option>Corporate</option><option>Community/Neighborhood</option>
-            <option>Healthcare</option><option>Real Estate</option><option>School</option>
-            <option>Friend Group/Celebration</option><option>Other</option>
+            <option>Healthcare</option><option>Real Estate</option><option>Friend Group/Celebration</option><option>Other</option>
           </select>
         </div>
       </div>
@@ -161,14 +161,16 @@ try{ if(localStorage.getItem('nma-theme')==='light') document.documentElement.se
       <div class="field-row-2">
         <div class="field"><label>Status</label>
           <select id="f-status">
-            <option>Not Contacted</option><option>Contacted</option><option>Scheduled</option>
+            <option>Not Contacted</option><option>Contacted</option><option>Proposal Sent</option><option>Scheduled</option>
             <option>Completed</option><option>Recurring/Follow-up</option><option>Declined</option>
           </select>
         </div>
         <div class="field"><label>Source</label>
           <select id="f-source">
-            <option>Referral</option><option>Cold Email</option><option>Facebook Post</option>
-            <option>Networking Event</option><option>Website Inquiry</option><option>Other</option>
+            <option>ChatGPT / AI Assistant</option><option>Google Search</option><option>Google Maps / Business Profile</option>
+            <option>Instagram</option><option>Facebook</option><option>Referral</option><option>Previous NMA Family</option>
+            <option>Flyer / Community Event</option><option>Website Inquiry</option><option>Cold Email</option>
+            <option>Networking Event</option><option>Other</option>
           </select>
         </div>
       </div>
@@ -270,6 +272,7 @@ var supa = { from: function(t){ return new LeadsQuery(t); } };
 var STATUS_META = {
   'Not Contacted':      {color:'var(--muted)',  bg:'var(--surf2)'},
   'Contacted':          {color:'var(--bright)', bg:'var(--soft)'},
+  'Proposal Sent':      {color:'var(--bright)', bg:'var(--soft)'},
   'Scheduled':          {color:'var(--amber)',  bg:'rgba(245,158,11,.14)'},
   'Completed':          {color:'var(--green)',  bg:'rgba(34,197,94,.14)'},
   'Recurring/Follow-up':{color:'var(--purple)', bg:'rgba(168,85,247,.14)'},
@@ -374,7 +377,15 @@ function openEditLead(id){
   editingId = id;
   document.getElementById('modal-title').textContent = 'Edit Workshop Lead';
   document.getElementById('deleteLeadBtn').style.display = 'block';
-  FIELDS.forEach(function(f){ var el=document.getElementById('f-'+f); if(el) el.value = lead[f]!=null ? lead[f] : ''; });
+  FIELDS.forEach(function(f){
+    var el=document.getElementById('f-'+f); if(!el) return;
+    var v = lead[f]!=null ? String(lead[f]) : '';
+    // A saved value this list doesn't have (e.g. set in the CRM) is added so saving never blanks it.
+    if (el.tagName==='SELECT' && v && ![].some.call(el.options,function(o){return o.value===v;})){
+      var o=document.createElement('option'); o.textContent=v; el.appendChild(o);
+    }
+    el.value = v;
+  });
   document.getElementById('f-testimonial_obtained').checked = !!lead.testimonial_obtained;
   document.getElementById('f-photo_obtained').checked = !!lead.photo_obtained;
   document.getElementById('modal-lead').classList.add('open');
