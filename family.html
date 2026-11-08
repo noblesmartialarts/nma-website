@@ -134,6 +134,15 @@ var THEMES=['Respect & manners','Listening','Interrupting / talking back','Self-
 var state={view:null,email:'',form:null};
 
 function $(id){return document.getElementById(id);}
+// Turns web addresses in already-escaped announcement text into tappable links.
+// Only http(s) links are made; a bare domain like noblesmartialarts.com/review gets https://.
+function linkify(h){
+  return String(h).replace(/(^|[\s(])((?:https?:\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\s<]*)?)/gi,function(m,pre,url){
+    var trail='';while(/[.,!?;:)]$/.test(url)){trail=url.slice(-1)+trail;url=url.slice(0,-1);}
+    var href=/^https?:\/\//i.test(url)?url:'https://'+url;
+    return pre+'<a href="'+href+'" target="_blank" rel="noopener" style="color:var(--bright);font-weight:700">'+url+'</a>'+trail;
+  });
+}
 function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function sess(){try{var s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.token&&s.exp>Date.now()/1000+60)return s;}catch(e){}return null;}
 function deviceId(){try{var d=localStorage.getItem('nma_portal_device');if(!d){d=Array.from(crypto.getRandomValues(new Uint8Array(12))).map(function(b){return ('0'+b.toString(16)).slice(-2);}).join('');localStorage.setItem('nma_portal_device',d);}return d;}catch(e){return '';}}
@@ -216,7 +225,7 @@ function render(){
     var sc=fam.school||{};
     if(v.families.length>1)h+='<div class="hero" style="padding:20px 0 0"><h1 style="font-size:2rem">'+esc(fam.family.name)+' Family</h1></div>';
     h+=regBanner(fam);
-    if(sc.announcement)h+='<div class="card" style="border-color:var(--bright)"><div class="small muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em">📣 From Sensei Brandon</div><div style="margin-top:6px;white-space:pre-line">'+esc(sc.announcement)+'</div></div>';
+    if(sc.announcement)h+='<div class="card" style="border-color:var(--bright)"><div class="small muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em">📣 From Sensei Brandon</div><div style="margin-top:6px;white-space:pre-line">'+linkify(esc(sc.announcement))+'</div></div>';
     if(!fam.students.length)h+='<div class="card"><p class="muted">No active students on your account right now.</p></div>';
     fam.students.forEach(function(s){h+=kidCard(s,fam);});
     h+=balanceCard(fam);
