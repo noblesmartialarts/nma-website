@@ -334,6 +334,8 @@ function resourcesCard(fam){
   var l=[['📘','Family Handbook','PDF','/handbook.pdf']];
   if(sc.bbGuide)l.push(['🏆','Black Belt Test Guide','Training workbook','/black-belt-test-training-guide.pdf']);
   l.push(['👕','Order Apparel','Shirts & uniforms','https://form.jotform.com/noblesmartialarts/nma-t-shirt-order']);
+  // Weapons start in Black Belt Club, so families with a BBC, Master's Club or Legends student get the gear & weapons order forms.
+  if((fam.students||[]).some(function(s){return s.group==='Black Belt Club'||s.group==="Master's Club"||s.group==='Legends Club';}))l.push(['⚔️','Gear & Weapons','Weapons & equipment','/gear']);
   l.push(['📸','Share Photos','Class & test pics','/photos']);
   l.push(['⭐','Leave a Review','Tell others on Google','/review']);
   l.push(['📦','Lost & Found','Missing items','/lost-and-found']);

@@ -1711,6 +1711,7 @@ fetchSiteContent(function() {
     '/registration':    { tab: 'register' },
     '/practice-videos': { tab: 'hub', after: function(){ if (typeof showVideos === 'function') showVideos(); } },
     '/parent-hub':      { tab: 'hub' },
+    '/gear':            { tab: 'hub', after: function(){ if (typeof showPaySection === 'function') { showPaySection(); setTimeout(function(){ var sec=document.getElementById('hubPaySection'); if (sec) sec.scrollIntoView({behavior:'smooth'}); }, 80); } } },
     '/sale':            { tab: 'sale' },
     '/lost-and-found':  { tab: 'lostfound' },
     '/forms':           { tab: 'forms' },
