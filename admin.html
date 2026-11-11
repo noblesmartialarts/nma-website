@@ -635,8 +635,11 @@ function populateForm(){
   var vids=data.videos||[];
   var vl=document.getElementById('vidList'); vl.innerHTML='';
   var VID_LABELS=['Little Dragons & Karate Kids','Black Belt Club Level I','Black Belt Club Level II',
-    'Masters Club','BBC Test Review (Orange → Purple)','Masters Club Test Review (Green II → Brown)','Black Belt Test Review (BB Candidates)'];
-  VID_LABELS.forEach(function(lbl,i){
+    'Masters Club','BBC Test Review (Orange → Purple)','Masters Club Test Review (Green II → Brown)','Black Belt Test Review (BB Candidates)',
+    'Legends Club (Jr. Black Belts)'];
+  // Slot 7 (Legends) is stored last so older saved data keeps its slots, but shown right after Masters Club.
+  var VID_ORDER=[0,1,2,3,7,4,5,6];
+  VID_ORDER.forEach(function(i){ var lbl=VID_LABELS[i];
     var url=(vids[i]&&vids[i].url)||'';
     vl.insertAdjacentHTML('beforeend',
       '<div class="field"><label>'+lbl+'</label>'+
@@ -850,7 +853,8 @@ function collectData(){
     {label:'Masters Club',tag:'Masters'},
     {label:'BBC Test Review',tag:'Orange to Purple'},
     {label:'Masters Club Test Review',tag:'Green II to Brown'},
-    {label:'Black Belt Test Review',tag:'BB Candidates'}
+    {label:'Black Belt Test Review',tag:'BB Candidates'},
+    {label:'Legends Club (Jr. Black Belts)',tag:'Legends'}
   ];
   VID_META.forEach(function(v,i){
     vids.push({label:v.label,tag:v.tag,url:(document.getElementById('vid-'+i)||{}).value||''});

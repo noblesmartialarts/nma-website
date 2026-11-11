@@ -2143,7 +2143,13 @@ fetchSiteContent(function() {
     sec.innerHTML='<div class="head" style="margin-top:20px"><p class="eye">Practice Videos</p><h2 class="disp">Train Between Classes</h2></div><div class="video-grid" id="hubVideoGrid"></div>';
     document.getElementById('tab-hub').querySelector('.wrap-inner,section').parentNode.appendChild(sec);
     var vg=document.getElementById('hubVideoGrid');
-    CONFIG.videos.forEach(function(v){
+    // Skip empty slots; show Legends right after Masters Club.
+    var vlist=CONFIG.videos.filter(function(v){return v&&v.url;});
+    var leg=vlist.filter(function(v){return /^legends/i.test(v.label||'');});
+    vlist=vlist.filter(function(v){return leg.indexOf(v)<0;});
+    var mi=-1; vlist.forEach(function(v,i){ if(/^masters club$/i.test(v.label||'')) mi=i; });
+    if(leg.length) vlist.splice(mi>=0?mi+1:vlist.length,0,leg[0]);
+    vlist.forEach(function(v){
       var row=document.createElement('div'); row.className='video-group';
       row.innerHTML='<div class="video-group-head"><div><div class="vg-label">'+esc(v.label)+'</div></div><div style="display:flex;align-items:center;gap:7px"><div class="vg-tag">'+esc(v.tag)+'</div><button class="vg-watch" data-url="'+esc(v.url)+'" data-label="'+esc(v.label)+'"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Watch</button></div></div>';
       vg.appendChild(row);
