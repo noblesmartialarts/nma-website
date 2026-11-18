@@ -452,7 +452,8 @@ function renderShop(){
 function shopItemHTML(i){
   var st=state.shop;
   var cat=null;(shopFam().shop.cats||[]).forEach(function(c){if(c.id===i.cat)cat=c;});
-  var pic=i.img?'<img class="shopimg" src="'+esc(i.img)+'" alt="" loading="lazy" onclick="shopZoom(\''+esc(i.img)+'\',\''+esc(i.name).replace(/'/g,'&#39;')+'\')"/>':'<div class="shopimg ph" aria-hidden="true">'+(cat&&cat.icon||'🛍️')+'</div>';
+  var src=(i.designImgs&&state.shop.pick===i.id&&state.shop.sel.design&&i.designImgs[state.shop.sel.design])||i.img;
+  var pic=src?'<img class="shopimg" src="'+esc(src)+'" alt="" loading="lazy" onclick="shopZoom(\''+esc(src)+'\',\''+esc(i.name).replace(/'/g,'&#39;')+'\')"/>':'<div class="shopimg ph" aria-hidden="true">'+(cat&&cat.icon||'🛍️')+'</div>';
   var h='<div style="display:flex;gap:12px;align-items:flex-start">'+pic+'<div style="flex:1;min-width:0;display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0">'+(i.badge?'<span class="pill a">'+esc(i.badge)+'</span>':'')+'<b style="display:block;font-size:1rem;margin-top:'+(i.badge?'6px':'0')+'">'+esc(i.name)+'</b>'+(i.detail?'<span class="small muted">'+esc(i.detail)+'</span>':'')+'</div><b class="disp" style="font-size:1.6rem;white-space:nowrap">$'+i.price+'</b></div></div>';
   if(st.pick!==i.id)return h+'<button class="btn sec" style="margin-top:12px" onclick="shopPick(\''+i.id+'\')">Add to order</button>';
   var sel=st.sel;
