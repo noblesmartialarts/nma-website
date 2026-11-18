@@ -103,6 +103,11 @@ details summary::-webkit-details-marker{display:none}
 a{color:var(--bright)}
 footer{padding:26px 0 40px;text-align:center;font-size:.8rem;color:var(--muted)}
 .hero{padding:40px 0 10px}
+select{width:100%;background:var(--surf2);border:1px solid var(--border2);color:var(--text);border-radius:12px;padding:12px 14px;font:500 1rem 'Inter',sans-serif;outline:none;min-height:46px}
+select:focus{border-color:var(--bright)}
+select:disabled{opacity:.6}
+.shopbar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--border2);padding:10px 0 calc(10px + env(safe-area-inset-bottom))}
+.shopbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .hero h1{font-family:'Bebas Neue';font-weight:400;font-size:2.6rem;letter-spacing:.04em;line-height:1}
 </style>
 </head>
@@ -226,6 +231,7 @@ function render(){
     if(v.families.length>1)h+='<div class="hero" style="padding:20px 0 0"><h1 style="font-size:2rem">'+esc(fam.family.name)+' Family</h1></div>';
     h+=regBanner(fam);
     if(sc.announcement)h+='<div class="card" style="border-color:var(--bright)"><div class="small muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em">📣 From Sensei Brandon</div><div style="margin-top:6px;white-space:pre-line">'+linkify(esc(sc.announcement))+'</div></div>';
+    h+=shopBanner(fam);
     if(!fam.students.length)h+='<div class="card"><p class="muted">No active students on your account right now.</p></div>';
     fam.students.forEach(function(s){h+=kidCard(s,fam);});
     h+=balanceCard(fam);
@@ -393,6 +399,123 @@ function submitAbsence(){
 }
 
 // ── Questions & feedback ──
+// ── Holiday Shop ── (shown only when the CRM includes a shop in this family's view)
+function shopCart(){return state.shop?state.shop.cart:[];}
+function shopKey(fam){return 'nma_shop_'+((fam.shop||{}).id||'')+'_'+fam.familyId;}
+function shopSave(){try{localStorage.setItem(state.shop.key,JSON.stringify(state.shop.cart));}catch(e){}}
+function shopItem(fam,id){var out=null;(fam.shop.items||[]).forEach(function(i){if(i.id===id)out=i;});return out;}
+function shopTotal(fam){return shopCart().reduce(function(a,l){var it=shopItem(fam,l.itemId);return a+(it?it.price*l.qty:0);},0);}
+function shopCount(){return shopCart().reduce(function(a,l){return a+l.qty;},0);}
+function shopBanner(fam){
+  var sh=fam.shop;if(!sh)return '';
+  var mine=fam.shopOrders||[];
+  var h='<section class="card" id="shop" style="border-color:var(--amber)">';
+  if(sh.preview)h+='<span class="pill a" style="margin-bottom:8px">Preview · only families Sensei picked can see this</span>';
+  h+='<h2 style="margin-top:4px">🎁 '+esc(sh.title)+'</h2>';
+  if(sh.closed)h+='<p class="small muted">Holiday orders closed on '+fmtLong(sh.deadline)+'. Questions about an order? Message Sensei Brandon.</p>';
+  else h+='<p class="small">'+esc(sh.intro||'')+'</p><p class="small" style="margin-top:8px"><b>Order by '+fmt(sh.deadline,{weekday:'short',month:'short',day:'numeric'})+'</b> · pick up '+esc(sh.pickup||'at class')+'</p><button class="btn" style="margin-top:12px" onclick="openShop(\''+esc(fam.familyId)+'\')">Open the Holiday Shop</button>';
+  if(mine.length){
+    h+='<div style="margin-top:12px">';
+    mine.forEach(function(o){h+='<div class="money"><span>Order for '+esc(o.studentName)+' <span class="muted small">· '+new Date(o.at).toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+o.lines.reduce(function(a,l){return a+l.qty;},0)+' item(s)</span></span><b>'+money(o.total)+'</b></div>';});
+    h+='<div class="small muted">Orders show in your balance once Sensei Brandon logs them.</div></div>';
+  }
+  return h+'</section>';
+}
+function openShop(fid){
+  var fam=famById(fid);if(!fam||!fam.shop)return;
+  var key=shopKey(fam),cart=[];
+  try{cart=JSON.parse(localStorage.getItem(key)||'[]')||[];}catch(e){}
+  cart=cart.filter(function(l){return shopItem(fam,l.itemId);});
+  state.shop={fid:fam.familyId,key:key,cat:'all',cart:cart,pick:null,sel:{},student:fam.students.length===1?String(fam.students[0].id):'',note:''};
+  renderShop();window.scrollTo(0,0);
+}
+function shopFam(){return famById(state.shop.fid);}
+function renderShop(){
+  var fam=shopFam(),sh=fam.shop,st=state.shop;
+  var h='<div style="padding-top:14px"><button class="ghost" onclick="closeShop()">← Back to portal</button></div>';
+  h+='<section class="card"><h2>🎁 '+esc(sh.title)+'</h2><p class="small"><b>Order by '+fmtLong(sh.deadline)+'</b> · pick up '+esc(sh.pickup||'at class')+'.</p>'+(sh.sizingNote?'<p class="small muted" style="margin-top:6px">'+esc(sh.sizingNote)+'</p>':'')+'</section>';
+  h+='<div class="chips" role="tablist" aria-label="Categories" style="margin:4px 0 6px">'+[{id:'all',label:'All',icon:''}].concat(sh.cats||[]).map(function(c){return '<button type="button" role="tab" aria-selected="'+(st.cat===c.id)+'" class="'+(st.cat===c.id?'on':'')+'" onclick="shopCat(\''+c.id+'\')">'+(c.icon?c.icon+' ':'')+esc(c.label)+'</button>';}).join('')+'</div>';
+  (sh.cats||[]).forEach(function(c){
+    if(st.cat!=='all'&&st.cat!==c.id)return;
+    var items=(sh.items||[]).filter(function(i){return i.cat===c.id;});if(!items.length)return;
+    h+='<h3 class="disp" style="font-size:1.6rem;margin:18px 0 0">'+(c.icon?c.icon+' ':'')+esc(c.label)+'</h3>';
+    items.forEach(function(i){h+='<section class="card" id="si-'+i.id+'" style="margin:10px 0">'+shopItemHTML(i)+'</section>';});
+  });
+  h+='<div style="height:90px"></div>';
+  if(shopCount())h+='<div class="shopbar"><div class="wrap"><span><b>'+shopCount()+' item'+(shopCount()!==1?'s':'')+'</b> · '+money(shopTotal(fam))+'</span><button class="btn" style="width:auto" onclick="shopReview()">Review order →</button></div></div>';
+  $('app').innerHTML=h;
+}
+function shopItemHTML(i){
+  var st=state.shop;
+  var h='<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div style="min-width:0">'+(i.badge?'<span class="pill a">'+esc(i.badge)+'</span>':'')+'<b style="display:block;font-size:1rem;margin-top:'+(i.badge?'6px':'0')+'">'+esc(i.name)+'</b>'+(i.detail?'<span class="small muted">'+esc(i.detail)+'</span>':'')+'</div><b class="disp" style="font-size:1.6rem;white-space:nowrap">$'+i.price+'</b></div>';
+  if(st.pick!==i.id)return h+'<button class="btn sec" style="margin-top:12px" onclick="shopPick(\''+i.id+'\')">Add to order</button>';
+  var sel=st.sel;
+  (i.opts||[]).forEach(function(o){
+    var ch=o.by?((o.map||{})[sel[o.by]]||[]):(o.choices||[]);
+    h+='<label class="f" for="so-'+o.k+'">'+esc(o.label)+'</label><select id="so-'+o.k+'" onchange="shopOpt(\''+i.id+'\',\''+o.k+'\',this.value)"'+(o.by&&!sel[o.by]?' disabled':'')+'><option value="">'+(o.by&&!sel[o.by]?'Choose a '+esc(o.by)+' first':'Choose…')+'</option>'+ch.map(function(c){return '<option'+(sel[o.k]===c?' selected':'')+'>'+esc(c)+'</option>';}).join('')+'</select>';
+  });
+  h+='<label class="f" for="so-qty">How many?</label><select id="so-qty" onchange="state.shop.sel._qty=this.value">'+[1,2,3,4,5].map(function(n){return '<option'+(String(sel._qty||1)===String(n)?' selected':'')+'>'+n+'</option>';}).join('')+'</select>';
+  h+='<div id="so-err"></div><div style="display:flex;gap:8px;margin-top:12px"><button class="btn sec" onclick="shopPick(null)">Cancel</button><button class="btn" onclick="shopAdd(\''+i.id+'\')">Add $'+i.price+'</button></div>';
+  return h;
+}
+function shopRedraw(id){var el=$('si-'+id);var i=shopItem(shopFam(),id);if(el&&i)el.innerHTML=shopItemHTML(i);}
+function shopCat(c){state.shop.cat=c;state.shop.pick=null;renderShop();}
+function shopPick(id){var was=state.shop.pick;state.shop.pick=id;state.shop.sel={};if(was)shopRedraw(was);if(id)shopRedraw(id);}
+function shopOpt(id,k,v){
+  var i=shopItem(shopFam(),id);var sel=state.shop.sel;sel[k]=v;
+  (i.opts||[]).forEach(function(o){if(o.by===k)delete sel[o.k];});
+  shopRedraw(id);
+}
+function shopAdd(id){
+  var i=shopItem(shopFam(),id);var sel=state.shop.sel;var opts={};var miss=null;
+  (i.opts||[]).forEach(function(o){if(!sel[o.k]&&!miss)miss=o.label;opts[o.k]=sel[o.k];});
+  if(miss){$('so-err').innerHTML='<div class="err">Please choose a '+esc(miss.toLowerCase())+'.</div>';return;}
+  var qty=parseInt(sel._qty||1,10);var key=JSON.stringify(opts);var found=null;
+  state.shop.cart.forEach(function(l){if(l.itemId===id&&JSON.stringify(l.opts)===key)found=l;});
+  if(found)found.qty=Math.min(10,found.qty+qty);else state.shop.cart.push({itemId:id,qty:qty,opts:opts});
+  shopSave();state.shop.pick=null;state.shop.sel={};
+  var y=window.scrollY;renderShop();window.scrollTo(0,y);
+}
+function shopOptText(i,l){return (i.opts||[]).map(function(o){return l.opts[o.k];}).filter(Boolean).join(' · ');}
+function shopReview(){
+  var fam=shopFam(),sh=fam.shop,st=state.shop;
+  var h='<div style="padding-top:14px"><button class="ghost" onclick="renderShop()">← Keep shopping</button></div><section class="card"><h2>Review your order</h2>';
+  if(!st.cart.length)h+='<p class="muted">Your order is empty.</p>';
+  st.cart.forEach(function(l,n){var i=shopItem(fam,l.itemId);if(!i)return;
+    h+='<div class="money"><span><b style="display:block">'+l.qty+'× '+esc(i.name)+'</b><span class="small muted">'+esc(shopOptText(i,l))+'</span><button type="button" class="small" style="display:block;background:none;border:none;color:var(--bright);font-weight:700;padding:4px 0 0;cursor:pointer" onclick="shopRemove('+n+')">Remove</button></span><b>'+money(i.price*l.qty)+'</b></div>';});
+  h+='<div class="money" style="font-size:1.05rem"><b>Total</b><b>'+money(shopTotal(fam))+'</b></div></section>';
+  h+='<section class="card"><label class="f" style="margin-top:0">Who is this order for?</label><div class="chips">'+fam.students.map(function(s){return '<button type="button" id="ss-'+esc(s.id)+'" class="'+(st.student===String(s.id)?'on':'')+'" onclick="shopStudent(\''+esc(s.id)+'\')">'+esc(s.first)+'</button>';}).join('')+'</div>'+
+    '<p class="small muted" style="margin-top:6px">Ordering for more than one student? Place a separate order for each.</p>'+
+    '<label class="f" for="sn">Note for Sensei Brandon <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="sn" maxlength="500" style="min-height:64px" placeholder="Gift — please keep it a surprise! / Sizing questions / anything else" oninput="state.shop.note=this.value">'+esc(st.note)+'</textarea>'+
+    '<div class="note" style="margin-top:14px"><b>How payment works:</b> after you place your order, pay with Venmo, Zelle or PayPal. You’ll get the details on the next screen and by email.</div>'+
+    '<div id="f-err"></div><button class="btn" id="f-btn" style="margin-top:14px" onclick="submitShop()"'+(st.cart.length&&!sh.closed?'':' disabled')+'>'+(sh.closed?'Orders are closed':'Place order · '+money(shopTotal(fam)))+'</button>'+
+    '<p class="small muted center" style="margin-top:8px">Orders close '+fmtLong(sh.deadline)+'.</p></section>';
+  $('app').innerHTML=h;window.scrollTo(0,0);
+}
+function shopRemove(n){state.shop.cart.splice(n,1);shopSave();shopReview();}
+function shopStudent(id){state.shop.student=String(id);shopFam().students.forEach(function(s){var b=$('ss-'+s.id);if(b)b.className=String(s.id)===String(id)?'on':'';});}
+function submitShop(){
+  if(previewBlock())return;
+  var fam=shopFam(),st=state.shop;
+  if(!st.student){$('f-err').innerHTML='<div class="err">Please choose who this order is for.</div>';return;}
+  var btn=$('f-btn');btn.disabled=true;btn.textContent='Placing your order…';$('f-err').innerHTML='';
+  api('submit-shop',{studentId:st.student,lines:st.cart,note:st.note}).then(function(j){
+    if(!j.ok){btn.disabled=false;btn.textContent='Place order · '+money(shopTotal(fam));$('f-err').innerHTML='<div class="err">'+esc(j.message||j.error||'Couldn’t place your order. Please try again.')+'</div>';return;}
+    st.cart=[];shopSave();
+    var s=null;fam.students.forEach(function(x){if(String(x.id)===st.student)s=x;});
+    var who=s?s.first+' '+(s.last||''):'';var pay=(fam.school||{}).pay||{};var amt=(+j.total).toFixed(2);
+    var memo=('NMA Holiday order - '+who.trim()).slice(0,140);
+    var h='<section class="card center" style="margin-top:24px"><div style="font-size:2.4rem">🎉</div><h2>Order placed!</h2><p class="small">Thanks! A confirmation is on its way to your email. Pick up '+esc(fam.shop.pickup||'at class')+'.</p></section>';
+    h+='<section class="card"><h2>Pay '+money(j.total)+'</h2>';
+    if(pay.venmo)h+='<a class="pay" target="_blank" rel="noopener" href="https://account.venmo.com/payment-link?audience=private&amount='+amt+'&note='+encodeURIComponent(memo)+'&recipients=%2C'+encodeURIComponent(pay.venmo)+'&txn=pay"><span class="lg" style="background:#008cff">V</span><span>Pay '+money(j.total)+' with Venmo <span class="pill" style="background:rgba(0,140,255,.15);color:#3aa0ff">Preferred</span><small>@'+esc(pay.venmo)+' · amount and note filled in</small></span><span class="go">→</span></a>';
+    if(pay.zelle)h+='<button type="button" class="pay" onclick="copyZelle(this,\''+esc(pay.zelle)+'\')"><span class="lg" style="background:#6d1ed4">Z</span><span>Pay with Zelle<small>Send '+money(j.total)+' to <b>'+esc(pay.zelle)+'</b> from your bank app · tap to copy</small></span></button>';
+    if(pay.paypal)h+='<a class="pay" target="_blank" rel="noopener" href="https://paypal.me/'+encodeURIComponent(pay.paypal)+'/'+amt+'USD"><span class="lg" style="background:#003087">P</span><span>Pay '+money(j.total)+' with PayPal<small>paypal.me/'+esc(pay.paypal)+'</small></span><span class="go">→</span></a>';
+    h+='<div class="small muted" style="margin-top:10px">Please include <b>'+esc(who.trim())+'</b> in the note.</div></section>';
+    h+='<button class="btn sec" onclick="closeShop()">Back to portal</button>';
+    $('app').innerHTML=h;window.scrollTo(0,0);
+  });
+}
+function closeShop(){state.shop=null;if(state.preview){render();return;}load().then(function(){setTimeout(function(){var el=$('shop');if(el)el.scrollIntoView({block:'start'});},50);});}
 function talkCard(fam){
   return '<section class="card" id="talk"><h2>Questions &amp; feedback</h2><p class="small muted">Reach Sensei Brandon directly — replies come to your email.</p>'+
     '<button class="btn" style="margin-top:12px" onclick="openMessage(\''+esc(fam.familyId)+'\')">💬 Message Sensei Brandon</button>'+
