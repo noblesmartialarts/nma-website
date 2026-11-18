@@ -416,7 +416,8 @@ function shopCart(){return state.shop?state.shop.cart:[];}
 function shopKey(fam){return 'nma_shop_'+((fam.shop||{}).id||'')+'_'+fam.familyId;}
 function shopSave(){try{localStorage.setItem(state.shop.key,JSON.stringify(state.shop.cart));}catch(e){}}
 function shopItem(fam,id){var out=null;(fam.shop.items||[]).forEach(function(i){if(i.id===id)out=i;});return out;}
-function shopTotal(fam){return shopCart().reduce(function(a,l){var it=shopItem(fam,l.itemId);return a+(it?it.price*l.qty:0);},0);}
+function shopDeals(fam){var out=[];(fam.shop.items||[]).forEach(function(it){if(!it.deal||!(it.deal.qty>1))return;var q=shopCart().reduce(function(a,l){return a+(l.itemId===it.id?l.qty:0);},0);var save=Math.floor(q/it.deal.qty)*(it.deal.qty*it.price-it.deal.price);if(save>0)out.push({name:it.name+' — '+it.deal.qty+' for $'+it.deal.price,save:save});});return out;}
+function shopTotal(fam){return shopCart().reduce(function(a,l){var it=shopItem(fam,l.itemId);return a+(it?it.price*l.qty:0);},0)-shopDeals(fam).reduce(function(a,d){return a+d.save;},0);}
 function shopCount(){return shopCart().reduce(function(a,l){return a+l.qty;},0);}
 function shopBanner(fam){
   var sh=fam.shop;if(!sh)return '';
@@ -499,6 +500,7 @@ function shopReview(){
   if(!st.cart.length)h+='<p class="muted">Your order is empty.</p>';
   st.cart.forEach(function(l,n){var i=shopItem(fam,l.itemId);if(!i)return;
     h+='<div class="money"><span><b style="display:block">'+l.qty+'× '+esc(i.name)+'</b><span class="small muted">'+esc(shopOptText(i,l))+'</span><button type="button" class="small" style="display:block;background:none;border:none;color:var(--bright);font-weight:700;padding:4px 0 0;cursor:pointer" onclick="shopRemove('+n+')">Remove</button></span><b>'+money(i.price*l.qty)+'</b></div>';});
+  shopDeals(fam).forEach(function(d){h+='<div class="money"><span style="color:var(--green);font-weight:600">'+esc(d.name)+'</span><b style="color:var(--green)">−'+money(d.save)+'</b></div>';});
   h+='<div class="money" style="font-size:1.05rem"><b>Total</b><b>'+money(shopTotal(fam))+'</b></div></section>';
   h+='<section class="card"><label class="f" style="margin-top:0">Who is this order for?</label><div class="chips">'+fam.students.map(function(s){return '<button type="button" id="ss-'+esc(s.id)+'" class="'+(st.student===String(s.id)?'on':'')+'" onclick="shopStudent(\''+esc(s.id)+'\')">'+esc(s.first)+'</button>';}).join('')+'</div>'+
     '<p class="small muted" style="margin-top:6px">Ordering for more than one student? Place a separate order for each.</p>'+
