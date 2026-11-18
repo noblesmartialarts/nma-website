@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<script>
-try{
-  if(localStorage.getItem('nma-theme')==='light'){
-    document.documentElement.setAttribute('data-theme','light');
-  }
-}catch(e){}
-</script>
+<script>(function(){var t=null;try{t=localStorage.getItem('nma-theme');}catch(e){}
+  var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: light)'):null;
+  function apply(){var s=null;try{s=localStorage.getItem('nma-theme');}catch(e){}
+    var light=s==='light'||(s!=='dark'&&!!(mq&&mq.matches));
+    if(light)document.documentElement.setAttribute('data-theme','light');else document.documentElement.removeAttribute('data-theme');}
+  apply();window.nmaApplyTheme=apply;
+  if(mq){var f=function(){var s=null;try{s=localStorage.getItem('nma-theme');}catch(e){}if(s!=='light'&&s!=='dark'){apply();if(window.nmaThemeChanged)window.nmaThemeChanged();}};if(mq.addEventListener)mq.addEventListener('change',f);else if(mq.addListener)mq.addListener(f);}
+})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Noble's Martial Arts — Wake Forest, NC</title>
 <meta name="description" content="Building confident, respectful kids through martial arts in Wake Forest, NC. Fun, high-energy classes for ages 4–13. Enroll today!"/>
@@ -1763,7 +1764,7 @@ fetchSiteContent(function() {
   if(siteMenuBackdrop) siteMenuBackdrop.addEventListener('click',closeSiteMenu);
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeSiteMenu(); });
 
-  /* ── theme toggle (dark default, light optional, remembered) ── */
+  /* ── theme toggle (follows the device until the visitor picks one; choice remembered) ── */
   function applyTheme(theme){
     var btn=document.getElementById('themeToggle');
     if(theme==='light'){

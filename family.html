@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<script>try{if(localStorage.getItem('nma-theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
+<script>(function(){var t=null;try{t=localStorage.getItem('nma-theme');}catch(e){}
+  var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: light)'):null;
+  function apply(){var s=null;try{s=localStorage.getItem('nma-theme');}catch(e){}
+    var light=s==='light'||(s!=='dark'&&!!(mq&&mq.matches));
+    if(light)document.documentElement.setAttribute('data-theme','light');else document.documentElement.removeAttribute('data-theme');}
+  apply();window.nmaApplyTheme=apply;
+  if(mq){var f=function(){var s=null;try{s=localStorage.getItem('nma-theme');}catch(e){}if(s!=='light'&&s!=='dark'){apply();if(window.nmaThemeChanged)window.nmaThemeChanged();}};if(mq.addEventListener)mq.addEventListener('change',f);else if(mq.addListener)mq.addListener(f);}
+})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Family Portal — Noble's Martial Arts</title>
 <meta name="robots" content="noindex"/>
@@ -119,6 +126,7 @@ select:disabled{opacity:.6}
 <header><div class="wrap">
   <a href="/" class="logo" aria-label="Noble's Martial Arts home" style="text-decoration:none;">NMA</a>
   <div class="t"><b id="h-title">Family Portal</b><small id="h-sub">Noble's Martial Arts</small></div>
+  <button class="ghost" id="h-theme" type="button" onclick="cycleTheme()" style="margin-left:auto"></button>
   <button class="ghost" id="h-out" style="display:none" onclick="signOut()">Sign out</button>
 </div></header>
 <main class="wrap" id="app"><div class="spin"></div></main>
@@ -524,6 +532,13 @@ function submitShop(){
   });
 }
 function closeShop(){state.shop=null;if(state.preview){render();return;}load().then(function(){setTimeout(function(){var el=$('shop');if(el)el.scrollIntoView({block:'start'});},50);});}
+// Appearance: Auto (follows the device), Light or Dark. Shared with the main website via 'nma-theme'.
+function themeMode(){var s=null;try{s=localStorage.getItem('nma-theme');}catch(e){}return s==='light'||s==='dark'?s:'auto';}
+function themeButton(){var b=$('h-theme');if(!b)return;var m=themeMode();var lbl={auto:'◐ Auto',light:'☀ Light',dark:'☾ Dark'}[m];b.textContent=lbl;b.setAttribute('aria-label','Appearance: '+{auto:'matches your device',light:'light',dark:'dark'}[m]+'. Tap to change.');
+  var mc=document.querySelector('meta[name=theme-color]');if(mc)mc.setAttribute('content',document.documentElement.getAttribute('data-theme')==='light'?'#f6f5fb':'#08080f');}
+function cycleTheme(){var next={auto:'light',light:'dark',dark:'auto'}[themeMode()];try{if(next==='auto')localStorage.removeItem('nma-theme');else localStorage.setItem('nma-theme',next);}catch(e){}if(window.nmaApplyTheme)window.nmaApplyTheme();themeButton();}
+window.nmaThemeChanged=themeButton;
+document.addEventListener('DOMContentLoaded',themeButton);
 function talkCard(fam){
   return '<section class="card" id="talk"><h2>Questions &amp; feedback</h2><p class="small muted">Reach Sensei Brandon directly — replies come to your email.</p>'+
     '<button class="btn" style="margin-top:12px" onclick="openMessage(\''+esc(fam.familyId)+'\')">💬 Message Sensei Brandon</button>'+
