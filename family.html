@@ -441,14 +441,14 @@ function openShop(fid){
   try{cart=JSON.parse(localStorage.getItem(key)||'[]')||[];}catch(e){}
   cart=cart.filter(function(l){return shopItem(fam,l.itemId);});
   var only=fam.students.length===1?String(fam.students[0].id):'';cart.forEach(function(l){if(!l.studentId&&only)l.studentId=only;});
-  state.shop={fid:fam.familyId,key:key,cat:'all',cart:cart,pick:null,sel:{},lastFor:only,note:''};
+  state.shop={fid:fam.familyId,key:key,cat:'all',cart:cart,pick:null,sel:{},lastFor:only,note:'',surprise:false,gift:{}};
   renderShop();window.scrollTo(0,0);
 }
 function shopFam(){return famById(state.shop.fid);}
 function renderShop(){
   var fam=shopFam(),sh=fam.shop,st=state.shop;
   var h='<div style="padding-top:14px"><button class="ghost" onclick="closeShop()">← Back to portal</button></div>';
-  h+='<section class="card"><h2>🎁 '+esc(sh.title)+'</h2><p class="small"><b>Order by '+fmtLong(sh.deadline)+'</b> · pick up '+esc(sh.pickup||'at class')+'.</p>'+(sh.sizingNote?'<p class="small muted" style="margin-top:6px">'+esc(sh.sizingNote)+'</p>':'')+'</section>';
+  h+='<section class="card"><h2>🎁 '+esc(sh.title)+'</h2><p class="small"><b>Order by '+fmtLong(sh.deadline)+'</b> · pick up '+esc(sh.pickup||'at class')+'.</p>'+(sh.sizingNote?'<p class="small muted" style="margin-top:6px">'+esc(sh.sizingNote)+'</p>':'')+(sh.freeGift?'<div class="note" style="margin-top:10px">👕 <b>'+esc(sh.freeGift.label)+'</b> — '+esc(sh.freeGift.note||'')+'</div>':'')+(sh.surpriseNote?'<div class="note" style="margin-top:8px">🎁 '+esc(sh.surpriseNote)+'</div>':'')+'</section>';
   h+='<div class="chips" role="tablist" aria-label="Categories" style="margin:4px 0 6px">'+[{id:'all',label:'All',icon:''}].concat(sh.cats||[]).map(function(c){return '<button type="button" role="tab" aria-selected="'+(st.cat===c.id)+'" class="'+(st.cat===c.id?'on':'')+'" onclick="shopCat(\''+c.id+'\')">'+(c.icon?c.icon+' ':'')+esc(c.label)+'</button>';}).join('')+'</div>';
   (sh.cats||[]).forEach(function(c){
     if(st.cat!=='all'&&st.cat!==c.id)return;
@@ -459,7 +459,9 @@ function renderShop(){
     var grp='';items.forEach(function(i){if(i.group&&i.group!==grp){grp=i.group;h+='<div class="small muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:18px 2px 0">'+esc(grp)+'</div>';}h+='<section class="card" id="si-'+i.id+'" style="margin:10px 0">'+shopItemHTML(i)+'</section>';});
   });
   h+='<div style="height:90px"></div>';
-  var hint='';shopCatInfo(fam).forEach(function(c){if(c.q>0&&c.q<c.d.min)hint='Add '+(c.d.min-c.q)+' more '+c.d.cat+' item'+(c.d.min-c.q!==1?'s':'')+' to save '+c.d.pct+'%';else if(c.save>0)hint=c.d.label+' applied!';});
+  var hints=[];shopCatInfo(fam).forEach(function(c){if(c.q>0&&c.q<c.d.min)hints.push('Add '+(c.d.min-c.q)+' more '+c.d.cat+' item'+(c.d.min-c.q!==1?'s':'')+' to save '+c.d.pct+'%');else if(c.save>0)hints.push(c.d.label+' applied!');});
+  var fgx=sh.freeGift,tot=shopTotal(fam);if(fgx&&tot>0){if(tot>=fgx.min)hints.push('You earned a '+fgx.label+'! Pick it at checkout.');else if(fgx.min-tot<=75)hints.push(money(fgx.min-tot)+' away from a '+fgx.label);}
+  var hint=hints.join(' · ');
   if(shopCount())h+='<div class="shopbar"><div class="wrap"><span><b>'+shopCount()+' item'+(shopCount()!==1?'s':'')+'</b> · '+money(shopTotal(fam))+(hint?'<small style="display:block;color:var(--green);font-weight:600">'+esc(hint)+'</small>':'')+'</span><button class="btn" style="width:auto" onclick="shopReview()">Review order →</button></div></div>';
   $('app').innerHTML=h;
 }
@@ -502,7 +504,7 @@ function shopAdd(id){
   shopSave();state.shop.pick=null;state.shop.sel={};
   var y=window.scrollY;renderShop();window.scrollTo(0,y);
 }
-function shopOptText(i,l){return (i.opts||[]).map(function(o){return l.opts[o.k];}).filter(Boolean).join(' · ');}
+function shopOptText(i,l){var many=(i.opts||[]).length>3;return (i.opts||[]).map(function(o){var v=l.opts[o.k];return v?(many?o.label.replace(/ color$/i,'')+': '+v:v):'';}).filter(Boolean).join(' · ');}
 function shopReview(){
   var fam=shopFam(),sh=fam.shop,st=state.shop;
   var h='<div style="padding-top:14px"><button class="ghost" onclick="renderShop()">← Keep shopping</button></div><section class="card"><h2>Review your order</h2>';
@@ -511,12 +513,37 @@ function shopReview(){
     h+='<div class="money"><span><b style="display:block">'+l.qty+'× '+esc(i.name)+'</b><span class="small muted">'+esc([shopOptText(i,l),fam.students.length>1?'for '+shopKidName(fam,l.studentId):''].filter(Boolean).join(' · '))+'</span><button type="button" class="small" style="display:block;background:none;border:none;color:var(--bright);font-weight:700;padding:4px 0 0;cursor:pointer" onclick="shopRemove('+n+')">Remove</button></span><b>'+money(i.price*l.qty)+'</b></div>';});
   shopDeals(fam).forEach(function(d){h+='<div class="money"><span style="color:var(--green);font-weight:600">'+esc(d.name)+'</span><b style="color:var(--green)">−'+money(d.save)+'</b></div>';});
   h+='<div class="money" style="font-size:1.05rem"><b>Total</b><b>'+money(shopTotal(fam))+'</b></div></section>';
+  h+=shopGiftHTML(fam);
   h+='<section class="card">'+
-    '<label class="f" style="margin-top:0" for="sn">Note for Sensei Brandon <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="sn" maxlength="500" style="min-height:64px" placeholder="Gift — please keep it a surprise! / Sizing questions / anything else" oninput="state.shop.note=this.value">'+esc(st.note)+'</textarea>'+
+    '<label class="chk" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;cursor:pointer"><input type="checkbox" style="width:22px;height:22px;margin-top:2px;flex:0 0 auto"'+(st.surprise?' checked':'')+' onchange="state.shop.surprise=this.checked"><span><b>🎁 Keep it a surprise</b><span class="small muted" style="display:block">Sensei will bag your order and hand it to a grown-up at pickup — not to your student.</span></span></label>'+
+    '<label class="f" style="margin-top:0" for="sn">Note for Sensei Brandon <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="sn" maxlength="500" style="min-height:64px" placeholder="Sizing questions or anything else" oninput="state.shop.note=this.value">'+esc(st.note)+'</textarea>'+
     '<div class="note" style="margin-top:14px"><b>How payment works:</b> after you place your order, pay with Venmo, Zelle or PayPal. You’ll get the details on the next screen and by email.</div>'+
     '<div id="f-err"></div><button class="btn" id="f-btn" style="margin-top:14px" onclick="submitShop()"'+(st.cart.length&&!sh.closed?'':' disabled')+'>'+(sh.closed?'Orders are closed':'Place order · '+money(shopTotal(fam)))+'</button>'+
     '<p class="small muted center" style="margin-top:8px">Orders close '+fmtLong(sh.deadline)+'.</p></section>';
   $('app').innerHTML=h;window.scrollTo(0,0);
+}
+function shopGiftHTML(fam){
+  var g=fam.shop.freeGift,st=state.shop;if(!g)return '';
+  var it=shopItem(fam,g.itemId);if(!it)return '';
+  var tot=shopTotal(fam);
+  if(tot<g.min)return '<section class="card"><p class="small" style="margin:0">👕 Add '+money(g.min-tot)+' more to get a <b>'+esc(g.label)+'</b>.</p></section>';
+  var sel=st.gift;var kids=fam.students;
+  var h='<section class="card" id="giftcard"><h2 style="margin-bottom:4px">👕 You earned a '+esc(g.label)+'!</h2><p class="small muted" style="margin:0">Pick the design, color and size. Skip it if you don’t want one.</p>';
+  if(kids.length>1){if(sel._for==null)sel._for=st.lastFor||'';h+='<label class="f" for="sg-for">Who is it for?</label><select id="sg-for" onchange="shopGiftOpt(\'_for\',this.value)"><option value="">Choose…</option>'+kids.map(function(k){return '<option value="'+esc(k.id)+'"'+(String(sel._for)===String(k.id)?' selected':'')+'>'+esc(k.first)+'</option>';}).join('')+'</select>';}
+  (it.opts||[]).forEach(function(o){var ch=o.by?((o.map||{})[sel[o.by]]||[]):(o.choices||[]);
+    h+='<label class="f" for="sg-'+o.k+'">'+esc(o.label)+'</label><select id="sg-'+o.k+'" onchange="shopGiftOpt(\''+o.k+'\',this.value)"'+(o.by&&!sel[o.by]?' disabled':'')+'><option value="">'+(o.by&&!sel[o.by]?'Choose a '+esc(o.by)+' first':'Choose…')+'</option>'+ch.map(function(c){return '<option'+(sel[o.k]===c?' selected':'')+'>'+esc(c)+'</option>';}).join('')+'</select>';});
+  return h+'</section>';
+}
+function shopGiftOpt(k,v){var fam=shopFam(),it=shopItem(fam,fam.shop.freeGift.itemId),sel=state.shop.gift;sel[k]=v;(it.opts||[]).forEach(function(o){if(o.by===k)delete sel[o.k];});var el=$('giftcard');if(el)el.outerHTML=shopGiftHTML(fam);}
+function shopGiftPayload(fam){
+  var g=fam.shop.freeGift;if(!g||shopTotal(fam)<g.min)return {skip:true};
+  var it=shopItem(fam,g.itemId),sel=state.shop.gift,opts={},picked=0,miss=null;
+  (it.opts||[]).forEach(function(o){if(sel[o.k]){picked++;opts[o.k]=sel[o.k];}else if(!miss)miss=o.label;});
+  var sid=fam.students.length===1?String(fam.students[0].id):String(sel._for||'');
+  if(!picked&&!sel._for)return {skip:true};
+  if(miss)return {err:'Please choose a '+miss.toLowerCase()+' for your free shirt (or clear your choices to skip it).'};
+  if(!sid)return {err:'Please choose who the free shirt is for.'};
+  return {gift:{studentId:sid,opts:opts}};
 }
 function shopRemove(n){state.shop.cart.splice(n,1);shopSave();shopReview();}
 function shopKidName(fam,id){var n='';fam.students.forEach(function(s){if(String(s.id)===String(id))n=s.first;});return n||'?';}
@@ -524,15 +551,16 @@ function submitShop(){
   if(previewBlock())return;
   var fam=shopFam(),st=state.shop;
   if(st.cart.some(function(l){return !l.studentId;})){$('f-err').innerHTML='<div class="err">Please remove and re-add any item that doesn\u2019t say who it\u2019s for.</div>';return;}
+  var gp=shopGiftPayload(fam);if(gp.err){$('f-err').innerHTML='<div class="err">'+esc(gp.err)+'</div>';return;}
   var btn=$('f-btn');btn.disabled=true;btn.textContent='Placing your order…';$('f-err').innerHTML='';
-  api('submit-shop',{lines:st.cart,note:st.note}).then(function(j){
+  api('submit-shop',{lines:st.cart,note:st.note,surprise:!!st.surprise,freeGift:gp.gift||null}).then(function(j){
     if(!j.ok){btn.disabled=false;btn.textContent='Place order · '+money(shopTotal(fam));$('f-err').innerHTML='<div class="err">'+esc(j.message||j.error||'Couldn’t place your order. Please try again.')+'</div>';return;}
     st.cart=[];shopSave();
     var ids=[];(j.lines||[]).forEach(function(l){if(l.studentId&&ids.indexOf(String(l.studentId))<0)ids.push(String(l.studentId));});
     var ks=fam.students.filter(function(x){return ids.indexOf(String(x.id))>=0;});
     var who=ks.length?ks.map(function(k){return k.first;}).join(' & ')+' '+(ks[0].last||''):'';var pay=(fam.school||{}).pay||{};var amt=(+j.total).toFixed(2);
     var memo=('NMA Holiday order - '+who.trim()).slice(0,140);
-    var h='<section class="card center" style="margin-top:24px"><div style="font-size:2.4rem">🎉</div><h2>Order placed!</h2><p class="small">Thanks! A confirmation is on its way to your email. Pick up '+esc(fam.shop.pickup||'at class')+'.</p></section>';
+    var h='<section class="card center" style="margin-top:24px"><div style="font-size:2.4rem">🎉</div><h2>Order placed!</h2><p class="small">Thanks! A confirmation is on its way to your email. Pick up '+esc(fam.shop.pickup||'at class')+'.'+(st.surprise?' 🎁 We’ll keep it a surprise and hand it to a grown-up.':'')+'</p></section>';
     h+='<section class="card"><h2>Pay '+money(j.total)+'</h2>';
     if(pay.venmo)h+='<a class="pay" target="_blank" rel="noopener" href="https://account.venmo.com/payment-link?audience=private&amount='+amt+'&note='+encodeURIComponent(memo)+'&recipients=%2C'+encodeURIComponent(pay.venmo)+'&txn=pay"><span class="lg" style="background:#008cff">V</span><span>Pay '+money(j.total)+' with Venmo <span class="pill" style="background:rgba(0,140,255,.15);color:#3aa0ff">Preferred</span><small>@'+esc(pay.venmo)+' · amount and note filled in</small></span><span class="go">→</span></a>';
     if(pay.zelle)h+='<button type="button" class="pay" onclick="copyZelle(this,\''+esc(pay.zelle)+'\')"><span class="lg" style="background:#6d1ed4">Z</span><span>Pay with Zelle<small>Send '+money(j.total)+' to <b>'+esc(pay.zelle)+'</b> from your bank app · tap to copy</small></span></button>';
