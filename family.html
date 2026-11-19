@@ -122,7 +122,7 @@ select:disabled{opacity:.6}
 .dealrow{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-top:6px;color:inherit;font:inherit;font-size:.88rem;cursor:pointer}
 .dealrow span:nth-child(2){flex:1}.dealrow span:last-child{opacity:.6;font-size:1.1rem;line-height:1}
 html[data-theme="light"] body.festive .shop-hero .dealrow{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.25);color:#fff}
-html[data-theme="light"] body.festive .shop-hero summary{color:#fff}
+html[data-theme="light"] body.festive .shop-hero summary,html[data-theme="light"] body.festive .shop-hero .deals>div{color:#fff}
 /* ── Holiday Shop: festive colors while the shop is open (red, pine green, gold; light + dark) ── */
 body.festive{--bg:#0c1511;--surf:#14211a;--surf2:#1a2b22;--border:rgba(255,255,255,.08);--border2:rgba(214,170,80,.28);
   --brand:#c8102e;--bright:#ff5468;--soft:rgba(255,84,104,.14);--text:#f6f3ea;--muted:#a9b8ad;
@@ -596,16 +596,21 @@ function shopDealList(fam){
   var sh=fam.shop,out=[];
   if(sh.freeGift){var g=shopItem(fam,sh.freeGift.itemId);out.push({icon:'👕',name:sh.freeGift.label,txt:'on orders of '+dm(sh.freeGift.min)+' or more',cat:g&&g.cat,id:null});}
   (sh.discounts||[]).forEach(function(d){out.push({icon:'🏷️',name:d.label,txt:'shirts, hoodies, uniforms — any mix, any kids',cat:d.cat,id:null});});
-  (sh.items||[]).forEach(function(i){if(i.deal){var save=i.deal.qty*i.price-i.deal.price;out.push({icon:'✌️',name:i.name,txt:i.deal.qty+' for '+dm(i.deal.price)+(save>0?' (save '+dm(save)+')':''),cat:i.cat,id:i.id});}});
+  (sh.items||[]).forEach(function(i){if(i.deal){var save=i.deal.qty*i.price-i.deal.price;out.push({key:i.id,icon:'✌️',name:i.name,txt:i.deal.qty+' for '+dm(i.deal.price)+(save>0?' (save '+dm(save)+')':''),cat:i.cat,id:i.id});}});
   (sh.combos||[]).forEach(function(k){var its=k.items.map(function(id){return shopItem(fam,id);}).filter(Boolean);if(its.length<k.items.length)return;
-    var full=its.reduce(function(a,i){return a+i.price;},0);out.push({icon:'🤝',name:k.name||k.label,txt:its.map(function(i){return i.name;}).join(' + ')+' — '+dm(full-k.save)+' (save '+dm(k.save)+')',cat:its[0].cat,id:its[0].id});});
+    var full=its.reduce(function(a,i){return a+i.price;},0);out.push({key:k.id,icon:'🤝',name:k.name||k.label,txt:its.map(function(i){return i.name;}).join(' + ')+' — '+dm(full-k.save)+' (save '+dm(k.save)+')',cat:its[0].cat,id:its[0].id});});
   return out;
 }
 function shopDealsHTML(fam){
   var d=shopDealList(fam);if(!d.length)return '';
-  return '<details class="deals" style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">🏷️ See all '+d.length+' holiday deals</summary><div style="margin-top:8px">'+
-    d.map(function(x){return '<button type="button" class="dealrow" onclick="shopJump(\''+esc(x.cat||'all')+'\',\''+esc(x.id||'')+'\')"><span>'+x.icon+'</span><span><b>'+esc(x.name)+'</b> — '+esc(x.txt)+'</span><span aria-hidden="true">›</span></button>';}).join('')+
-    '<p class="small" style="margin-top:8px;opacity:.85">Deals apply automatically at checkout. They don’t stack: items in a 2-for deal or pack count toward the 10% apparel discount but aren’t discounted twice.</p></div></details>';
+  var feat=(fam.shop.featuredDeals||[]),top=[],rest=[];
+  d.forEach(function(x){(x.key&&feat.indexOf(x.key)>=0?top:rest).push(x);});
+  top.sort(function(a,b){return feat.indexOf(a.key)-feat.indexOf(b.key);});
+  if(!top.length){top=d.slice(0,2);rest=d.slice(2);}
+  var row=function(x){return '<button type="button" class="dealrow" onclick="shopJump(\''+esc(x.cat||'all')+'\',\''+esc(x.id||'')+'\')"><span>'+x.icon+'</span><span><b>'+esc(x.name)+'</b> — '+esc(x.txt)+'</span><span aria-hidden="true">›</span></button>';};
+  var foot='<p class="small" style="margin-top:8px;opacity:.85">Deals apply automatically at checkout. They don’t stack: items in a 2-for deal or pack count toward the 10% apparel discount but aren’t discounted twice.</p>';
+  return '<div class="deals" style="margin-top:12px"><div style="font-weight:700">🏷️ Top holiday deals</div>'+top.map(row).join('')+
+    (rest.length?'<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">See '+rest.length+' more deal'+(rest.length!==1?'s':'')+'</summary>'+rest.map(row).join('')+foot+'</details>':foot)+'</div>';
 }
 function shopJump(cat,id){state.shop.cat=cat||'all';state.shop.pick=null;renderShop();var el=id&&$('si-'+id);if(el)el.scrollIntoView({block:'center'});else{var t=document.querySelector('h3.disp');if(t)t.scrollIntoView({block:'start'});}}
 function shopCat(c){state.shop.cat=c;state.shop.pick=null;renderShop();}
