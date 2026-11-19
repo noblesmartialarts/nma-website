@@ -119,6 +119,32 @@ select:disabled{opacity:.6}
 .shopzoom{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.8);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px}
 .shopzoom img{max-width:min(92vw,520px);max-height:75vh;border-radius:16px;background:#fff}
 .shopbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+/* ── Holiday Shop: festive colors while the shop is open (red, pine green, gold; light + dark) ── */
+body.festive{--bg:#0c1511;--surf:#14211a;--surf2:#1a2b22;--border:rgba(255,255,255,.08);--border2:rgba(214,170,80,.28);
+  --brand:#c8102e;--bright:#ff5468;--soft:rgba(255,84,104,.14);--text:#f6f3ea;--muted:#a9b8ad;
+  --green:#4ade80;--green-soft:rgba(74,222,128,.14);--amber:#e8c06a;--amber-soft:rgba(232,192,106,.14);--gold:#d9b25c}
+html[data-theme="light"] body.festive{--bg:#fbf6ee;--surf:#ffffff;--surf2:#f6efe2;--border:rgba(31,90,52,.12);--border2:rgba(176,128,40,.35);
+  --brand:#b3122e;--bright:#a50f28;--soft:rgba(179,18,46,.07);--text:#1d1a14;--muted:#5d5a4e;
+  --green:#166534;--green-soft:rgba(22,101,52,.09);--amber:#8a5a00;--amber-soft:rgba(176,128,40,.12);--gold:#b08028}
+body.festive header{border-bottom:0}
+body.festive header::after,.festive-card::before{content:'';display:block;height:5px;background:repeating-linear-gradient(-45deg,#c8102e 0 9px,#fff 9px 15px,#1f7a3a 15px 24px,#fff 24px 30px)}
+body.festive .card{border-color:var(--border2)}
+body.festive h2,body.festive h3.disp{color:var(--brand)}
+html:not([data-theme="light"]) body.festive h2,html:not([data-theme="light"]) body.festive h3.disp{color:var(--gold)}
+body.festive .note{background:var(--green-soft)}
+body.festive .chips button.on{background:var(--brand);border-color:var(--brand)}
+body.festive .shopbar{border-top:2px solid var(--gold)}
+body.festive::before{content:'';position:fixed;inset:-100px 0 0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:radial-gradient(2px 2px at 20px 30px,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 90px 80px,#fff 50%,transparent 51%),radial-gradient(2.5px 2.5px at 150px 20px,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 60px 140px,#fff 50%,transparent 51%);
+  background-size:180px 160px;animation:nma-snow 14s linear infinite}
+html[data-theme="light"] body.festive::before{opacity:.9;filter:drop-shadow(0 0 1px rgba(31,90,52,.35))}
+body.festive main{position:relative;z-index:1}
+@keyframes nma-snow{to{transform:translateY(160px)}}
+@media (prefers-reduced-motion:reduce){body.festive::before{animation:none}}
+.festive-card{overflow:hidden;padding-top:0!important;border:1px solid rgba(200,16,46,.45)!important;background:linear-gradient(180deg,rgba(200,16,46,.07),rgba(31,122,58,.06)) ,var(--surf)!important}
+.festive-card::before{margin:0 -16px 14px}
+.festive-card .btn{background:#c8102e}
+
 .hero h1{font-family:'Bebas Neue';font-weight:400;font-size:2.6rem;letter-spacing:.04em;line-height:1}
 </style>
 </head>
@@ -219,7 +245,7 @@ function verify(e){
     showCode(j.error||'That code didn’t work.');
   });
 }
-function signOut(){try{localStorage.removeItem(KEY);}catch(e){}state.view=null;showSignIn('You’re signed out.');}
+function signOut(){document.body.classList.remove("festive");try{localStorage.removeItem(KEY);}catch(e){}state.view=null;showSignIn('You’re signed out.');}
 
 // ── Portal ──
 function load(){
@@ -427,7 +453,7 @@ function shopCount(){return shopCart().reduce(function(a,l){return a+l.qty;},0);
 function shopBanner(fam){
   var sh=fam.shop;if(!sh)return '';
   var mine=fam.shopOrders||[];
-  var h='<section class="card" id="shop" style="border-color:var(--amber)">';
+  var h='<section class="card festive-card" id="shop">';
   if(sh.preview)h+='<span class="pill a" style="margin-bottom:8px">Preview · only families Sensei picked can see this</span>';
   h+='<h2 style="margin-top:4px">🎁 '+esc(sh.title)+'</h2>';
   if(sh.closed)h+='<p class="small muted">Holiday orders closed on '+fmtLong(sh.deadline)+'. Questions about an order? Message Sensei Brandon.</p>';
@@ -450,7 +476,7 @@ function openShop(fid){
   cart=cart.filter(function(l){return shopItem(fam,l.itemId);});
   var only=fam.students.length===1?String(fam.students[0].id):'';cart.forEach(function(l){if(!l.studentId&&only)l.studentId=only;});
   state.shop={fid:fam.familyId,key:key,cat:'all',cart:cart,pick:null,sel:{},lastFor:only,note:'',surprise:false,gift:{}};
-  renderShop();window.scrollTo(0,0);
+  document.body.classList.add('festive');renderShop();window.scrollTo(0,0);
 }
 // Open the shop from a #shop link (Parent Hub) once the portal has loaded.
 function shopDeepLink(){
@@ -471,7 +497,7 @@ function shopChange(fid,oid){
   });
   var only=fam.students.length===1?String(fam.students[0].id):'';
   state.shop={fid:fam.familyId,key:shopKey(fam)+'_edit',cat:'all',cart:cart,pick:null,sel:{},lastFor:only,note:o.note||'',surprise:!!o.surprise,gift:gift,replaces:+o.id,replacesAt:o.at,replacesTotal:o.total,gone:gone};
-  shopSave();shopReview();
+  document.body.classList.add('festive');shopSave();shopReview();
 }
 function shopEditBanner(){
   var st=state.shop;if(!st||!st.replaces)return '';
@@ -613,7 +639,7 @@ function submitShop(){
     $('app').innerHTML=h;window.scrollTo(0,0);
   });
 }
-function closeShop(){if(state.shop&&state.shop.replaces){try{localStorage.removeItem(state.shop.key);}catch(e){}}state.shop=null;if(state.preview){render();return;}load().then(function(){setTimeout(function(){var el=$('shop');if(el)el.scrollIntoView({block:'start'});},50);});}
+function closeShop(){document.body.classList.remove('festive');if(state.shop&&state.shop.replaces){try{localStorage.removeItem(state.shop.key);}catch(e){}}state.shop=null;if(state.preview){render();return;}load().then(function(){setTimeout(function(){var el=$('shop');if(el)el.scrollIntoView({block:'start'});},50);});}
 // Appearance: Auto (follows the device), Light or Dark. Shared with the main website via 'nma-theme'.
 function themeMode(){var s=null;try{s=localStorage.getItem('nma-theme');}catch(e){}return s==='light'||s==='dark'?s:'auto';}
 function themeButton(){var b=$('h-theme');if(!b)return;var m=themeMode();var lbl={auto:'◐ Auto',light:'☀ Light',dark:'☾ Dark'}[m];b.textContent=lbl;b.setAttribute('aria-label','Appearance: '+{auto:'matches your device',light:'light',dark:'dark'}[m]+'. Tap to change.');
