@@ -1456,6 +1456,7 @@ function fetchSiteContent(onReady) {
       if (d.photos)        CONFIG.photos        = d.photos;
       if (d.videos && d.videos.length)           CONFIG.videos        = d.videos;
       if (d.gearLinks)     CONFIG.gearLinks     = d.gearLinks;
+      if (d.holidayShop)   CONFIG.holidayShop   = d.holidayShop;
       if (d.regUrls) {
         CONFIG.programs.forEach(function(p) {
           if (d.regUrls[p.name]) p.regUrl = d.regUrls[p.name];
@@ -2086,13 +2087,27 @@ fetchSiteContent(function() {
     if (a && window.trackEvent) trackEvent('register_click', {source:'program_card', program: a.dataset.prog||''});
   });
 
+  /* ── Holiday Shop (family portal): while the CRM has it open to everyone, through the order deadline.
+        Adds a Holiday Shop card and points the apparel links at the shop; after the deadline it all reverts. ── */
+  (function(){
+    var hs=CONFIG.holidayShop;if(!hs||!hs.live||!hs.until)return;
+    var t=new Date(),today=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+    if(today>hs.until)return;
+    var by=new Date(hs.until+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    var shopUrl='/family#shop',isApparel=function(u){return /jotform\.com\/noblesmartialarts\/nma-t-shirt-order/i.test(u||'');};
+    CONFIG.hubCards=CONFIG.hubCards.map(function(c){return isApparel(c.url)?Object.assign({},c,{url:shopUrl,sub:'Holiday Shop · order by '+by,sameTab:true}):c;});
+    CONFIG.hubCards.unshift({icon:'🎁',label:hs.title||'Holiday Shop',sub:'Gifts & gear · order by '+by,url:shopUrl,sameTab:true,feature:true});
+    CONFIG.gearLinks=(CONFIG.gearLinks||[]).map(function(l){return isApparel(l.url)?Object.assign({},l,{url:shopUrl,sub:'Holiday Shop · order by '+by,sameTab:true}):l;});
+  })();
+
   /* ── hub grid ── */
   var hg=document.getElementById('hubGrid');
   CONFIG.hubCards.forEach(function(c){
     if (c.url) {
       var a=document.createElement('a');
       a.className='hub-card ext'; a.href=c.url;
-      if (c.download) { a.download=''; } else { a.target='_blank'; a.rel='noopener'; }
+      if (c.feature) a.style.cssText='border:2px solid var(--bright);box-shadow:0 0 0 4px var(--soft);';
+      if (c.download) { a.download=''; } else if (!c.sameTab) { a.target='_blank'; a.rel='noopener'; }
       a.innerHTML='<div class="hub-icon">'+c.icon+'</div><div class="hub-label">'+esc(c.label)+'</div><div class="hub-sub">'+esc(c.sub)+'</div>';
       hg.appendChild(a);
     } else if (c.action) {
@@ -2169,7 +2184,7 @@ fetchSiteContent(function() {
       var gearContainer = existing.querySelector('.gear-links-wrap');
       var gearHtml='';
       CONFIG.gearLinks.filter(function(l){return l.url;}).forEach(function(l){
-        gearHtml+='<a href="'+esc(l.url)+'" target="_blank" rel="noopener" class="link"><span class="ic">'+svg(ICONS[l.icon]||ICONS.link)+'</span><span class="txt">'+esc(l.label)+'<small>'+esc(l.sub||'')+'</small></span><span class="chev">'+CHEV+'</span></a>';
+        gearHtml+='<a href="'+esc(l.url)+'"'+(l.sameTab?'':' target="_blank" rel="noopener"')+' class="link"><span class="ic">'+svg(ICONS[l.icon]||ICONS.link)+'</span><span class="txt">'+esc(l.label)+'<small>'+esc(l.sub||'')+'</small></span><span class="chev">'+CHEV+'</span></a>';
       });
       if (gearContainer) gearContainer.innerHTML = gearHtml ? '<p class="eye" style="margin-top:16px;margin-bottom:8px">Gear &amp; Weapons</p><div class="links">'+gearHtml+'</div>' : '';
       existing.scrollIntoView({behavior:'smooth'}); return;
@@ -2183,7 +2198,7 @@ fetchSiteContent(function() {
     });
     var gearHtml='';
     CONFIG.gearLinks.filter(function(l){return l.url;}).forEach(function(l){
-      gearHtml+='<a href="'+esc(l.url)+'" target="_blank" rel="noopener" class="link"><span class="ic">'+svg(ICONS[l.icon]||ICONS.link)+'</span><span class="txt">'+esc(l.label)+'<small>'+esc(l.sub||'')+'</small></span><span class="chev">'+CHEV+'</span></a>';
+      gearHtml+='<a href="'+esc(l.url)+'"'+(l.sameTab?'':' target="_blank" rel="noopener"')+' class="link"><span class="ic">'+svg(ICONS[l.icon]||ICONS.link)+'</span><span class="txt">'+esc(l.label)+'<small>'+esc(l.sub||'')+'</small></span><span class="chev">'+CHEV+'</span></a>';
     });
     sec.innerHTML='<div class="head" style="margin-top:20px"><p class="eye">Payments &amp; Orders</p><h2 class="disp">Pay &amp; Order</h2></div>'+
       '<div class="links">'+linksHtml+'</div>'+

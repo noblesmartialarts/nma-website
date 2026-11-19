@@ -227,7 +227,7 @@ function load(){
   return api('me').then(function(j){
     if(j._status===401){try{localStorage.removeItem(KEY);}catch(e){}return showSignIn(sessWasSet?'Your sign-in ended. Enter your email to get a new code.':'',!!sessWasSet);}
     if(!j.families){$('app').innerHTML='<div class="card"><div class="err">'+esc(j.error||'Couldn’t load your portal.')+'</div><button class="btn sec" style="margin-top:12px" onclick="load()">Try again</button></div>';return;}
-    state.view=j;render();
+    state.view=j;render();shopDeepLink();
   });
 }
 var sessWasSet=false;
@@ -434,8 +434,12 @@ function shopBanner(fam){
   else h+='<p class="small">'+esc(sh.intro||'')+'</p><p class="small" style="margin-top:8px"><b>Order by '+fmt(sh.deadline,{weekday:'short',month:'short',day:'numeric'})+'</b> · pick up '+esc(sh.pickup||'at class')+'</p><button class="btn" style="margin-top:12px" onclick="openShop(\''+esc(fam.familyId)+'\')">Open the Holiday Shop</button>';
   if(mine.length){
     h+='<div style="margin-top:12px">';
-    mine.forEach(function(o){h+='<div class="money"><span>Order for '+esc(o.studentName)+' <span class="muted small">· '+new Date(o.at).toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+o.lines.reduce(function(a,l){return a+l.qty;},0)+' item(s)</span></span><b>'+money(o.total)+'</b></div>';});
-    h+='<div class="small muted">Orders show in your balance once Sensei Brandon logs them.</div></div>';
+    mine.forEach(function(o){
+      var n=o.lines.reduce(function(a,l){return a+(l.deal?0:l.qty);},0);
+      h+='<div class="money" style="align-items:flex-start"><span>Order for '+esc(o.studentName)+(o.changed?' <span class="pill" style="font-size:.7rem">Updated</span>':'')+(o.surprise?' 🎁':'')+' <span class="muted small">· '+new Date(o.at).toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+n+' item'+(n!==1?'s':'')+'</span>';
+      if(!sh.closed)h+='<span style="display:flex;gap:16px;margin-top:4px"><button type="button" class="small" style="background:none;border:none;color:var(--bright);font-weight:700;padding:4px 0;cursor:pointer" onclick="shopChange(\''+esc(fam.familyId)+'\','+(+o.id)+')">Change order</button><button type="button" class="small" style="background:none;border:none;color:var(--muted);font-weight:700;padding:4px 0;cursor:pointer" onclick="shopCancel('+(+o.id)+')">Cancel order</button></span>';
+      h+='</span><b>'+money(o.total)+'</b></div>';});
+    h+='<div class="small muted">'+(sh.closed?'':'You can change or cancel until '+fmt(sh.deadline,{weekday:'short',month:'short',day:'numeric'})+'. ')+'Orders show in your balance once Sensei Brandon logs them.</div></div>';
   }
   return h+'</section>';
 }
@@ -448,11 +452,45 @@ function openShop(fid){
   state.shop={fid:fam.familyId,key:key,cat:'all',cart:cart,pick:null,sel:{},lastFor:only,note:'',surprise:false,gift:{}};
   renderShop();window.scrollTo(0,0);
 }
+// Open the shop from a #shop link (Parent Hub) once the portal has loaded.
+function shopDeepLink(){
+  if(!state.wantShop)return;state.wantShop=false;
+  var f=null;(state.view.families||[]).forEach(function(x){if(!f&&x.shop&&!x.shop.closed)f=x;});
+  if(f)openShop(f.familyId);else{var el=$('shop');if(el)el.scrollIntoView({block:'start'});}
+}
+// Change an order: load it back into a separate cart; placing it replaces the old one.
+function shopChange(fid,oid){
+  var fam=famById(fid);if(!fam||!fam.shop)return;
+  var o=null;(fam.shopOrders||[]).forEach(function(x){if(+x.id===+oid)o=x;});if(!o)return;
+  var cart=[],gift={},gone=0;
+  o.lines.forEach(function(l){
+    if(l.deal)return;
+    if(l.gift){gift=Object.assign({_for:String(l.studentId||'')},l.opts||{});return;}
+    if(!shopItem(fam,l.itemId)){gone++;return;}
+    cart.push({itemId:l.itemId,qty:l.qty,opts:l.opts||{},studentId:String(l.studentId||'')});
+  });
+  var only=fam.students.length===1?String(fam.students[0].id):'';
+  state.shop={fid:fam.familyId,key:shopKey(fam)+'_edit',cat:'all',cart:cart,pick:null,sel:{},lastFor:only,note:o.note||'',surprise:!!o.surprise,gift:gift,replaces:+o.id,replacesAt:o.at,replacesTotal:o.total,gone:gone};
+  shopSave();shopReview();
+}
+function shopEditBanner(){
+  var st=state.shop;if(!st||!st.replaces)return '';
+  return '<div class="note" style="margin-top:12px;border-color:var(--amber)">✏️ <b>Changing your '+new Date(st.replacesAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})+' order ('+money(st.replacesTotal)+').</b> Add or remove items, then place the order — it replaces the old one.'+(st.gone?' '+st.gone+' item'+(st.gone!==1?'s are':' is')+' no longer available and was removed.':'')+' <button type="button" class="small" style="background:none;border:none;color:var(--bright);font-weight:700;padding:0;cursor:pointer" onclick="closeShop()">Keep my original order</button></div>';
+}
+function shopCancel(oid){
+  if(previewBlock())return;
+  if(!confirm('Cancel this holiday order? This can\u2019t be undone, but you can place a new order before the deadline.'))return;
+  api('cancel-shop',{orderId:oid}).then(function(j){
+    if(j._status===401)return signOut();
+    if(!j.ok){alert(j.message||j.error||'Couldn\u2019t cancel. Please message Sensei Brandon.');return;}
+    load().then(function(){var el=$('shop');if(el){el.scrollIntoView({block:'start'});el.insertAdjacentHTML('afterbegin','<div class="ok" style="margin:0 0 12px">Your order was cancelled. If you already paid, Sensei Brandon will refund you.</div>');}});
+  });
+}
 function shopFam(){return famById(state.shop.fid);}
 function renderShop(){
   var fam=shopFam(),sh=fam.shop,st=state.shop;
   var h='<div style="padding-top:14px"><button class="ghost" onclick="closeShop()">← Back to portal</button></div>';
-  h+='<section class="card"><h2>🎁 '+esc(sh.title)+'</h2><p class="small"><b>Order by '+fmtLong(sh.deadline)+'</b> · pick up '+esc(sh.pickup||'at class')+'.</p>'+(sh.sizingNote?'<p class="small muted" style="margin-top:6px">'+esc(sh.sizingNote)+'</p>':'')+(sh.freeGift?'<div class="note" style="margin-top:10px">👕 <b>'+esc(sh.freeGift.label)+'</b> — '+esc(sh.freeGift.note||'')+'</div>':'')+(sh.surpriseNote?'<div class="note" style="margin-top:8px">🎁 '+esc(sh.surpriseNote)+'</div>':'')+'</section>';
+  h+='<section class="card"><h2>🎁 '+esc(sh.title)+'</h2><p class="small"><b>Order by '+fmtLong(sh.deadline)+'</b> · pick up '+esc(sh.pickup||'at class')+'.</p>'+(sh.sizingNote?'<p class="small muted" style="margin-top:6px">'+esc(sh.sizingNote)+'</p>':'')+(sh.freeGift?'<div class="note" style="margin-top:10px">👕 <b>'+esc(sh.freeGift.label)+'</b> — '+esc(sh.freeGift.note||'')+'</div>':'')+(sh.surpriseNote?'<div class="note" style="margin-top:8px">🎁 '+esc(sh.surpriseNote)+'</div>':'')+shopEditBanner()+'</section>';
   h+='<div class="chips" role="tablist" aria-label="Categories" style="margin:4px 0 6px">'+[{id:'all',label:'All',icon:''}].concat(sh.cats||[]).map(function(c){return '<button type="button" role="tab" aria-selected="'+(st.cat===c.id)+'" class="'+(st.cat===c.id?'on':'')+'" onclick="shopCat(\''+c.id+'\')">'+(c.icon?c.icon+' ':'')+esc(c.label)+'</button>';}).join('')+'</div>';
   (sh.cats||[]).forEach(function(c){
     if(st.cat!=='all'&&st.cat!==c.id)return;
@@ -511,7 +549,7 @@ function shopAdd(id){
 function shopOptText(i,l){var many=(i.opts||[]).length>3;return (i.opts||[]).map(function(o){var v=l.opts[o.k];return v?(many?o.label.replace(/ color$/i,'')+': '+v:v):'';}).filter(Boolean).join(' · ');}
 function shopReview(){
   var fam=shopFam(),sh=fam.shop,st=state.shop;
-  var h='<div style="padding-top:14px"><button class="ghost" onclick="renderShop()">← Keep shopping</button></div><section class="card"><h2>Review your order</h2>';
+  var h='<div style="padding-top:14px"><button class="ghost" onclick="renderShop()">← Keep shopping</button></div><section class="card"><h2>'+(st.replaces?'Your updated order':'Review your order')+'</h2>'+shopEditBanner();
   if(!st.cart.length)h+='<p class="muted">Your order is empty.</p>';
   st.cart.forEach(function(l,n){var i=shopItem(fam,l.itemId);if(!i)return;
     h+='<div class="money"><span><b style="display:block">'+l.qty+'× '+esc(i.name)+'</b><span class="small muted">'+esc([shopOptText(i,l),fam.students.length>1?'for '+shopKidName(fam,l.studentId):''].filter(Boolean).join(' · '))+'</span><button type="button" class="small" style="display:block;background:none;border:none;color:var(--bright);font-weight:700;padding:4px 0 0;cursor:pointer" onclick="shopRemove('+n+')">Remove</button></span><b>'+money(i.price*l.qty)+'</b></div>';});
@@ -522,7 +560,7 @@ function shopReview(){
     '<label class="chk" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;cursor:pointer"><input type="checkbox" style="width:22px;height:22px;margin-top:2px;flex:0 0 auto"'+(st.surprise?' checked':'')+' onchange="state.shop.surprise=this.checked"><span><b>🎁 Keep it a surprise</b><span class="small muted" style="display:block">Sensei will bag your order and hand it to a grown-up at pickup — not to your student.</span></span></label>'+
     '<label class="f" style="margin-top:0" for="sn">Note for Sensei Brandon <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="sn" maxlength="500" style="min-height:64px" placeholder="Sizing questions or anything else" oninput="state.shop.note=this.value">'+esc(st.note)+'</textarea>'+
     '<div class="note" style="margin-top:14px"><b>How payment works:</b> after you place your order, pay with Venmo, Zelle or PayPal. You’ll get the details on the next screen and by email.</div>'+
-    '<div id="f-err"></div><button class="btn" id="f-btn" style="margin-top:14px" onclick="submitShop()"'+(st.cart.length&&!sh.closed?'':' disabled')+'>'+(sh.closed?'Orders are closed':'Place order · '+money(shopTotal(fam)))+'</button>'+
+    '<div id="f-err"></div><button class="btn" id="f-btn" style="margin-top:14px" onclick="submitShop()"'+(st.cart.length&&!sh.closed?'':' disabled')+'>'+(sh.closed?'Orders are closed':(st.replaces?'Update order · ':'Place order · ')+money(shopTotal(fam)))+'</button>'+
     '<p class="small muted center" style="margin-top:8px">Orders close '+fmtLong(sh.deadline)+'.</p></section>';
   $('app').innerHTML=h;window.scrollTo(0,0);
 }
@@ -556,16 +594,17 @@ function submitShop(){
   var fam=shopFam(),st=state.shop;
   if(st.cart.some(function(l){return !l.studentId;})){$('f-err').innerHTML='<div class="err">Please remove and re-add any item that doesn\u2019t say who it\u2019s for.</div>';return;}
   var gp=shopGiftPayload(fam);if(gp.err){$('f-err').innerHTML='<div class="err">'+esc(gp.err)+'</div>';return;}
-  var btn=$('f-btn');btn.disabled=true;btn.textContent='Placing your order…';$('f-err').innerHTML='';
-  api('submit-shop',{lines:st.cart,note:st.note,surprise:!!st.surprise,freeGift:gp.gift||null}).then(function(j){
-    if(!j.ok){btn.disabled=false;btn.textContent='Place order · '+money(shopTotal(fam));$('f-err').innerHTML='<div class="err">'+esc(j.message||j.error||'Couldn’t place your order. Please try again.')+'</div>';return;}
+  var btn=$('f-btn');btn.disabled=true;btn.textContent=st.replaces?'Updating your order…':'Placing your order…';$('f-err').innerHTML='';
+  api('submit-shop',{lines:st.cart,note:st.note,surprise:!!st.surprise,freeGift:gp.gift||null,replaces:st.replaces||null}).then(function(j){
+    if(!j.ok){btn.disabled=false;btn.textContent=(st.replaces?'Update order · ':'Place order · ')+money(shopTotal(fam));$('f-err').innerHTML='<div class="err">'+esc(j.message||j.error||'Couldn’t place your order. Please try again.')+'</div>';return;}
     st.cart=[];shopSave();
     var ids=[];(j.lines||[]).forEach(function(l){if(l.studentId&&ids.indexOf(String(l.studentId))<0)ids.push(String(l.studentId));});
     var ks=fam.students.filter(function(x){return ids.indexOf(String(x.id))>=0;});
     var who=ks.length?ks.map(function(k){return k.first;}).join(' & ')+' '+(ks[0].last||''):'';var pay=(fam.school||{}).pay||{};var amt=(+j.total).toFixed(2);
     var memo=('NMA Holiday order - '+who.trim()).slice(0,140);
-    var h='<section class="card center" style="margin-top:24px"><div style="font-size:2.4rem">🎉</div><h2>Order placed!</h2><p class="small">Thanks! A confirmation is on its way to your email. Pick up '+esc(fam.shop.pickup||'at class')+'.'+(st.surprise?' 🎁 We’ll keep it a surprise and hand it to a grown-up.':'')+'</p></section>';
+    var h='<section class="card center" style="margin-top:24px"><div style="font-size:2.4rem">🎉</div><h2>'+(st.replaces?'Order updated!':'Order placed!')+'</h2><p class="small">Thanks! '+(st.replaces?'Your earlier order was replaced. ':'')+'A confirmation is on its way to your email. Pick up '+esc(fam.shop.pickup||'at class')+'.'+(st.surprise?' 🎁 We’ll keep it a surprise and hand it to a grown-up.':'')+'</p></section>';
     h+='<section class="card"><h2>Pay '+money(j.total)+'</h2>';
+    if(st.replaces)h+='<p class="small muted" style="margin-top:0">Already paid for your earlier order? Sensei Brandon will apply it — you only owe the difference (or get the extra back).</p>';
     if(pay.venmo)h+='<a class="pay" target="_blank" rel="noopener" href="https://account.venmo.com/payment-link?audience=private&amount='+amt+'&note='+encodeURIComponent(memo)+'&recipients=%2C'+encodeURIComponent(pay.venmo)+'&txn=pay"><span class="lg" style="background:#008cff">V</span><span>Pay '+money(j.total)+' with Venmo <span class="pill" style="background:rgba(0,140,255,.15);color:#3aa0ff">Preferred</span><small>@'+esc(pay.venmo)+' · amount and note filled in</small></span><span class="go">→</span></a>';
     if(pay.zelle)h+='<button type="button" class="pay" onclick="copyZelle(this,\''+esc(pay.zelle)+'\')"><span class="lg" style="background:#6d1ed4">Z</span><span>Pay with Zelle<small>Send '+money(j.total)+' to <b>'+esc(pay.zelle)+'</b> from your bank app · tap to copy</small></span></button>';
     if(pay.paypal)h+='<a class="pay" target="_blank" rel="noopener" href="https://paypal.me/'+encodeURIComponent(pay.paypal)+'/'+amt+'USD"><span class="lg" style="background:#003087">P</span><span>Pay '+money(j.total)+' with PayPal<small>paypal.me/'+esc(pay.paypal)+'</small></span><span class="go">→</span></a>';
@@ -574,7 +613,7 @@ function submitShop(){
     $('app').innerHTML=h;window.scrollTo(0,0);
   });
 }
-function closeShop(){state.shop=null;if(state.preview){render();return;}load().then(function(){setTimeout(function(){var el=$('shop');if(el)el.scrollIntoView({block:'start'});},50);});}
+function closeShop(){if(state.shop&&state.shop.replaces){try{localStorage.removeItem(state.shop.key);}catch(e){}}state.shop=null;if(state.preview){render();return;}load().then(function(){setTimeout(function(){var el=$('shop');if(el)el.scrollIntoView({block:'start'});},50);});}
 // Appearance: Auto (follows the device), Light or Dark. Shared with the main website via 'nma-theme'.
 function themeMode(){var s=null;try{s=localStorage.getItem('nma-theme');}catch(e){}return s==='light'||s==='dark'?s:'auto';}
 function themeButton(){var b=$('h-theme');if(!b)return;var m=themeMode();var lbl={auto:'◐ Auto',light:'☀ Light',dark:'☾ Dark'}[m];b.textContent=lbl;b.setAttribute('aria-label','Appearance: '+{auto:'matches your device',light:'light',dark:'dark'}[m]+'. Tap to change.');
@@ -789,6 +828,7 @@ function submitIntent(){
 
 // ── Start ──
 (function(){
+  if(/^#shop\b/.test(location.hash||'')){state.wantShop=true;history.replaceState(null,'',location.pathname);}
   if(location.hash==='#preview'&&window.opener){
     state.preview=true;$('app').innerHTML='<div class="spin"></div><p class="center muted small">Loading preview…</p>';
     window.addEventListener('message',function(e){
