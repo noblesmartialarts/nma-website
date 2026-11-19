@@ -137,7 +137,19 @@ body.festive .shopbar{border-top:2px solid var(--gold)}
 body.festive::before{content:'';position:fixed;inset:-100px 0 0;pointer-events:none;z-index:0;opacity:.5;
   background-image:radial-gradient(2px 2px at 20px 30px,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 90px 80px,#fff 50%,transparent 51%),radial-gradient(2.5px 2.5px at 150px 20px,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 60px 140px,#fff 50%,transparent 51%);
   background-size:180px 160px;animation:nma-snow 14s linear infinite}
-html[data-theme="light"] body.festive::before{opacity:.9;filter:drop-shadow(0 0 1px rgba(31,90,52,.35))}
+html[data-theme="light"] body.festive{background:linear-gradient(180deg,#f3e3df 0,#fbf6ee 260px) fixed,#fbf6ee}
+html[data-theme="light"] body.festive::before{opacity:.55;
+  background-image:radial-gradient(3px 3px at 20px 30px,#c8102e 50%,transparent 51%),radial-gradient(2.5px 2.5px at 95px 85px,#1f7a3a 50%,transparent 51%),radial-gradient(3px 3px at 150px 20px,#d4a23c 50%,transparent 51%),radial-gradient(2px 2px at 60px 140px,#1f7a3a 50%,transparent 51%),radial-gradient(2.5px 2.5px at 130px 130px,#c8102e 50%,transparent 51%)}
+html[data-theme="light"] body.festive header{background:color-mix(in srgb,#b3122e 92%,transparent)}
+html[data-theme="light"] body.festive header .t b,html[data-theme="light"] body.festive header .t small{color:#fff}
+html[data-theme="light"] body.festive header .ghost{color:#fff;border-color:rgba(255,255,255,.5)}
+html[data-theme="light"] body.festive header .logo{background:#fff;color:#b3122e}
+html[data-theme="light"] body.festive .card{border:1px solid rgba(176,128,40,.4);box-shadow:0 2px 0 rgba(31,90,52,.08)}
+html[data-theme="light"] body.festive .note{background:#e9f3ea;border-left:4px solid #1f7a3a}
+html[data-theme="light"] body.festive h3.disp{color:#1f6b35;border-bottom:2px solid #d4a23c;padding-bottom:4px;display:inline-block}
+html[data-theme="light"] body.festive .chips button{border-color:rgba(31,107,53,.35);background:#fff}
+html[data-theme="light"] body.festive .chips button.on{background:#b3122e;border-color:#b3122e}
+html[data-theme="light"] body.festive .shopbar{background:color-mix(in srgb,#fff7ef 94%,transparent);border-top:3px solid #b3122e}
 body.festive main{position:relative;z-index:1}
 @keyframes nma-snow{to{transform:translateY(160px)}}
 @media (prefers-reduced-motion:reduce){body.festive::before{animation:none}}
