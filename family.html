@@ -454,6 +454,7 @@ function renderShop(){
     if(st.cat!=='all'&&st.cat!==c.id)return;
     var items=(sh.items||[]).filter(function(i){return i.cat===c.id;});if(!items.length)return;
     h+='<h3 class="disp" style="font-size:1.6rem;margin:18px 0 0">'+(c.icon?c.icon+' ':'')+esc(c.label)+'</h3>';
+    if(c.note)h+='<p class="small muted" style="margin-top:6px">'+esc(c.note)+'</p>';
     (sh.discounts||[]).forEach(function(d){if(d.cat===c.id)h+='<div class="note" style="margin-top:8px">🏷️ <b>'+esc(d.label)+'</b> — '+esc(d.note||'')+'</div>';});
     var grp='';items.forEach(function(i){if(i.group&&i.group!==grp){grp=i.group;h+='<div class="small muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:18px 2px 0">'+esc(grp)+'</div>';}h+='<section class="card" id="si-'+i.id+'" style="margin:10px 0">'+shopItemHTML(i)+'</section>';});
   });
