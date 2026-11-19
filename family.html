@@ -416,8 +416,12 @@ function shopCart(){return state.shop?state.shop.cart:[];}
 function shopKey(fam){return 'nma_shop_'+((fam.shop||{}).id||'')+'_'+fam.familyId;}
 function shopSave(){try{localStorage.setItem(state.shop.key,JSON.stringify(state.shop.cart));}catch(e){}}
 function shopItem(fam,id){var out=null;(fam.shop.items||[]).forEach(function(i){if(i.id===id)out=i;});return out;}
-function shopDeals(fam){var out=[];(fam.shop.items||[]).forEach(function(it){if(!it.deal||!(it.deal.qty>1))return;var q=shopCart().reduce(function(a,l){return a+(l.itemId===it.id?l.qty:0);},0);var save=Math.floor(q/it.deal.qty)*(it.deal.qty*it.price-it.deal.price);if(save>0)out.push({name:it.name+' — '+it.deal.qty+' for $'+it.deal.price,save:save});});shopCatInfo(fam).forEach(function(c){if(c.save>0)out.push({name:c.d.label,save:c.save});});return out;}
-function shopCatInfo(fam){var out=[];(fam.shop.discounts||[]).forEach(function(d){var q=0,sub=0;shopCart().forEach(function(l){var it=shopItem(fam,l.itemId);if(it&&it.cat===d.cat){q+=l.qty;sub+=it.price*l.qty;}});out.push({d:d,q:q,save:q>=d.min?Math.round(sub*d.pct)/100:0});});return out;}
+function shopDeals(fam){var out=[];(fam.shop.items||[]).forEach(function(it){if(!it.deal||!(it.deal.qty>1))return;var sets=Math.floor(shopQty(fam,it.id)/it.deal.qty);var save=sets*(it.deal.qty*it.price-it.deal.price);if(save>0)out.push({name:it.name+' — '+it.deal.qty+' for $'+it.deal.price,save:save});});
+  (fam.shop.combos||[]).forEach(function(c){var sets=Math.min.apply(null,c.items.map(function(id){return shopQty(fam,id);}));if(sets>0)out.push({name:c.label,save:sets*c.save});});
+  shopCatInfo(fam).forEach(function(c){if(c.save>0)out.push({name:c.d.label,save:c.save});});return out;}
+function shopQty(fam,id){return shopCart().reduce(function(a,l){return a+(l.itemId===id?l.qty:0);},0);}
+function shopCovered(fam,it){return it.deal&&it.deal.qty>1?Math.floor(shopQty(fam,it.id)/it.deal.qty)*it.deal.qty:0;}
+function shopCatInfo(fam){var out=[];(fam.shop.discounts||[]).forEach(function(d){var q=0,sub=0;(fam.shop.items||[]).forEach(function(it){if(it.cat!==d.cat)return;var n=shopQty(fam,it.id);q+=n;sub+=it.price*(n-shopCovered(fam,it));});out.push({d:d,q:q,save:q>=d.min?Math.round(sub*d.pct)/100:0});});return out;}
 function shopTotal(fam){return shopCart().reduce(function(a,l){var it=shopItem(fam,l.itemId);return a+(it?it.price*l.qty:0);},0)-shopDeals(fam).reduce(function(a,d){return a+d.save;},0);}
 function shopCount(){return shopCart().reduce(function(a,l){return a+l.qty;},0);}
 function shopBanner(fam){
