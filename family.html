@@ -137,19 +137,34 @@ body.festive .shopbar{border-top:2px solid var(--gold)}
 body.festive::before{content:'';position:fixed;inset:-100px 0 0;pointer-events:none;z-index:0;opacity:.5;
   background-image:radial-gradient(2px 2px at 20px 30px,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 90px 80px,#fff 50%,transparent 51%),radial-gradient(2.5px 2.5px at 150px 20px,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 60px 140px,#fff 50%,transparent 51%);
   background-size:180px 160px;animation:nma-snow 14s linear infinite}
-html[data-theme="light"] body.festive{background:linear-gradient(180deg,#f3e3df 0,#fbf6ee 260px) fixed,#fbf6ee}
-html[data-theme="light"] body.festive::before{opacity:.55;
+html[data-theme="light"] body.festive{--bg:#fbf5ea;
+  background:repeating-linear-gradient(0deg,rgba(179,18,46,.045) 0 22px,transparent 22px 44px),repeating-linear-gradient(90deg,rgba(31,107,53,.045) 0 22px,transparent 22px 44px),#fbf5ea}
+html[data-theme="light"] body.festive::before{opacity:.5;
   background-image:radial-gradient(3px 3px at 20px 30px,#c8102e 50%,transparent 51%),radial-gradient(2.5px 2.5px at 95px 85px,#1f7a3a 50%,transparent 51%),radial-gradient(3px 3px at 150px 20px,#d4a23c 50%,transparent 51%),radial-gradient(2px 2px at 60px 140px,#1f7a3a 50%,transparent 51%),radial-gradient(2.5px 2.5px at 130px 130px,#c8102e 50%,transparent 51%)}
-html[data-theme="light"] body.festive header{background:color-mix(in srgb,#b3122e 92%,transparent)}
+html[data-theme="light"] body.festive header{background:#174d2b;box-shadow:inset 0 -2px 0 #d4a23c}
 html[data-theme="light"] body.festive header .t b,html[data-theme="light"] body.festive header .t small{color:#fff}
-html[data-theme="light"] body.festive header .ghost{color:#fff;border-color:rgba(255,255,255,.5)}
-html[data-theme="light"] body.festive header .logo{background:#fff;color:#b3122e}
-html[data-theme="light"] body.festive .card{border:1px solid rgba(176,128,40,.4);box-shadow:0 2px 0 rgba(31,90,52,.08)}
-html[data-theme="light"] body.festive .note{background:#e9f3ea;border-left:4px solid #1f7a3a}
-html[data-theme="light"] body.festive h3.disp{color:#1f6b35;border-bottom:2px solid #d4a23c;padding-bottom:4px;display:inline-block}
-html[data-theme="light"] body.festive .chips button{border-color:rgba(31,107,53,.35);background:#fff}
-html[data-theme="light"] body.festive .chips button.on{background:#b3122e;border-color:#b3122e}
-html[data-theme="light"] body.festive .shopbar{background:color-mix(in srgb,#fff7ef 94%,transparent);border-top:3px solid #b3122e}
+html[data-theme="light"] body.festive header .ghost{color:#fff;border-color:rgba(255,255,255,.45)}
+html[data-theme="light"] body.festive .card{border:1px solid rgba(176,128,40,.45);box-shadow:0 2px 6px rgba(23,77,43,.08)}
+html[data-theme="light"] body.festive .card[id^="si-"]{border-top:4px solid #1f6b35}
+html[data-theme="light"] body.festive .note{background:#e7f1e8;border-left:4px solid #1f6b35}
+html[data-theme="light"] body.festive h3.disp{color:#b3122e;border-bottom:3px solid #d4a23c;padding-bottom:4px;display:inline-block}
+html[data-theme="light"] body.festive .chips button{border-color:rgba(31,107,53,.4);background:#fff;color:#174d2b}
+html[data-theme="light"] body.festive .chips button.on{background:#b3122e;border-color:#b3122e;color:#fff}
+html[data-theme="light"] body.festive .btn{background:#b3122e;box-shadow:0 2px 0 #7d0b1f}
+html[data-theme="light"] body.festive .shopbar{background:#174d2b;border-top:3px solid #d4a23c;color:#fff}
+html[data-theme="light"] body.festive .shopbar *{color:#fff!important}
+html[data-theme="light"] body.festive .shopbar small{color:#f0d58a!important}
+html[data-theme="light"] .festive-card{border:2px solid #1f6b35!important;background:repeating-linear-gradient(0deg,rgba(179,18,46,.05) 0 18px,transparent 18px 36px),repeating-linear-gradient(90deg,rgba(31,107,53,.05) 0 18px,transparent 18px 36px),#fffaf0!important}
+html[data-theme="light"] .festive-card h2{color:#b3122e}
+html[data-theme="light"] body.festive .shopbar .btn{background:#c8102e;box-shadow:0 2px 0 #7d0b1f}
+/* the shop's top card looks like a wrapped present: red paper, gold ribbon and a bow */
+html[data-theme="light"] body.festive .shop-hero{position:relative;color:#fff;border:0;padding-right:46px;
+  background:linear-gradient(90deg,transparent calc(100% - 34px),#d4a23c calc(100% - 34px),#f0d58a calc(100% - 25px),#d4a23c calc(100% - 16px),transparent calc(100% - 16px)),
+  radial-gradient(circle at 20% 0,rgba(255,255,255,.18),transparent 55%),#b3122e;box-shadow:0 6px 18px rgba(125,11,31,.25)}
+html[data-theme="light"] body.festive .shop-hero::after{content:'🎀';position:absolute;top:-14px;right:2px;font-size:2rem;line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.2))}
+html[data-theme="light"] body.festive .shop-hero h2,html[data-theme="light"] body.festive .shop-hero .small,html[data-theme="light"] body.festive .shop-hero b{color:#fff}
+html[data-theme="light"] body.festive .shop-hero .muted{color:rgba(255,255,255,.85)}
+html[data-theme="light"] body.festive .shop-hero .note{background:rgba(255,255,255,.14);border-left:4px solid #f0d58a;color:#fff}
 body.festive main{position:relative;z-index:1}
 @keyframes nma-snow{to{transform:translateY(160px)}}
 @media (prefers-reduced-motion:reduce){body.festive::before{animation:none}}
@@ -528,7 +543,7 @@ function shopFam(){return famById(state.shop.fid);}
 function renderShop(){
   var fam=shopFam(),sh=fam.shop,st=state.shop;
   var h='<div style="padding-top:14px"><button class="ghost" onclick="closeShop()">← Back to portal</button></div>';
-  h+='<section class="card"><h2>🎁 '+esc(sh.title)+'</h2><p class="small"><b>Order by '+fmtLong(sh.deadline)+'</b> · pick up '+esc(sh.pickup||'at class')+'.</p>'+(sh.sizingNote?'<p class="small muted" style="margin-top:6px">'+esc(sh.sizingNote)+'</p>':'')+(sh.freeGift?'<div class="note" style="margin-top:10px">👕 <b>'+esc(sh.freeGift.label)+'</b> — '+esc(sh.freeGift.note||'')+'</div>':'')+(sh.surpriseNote?'<div class="note" style="margin-top:8px">🎁 '+esc(sh.surpriseNote)+'</div>':'')+shopEditBanner()+'</section>';
+  h+='<section class="card shop-hero"><h2>🎁 '+esc(sh.title)+'</h2><p class="small"><b>Order by '+fmtLong(sh.deadline)+'</b> · pick up '+esc(sh.pickup||'at class')+'.</p>'+(sh.sizingNote?'<p class="small muted" style="margin-top:6px">'+esc(sh.sizingNote)+'</p>':'')+(sh.freeGift?'<div class="note" style="margin-top:10px">👕 <b>'+esc(sh.freeGift.label)+'</b> — '+esc(sh.freeGift.note||'')+'</div>':'')+(sh.surpriseNote?'<div class="note" style="margin-top:8px">🎁 '+esc(sh.surpriseNote)+'</div>':'')+shopEditBanner()+'</section>';
   h+='<div class="chips" role="tablist" aria-label="Categories" style="margin:4px 0 6px">'+[{id:'all',label:'All',icon:''}].concat(sh.cats||[]).map(function(c){return '<button type="button" role="tab" aria-selected="'+(st.cat===c.id)+'" class="'+(st.cat===c.id?'on':'')+'" onclick="shopCat(\''+c.id+'\')">'+(c.icon?c.icon+' ':'')+esc(c.label)+'</button>';}).join('')+'</div>';
   (sh.cats||[]).forEach(function(c){
     if(st.cat!=='all'&&st.cat!==c.id)return;
