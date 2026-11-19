@@ -149,6 +149,7 @@ html[data-theme="light"] body.festive h3.disp{color:#b3122e;border-bottom:3px so
 html[data-theme="light"] body.festive .chips button{border-color:rgba(31,107,53,.4);background:#fff;color:#174d2b}
 html[data-theme="light"] body.festive .chips button.on{background:#b3122e;border-color:#b3122e;color:#fff}
 html[data-theme="light"] body.festive .btn{background:#b3122e;box-shadow:0 2px 0 #7d0b1f}
+html[data-theme="light"] body.festive .btn.sec{background:#fff;color:#b3122e;border:2px solid #b3122e;box-shadow:none}
 html[data-theme="light"] body.festive .shopbar{background:#174d2b;border-top:3px solid #d4a23c;color:#fff}
 html[data-theme="light"] body.festive .shopbar *{color:#fff!important}
 html[data-theme="light"] body.festive .shopbar small{color:#f0d58a!important}
@@ -549,21 +550,29 @@ function renderShop(){
     h+='<h3 class="disp" style="font-size:1.6rem;margin:18px 0 0">'+(c.icon?c.icon+' ':'')+esc(c.label)+'</h3>';
     if(c.note)h+='<p class="small muted" style="margin-top:6px">'+esc(c.note)+'</p>';
     (sh.discounts||[]).forEach(function(d){if(d.cat===c.id)h+='<div class="note" style="margin-top:8px">🏷️ <b>'+esc(d.label)+'</b> — '+esc(d.note||'')+'</div>';});
+    (sh.combos||[]).forEach(function(k){if(k.items.some(function(id){var it=shopItem(fam,id);return it&&it.cat===c.id;}))h+='<div class="note" style="margin-top:8px">🤝 <b>'+esc(k.name||k.label)+'</b> — '+esc(k.note||('Save $'+k.save+' when you get them together.'))+'</div>';});
     var grp='';items.forEach(function(i){if(i.group&&i.group!==grp){grp=i.group;h+='<div class="small muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:18px 2px 0">'+esc(grp)+'</div>';}h+='<section class="card" id="si-'+i.id+'" style="margin:10px 0">'+shopItemHTML(i)+'</section>';});
   });
   h+='<div style="height:90px"></div>';
   var hints=[];shopCatInfo(fam).forEach(function(c){if(c.q>0&&c.q<c.d.min)hints.push('Add '+(c.d.min-c.q)+' more '+c.d.cat+' item'+(c.d.min-c.q!==1?'s':'')+' to save '+c.d.pct+'%');else if(c.save>0)hints.push(c.d.label+' applied!');});
+  (sh.combos||[]).forEach(function(k){var have=k.items.filter(function(id){return shopQty(fam,id)>0;});
+    if(have.length&&have.length<k.items.length){var miss=k.items.filter(function(id){return have.indexOf(id)<0;}).map(function(id){var it=shopItem(fam,id);return it?it.name:id;});hints.push('Add a '+miss.join(' + ')+' for the '+(k.name||'bundle')+' (save $'+k.save+')');}});
   var fgx=sh.freeGift,tot=shopTotal(fam);if(fgx&&tot>0){if(tot>=fgx.min)hints.push('You earned a '+fgx.label+'! Pick it at checkout.');else if(fgx.min-tot<=75)hints.push(money(fgx.min-tot)+' away from a '+fgx.label);}
   var hint=hints.join(' · ');
   if(shopCount())h+='<div class="shopbar"><div class="wrap"><span><b>'+shopCount()+' item'+(shopCount()!==1?'s':'')+'</b> · '+money(shopTotal(fam))+(hint?'<small style="display:block;color:var(--green);font-weight:600">'+esc(hint)+'</small>':'')+'</span><button class="btn" style="width:auto" onclick="shopReview()">Review order →</button></div></div>';
   $('app').innerHTML=h;
+}
+function shopBadge(i){
+  if(i.badge)return i.badge;var b='';
+  (shopFam().shop.combos||[]).forEach(function(k){if(!b&&k.items.indexOf(i.id)>=0)b=(k.name||'Bundle')+' · save $'+k.save;});
+  return b;
 }
 function shopItemHTML(i){
   var st=state.shop;
   var cat=null;(shopFam().shop.cats||[]).forEach(function(c){if(c.id===i.cat)cat=c;});
   var src=(i.designImgs&&state.shop.pick===i.id&&state.shop.sel.design&&i.designImgs[state.shop.sel.design])||i.img;
   var pic=src?'<img class="shopimg" src="'+esc(src)+'" alt="" loading="lazy" onclick="shopZoom(\''+esc(src)+'\',\''+esc(i.name).replace(/'/g,'&#39;')+'\')"/>':'<div class="shopimg ph" aria-hidden="true">'+(cat&&cat.icon||'🛍️')+'</div>';
-  var h='<div style="display:flex;gap:12px;align-items:flex-start">'+pic+'<div style="flex:1;min-width:0;display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0">'+(i.badge?'<span class="pill a">'+esc(i.badge)+'</span>':'')+'<b style="display:block;font-size:1rem;margin-top:'+(i.badge?'6px':'0')+'">'+esc(i.name)+'</b>'+(i.detail?'<span class="small muted">'+esc(i.detail)+'</span>':'')+'</div><b class="disp" style="font-size:1.6rem;white-space:nowrap">$'+i.price+'</b></div></div>';
+  var h='<div style="display:flex;gap:12px;align-items:flex-start">'+pic+'<div style="flex:1;min-width:0;display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0">'+(shopBadge(i)?'<span class="pill a">'+esc(shopBadge(i))+'</span>':'')+'<b style="display:block;font-size:1rem;margin-top:'+(shopBadge(i)?'6px':'0')+'">'+esc(i.name)+'</b>'+(i.detail?'<span class="small muted">'+esc(i.detail)+'</span>':'')+'</div><b class="disp" style="font-size:1.6rem;white-space:nowrap">$'+i.price+'</b></div></div>';
   if(st.pick!==i.id)return h+'<button class="btn sec" style="margin-top:12px" onclick="shopPick(\''+i.id+'\')">Add to order</button>';
   var sel=st.sel;var kids=shopFam().students;
   if(kids.length>1){if(sel._for==null)sel._for=st.lastFor||'';h+='<label class="f" for="so-for">Who is this for?</label><select id="so-for" onchange="state.shop.sel._for=this.value"><option value="">Choose…</option>'+kids.map(function(k){return '<option value="'+esc(k.id)+'"'+(String(sel._for)===String(k.id)?' selected':'')+'>'+esc(k.first)+'</option>';}).join('')+'</select>';}
